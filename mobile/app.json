@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Deeply Fit",
+    "slug": "deeply-fit",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.deeplyfit.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to scan food with AI",
+        "NSPhotoLibraryUsageDescription": "Used to select food photos"
+      }
+    },
+    "android": {
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0a0f"
+      },
+      "package": "com.deeplyfit.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      "expo-camera",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Used to select food photos"
+        }
+      ],
+      "expo-status-bar",
+      "expo-font"
+    ]
+  }
+}

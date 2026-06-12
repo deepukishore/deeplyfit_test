@@ -1,0 +1,44 @@
+{
+  "name": "deeply-fit-mobile",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "doctor": "expo-doctor",
+    "export:android": "expo export --platform android --output-dir dist",
+    "build:apk": "npx eas-cli build --platform android --profile apk"
+  },
+  "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/netinfo": "12.0.1",
+    "@react-navigation/bottom-tabs": "^6.5.20",
+    "@react-navigation/native": "^6.1.17",
+    "@react-navigation/native-stack": "^6.9.26",
+    "expo": "^56.0.8",
+    "expo-camera": "~56.0.7",
+    "expo-clipboard": "~56.0.3",
+    "expo-file-system": "~56.0.7",
+    "expo-font": "~56.0.5",
+    "expo-image-manipulator": "~56.0.16",
+    "expo-image-picker": "~56.0.15",
+    "expo-status-bar": "~56.0.4",
+    "hermes-compiler": "0.17.0",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-svg": "15.15.4",
+    "react-native-toast-message": "^2.2.0",
+    "react-native-worklets": "0.8.3",
+    "react-native-worklets-core": "^1.6.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "babel-preset-expo": "~56.0.0"
+  }
+}

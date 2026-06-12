@@ -1,0 +1,24 @@
+# Secrets and Environment Variables
+.env
+.env.*
+
+# Python / Backend
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+backend.log
+frontend.log
+
+# Node / Frontend / Expo
+node_modules/
+.expo/
+dist/
+build/
+
+# OS generated files
+.DS_Store
+Thumbs.db
