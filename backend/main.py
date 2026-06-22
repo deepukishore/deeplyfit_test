@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
+import os
 
 from database import engine, Base, get_db
 import models
@@ -44,10 +45,16 @@ ensure_user_premium_columns()
 
 app = FastAPI(title="Deeply Fit API", version="1.0.0")
 
+
+def get_cors_origins():
+    origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+    return [origin.strip() for origin in origins.split(",") if origin.strip()]
+
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

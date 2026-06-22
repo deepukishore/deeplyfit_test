@@ -95,7 +95,8 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     db.add(reset_token)
     db.commit()
 
-    reset_url = f"http://localhost:3000/reset-password?token={token}"
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+    reset_url = f"{frontend_url}/reset-password?token={token}"
 
     smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
@@ -113,7 +114,7 @@ Click the link below to reset your password (valid for 1 hour):
 
 If you didn't request this, ignore this email.
 
-— Deeply Fit Team"""
+-- Deeply Fit Team"""
             msg = MIMEText(body)
             msg["Subject"] = "Reset your Deeply Fit password"
             msg["From"] = smtp_user
