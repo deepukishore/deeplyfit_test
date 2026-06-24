@@ -6,13 +6,34 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "mysql+pymysql://root:password@localhost:3306/fittrack"
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+
+# Render gives "postgres://" but we need "postgresql://"
+# This line fixes it automatically
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgres://", "postgresql://", 1
+    )
+
+# If no DATABASE_URL set, use your local MySQL
+# (so your laptop still works for testing)
+if not DATABASE_URL:
+    DATABASE_URL = (
+        "mysql+pymysql://root:password@localhost:3306/fittrack"
+    )
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=300,
 )
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
 Base = declarative_base()
 
 
