@@ -1,17 +1,28 @@
 {
   "cli": {
-    "version": ">= 15.0.0"
+    "version": ">= 12.0.0",
+    "appVersionSource": "local"
   },
   "build": {
-    "apk": {
+    "preview": {
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://deeplyfit-backend.onrender.com"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://deeplyfit-backend.onrender.com"
       }
     }
+  },
+  "submit": {
+    "production": {}
   }
 }
