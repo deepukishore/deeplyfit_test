@@ -30,7 +30,8 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.INTERNET"
+        "android.permission.INTERNET",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -47,8 +48,9 @@
     "extra": {
       "apiUrl": "https://deeplyfit-backend.onrender.com",
       "eas": {
-        "projectId": "your-eas-project-id"
+        "projectId": "49af3e5c-0ba4-45e2-af60-47ae2a86ab3e"
       }
-    }
+    },
+    "owner": "deepukishore17"
   }
 }
