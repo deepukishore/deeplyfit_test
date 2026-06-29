@@ -494,3 +494,63 @@ select {
 [data-hot-toast] {
   font-family: var(--font-body) !important;
 }
+
+@media (min-width: 900px) {
+  :root {
+    --nav-width: 240px;
+    --content-max: 1280px;
+  }
+
+  html, body, #root {
+    min-width: 900px;
+  }
+
+  .app-container {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding-left: var(--nav-width);
+  }
+
+  .page-content {
+    width: min(100%, var(--content-max));
+    margin: 0 auto;
+    padding: 0 32px 48px;
+  }
+
+  .page-header {
+    margin: 0 -32px;
+    padding: 24px 32px 16px;
+  }
+
+  .route-skeleton-body {
+    width: min(100%, var(--content-max));
+    margin: 0 auto;
+    padding: 0 32px 32px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .route-skeleton-card {
+    height: 160px;
+  }
+
+  .modal-overlay {
+    align-items: center;
+    padding: 32px;
+  }
+
+  .modal-sheet {
+    max-width: 640px;
+    border-radius: var(--radius-xl);
+    padding: 28px;
+  }
+
+  .planner-modal {
+    max-width: 760px;
+  }
+
+  .btn:active {
+    transform: none;
+  }
+}

@@ -1661,3 +1661,155 @@
 .chat-limit-wall {
   margin: 0 0 8px;
 }
+
+@media (min-width: 900px) {
+  .page-header {
+    position: sticky;
+    top: 0;
+  }
+
+  .page-header-inner {
+    max-width: var(--content-max);
+    margin: 0 auto;
+  }
+
+  .greeting-name {
+    font-size: 28px;
+  }
+
+  .page-scroll {
+    padding: 20px 0 0;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+
+  .page-scroll > * {
+    grid-column: span 6;
+  }
+
+  .quote-card,
+  .calories-card,
+  .meal-suggestions-card,
+  .workout-card,
+  .chart-container {
+    grid-column: span 12;
+  }
+
+  .calories-card,
+  .macros-card,
+  .water-card,
+  .workout-card,
+  .meal-suggestions-card,
+  .chart-container,
+  .settings-section,
+  .feed-post,
+  .meal-section,
+  .template-card,
+  .stat-card {
+    border-radius: var(--radius-lg);
+  }
+
+  .calories-main {
+    align-items: center;
+  }
+
+  .calories-remaining-value {
+    font-size: 64px;
+  }
+
+  .quick-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .meal-suggestions-grid,
+  .template-grid,
+  .favorite-grid,
+  .achievement-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .progress-stats-grid,
+  .micro-card-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .diary-date-nav,
+  .diary-action-row {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .meal-section {
+    margin-bottom: 20px;
+  }
+
+  .food-item {
+    padding: 14px 4px;
+  }
+
+  .food-search-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .profile-header {
+    padding: 40px 0 28px;
+  }
+
+  .profile-avatar-large {
+    width: 108px;
+    height: 108px;
+    font-size: 42px;
+    border-radius: var(--radius-lg);
+  }
+
+  .profile-name {
+    font-size: 28px;
+  }
+
+  .settings-section {
+    max-width: none;
+  }
+
+  .feed-post {
+    margin-bottom: 20px;
+  }
+
+  .community-photo {
+    max-height: 520px;
+    object-fit: cover;
+  }
+
+  .premium-modal {
+    max-width: 720px;
+  }
+
+  .premium-features-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+  }
+}
+
+@media (min-width: 1180px) {
+  .quote-card,
+  .calories-card {
+    grid-column: span 8;
+  }
+
+  .macros-card,
+  .water-card {
+    grid-column: span 4;
+  }
+
+  .meal-suggestions-card,
+  .workout-card {
+    grid-column: span 6;
+  }
+
+  .meal-suggestions-grid,
+  .achievement-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

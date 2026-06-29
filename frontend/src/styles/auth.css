@@ -598,3 +598,76 @@
   0%, 100% { transform: scaleY(1); opacity: 0.85; }
   50% { transform: scaleY(0.9); opacity: 1; }
 }
+
+@media (min-width: 900px) {
+  .auth-page {
+    padding: 48px;
+  }
+
+  .auth-content {
+    max-width: 460px;
+  }
+
+  .auth-card {
+    padding: 36px;
+    border-radius: var(--radius-lg);
+  }
+
+  .auth-logo h1 {
+    font-size: 32px;
+  }
+
+  .auth-card h2 {
+    font-size: 26px;
+  }
+
+  .onboarding-page {
+    width: min(100%, 1120px);
+    margin: 0 auto;
+    padding: 40px 48px;
+    display: grid;
+    grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
+    gap: 40px;
+    align-items: start;
+  }
+
+  .onboarding-header {
+    position: sticky;
+    top: 40px;
+    padding-top: 0;
+    margin-bottom: 0;
+  }
+
+  .onboarding-title {
+    font-size: 34px;
+  }
+
+  .onboarding-subtitle {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .onboarding-visual-wrap {
+    margin-top: 24px;
+  }
+
+  .onboarding-visual-card {
+    min-height: 260px;
+  }
+
+  .onboarding-form {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .radio-group {
+    gap: 12px;
+  }
+
+  .radio-option {
+    padding: 16px;
+  }
+}
