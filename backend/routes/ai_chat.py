@@ -15,7 +15,8 @@ from utils.premium import enforce_free_limit
 router = APIRouter(prefix="/ai", tags=["ai"])
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"]
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODELS[0])
 
 
 class ChatMessage(BaseModel):
@@ -30,6 +31,23 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+
+
+def get_gemini_model_names(configured_model: str) -> List[str]:
+    model_names = [configured_model]
+    for model_name in DEFAULT_GEMINI_MODELS:
+        if model_name not in model_names:
+            model_names.append(model_name)
+    return model_names
+
+
+def is_model_unavailable_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return (
+        "not found" in message
+        or "not supported" in message
+        or ("model" in message and "generatecontent" in message and "404" in message)
+    )
 
 
 def get_daily_metrics(user: User, db: Session) -> dict:
@@ -187,9 +205,6 @@ async def chat(
                 detail="AI coach is not configured. Set GEMINI_API_KEY on the backend.",
             )
 
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel(GEMINI_MODEL)
-
         history_text = "=== CONVERSATION HISTORY ===\n"
         if request.history:
             for msg in request.history[-10:]:
@@ -205,13 +220,26 @@ User: {request.message}
 
 Respond as the AI coach using the data above. Be specific, warm, and actionable."""
 
-        response = model.generate_content(full_prompt)
-        response_text = (getattr(response, "text", "") or "").strip()
-        if not response_text:
-            raise HTTPException(status_code=502, detail="AI coach returned an empty response")
+        genai.configure(api_key=GEMINI_API_KEY)
+        last_error = None
+        for model_name in get_gemini_model_names(GEMINI_MODEL):
+            try:
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(full_prompt)
+                response_text = (getattr(response, "text", "") or "").strip()
+                if not response_text:
+                    raise HTTPException(status_code=502, detail="AI coach returned an empty response")
 
-        db.commit()
-        return ChatResponse(response=response_text)
+                db.commit()
+                return ChatResponse(response=response_text)
+            except HTTPException:
+                raise
+            except Exception as exc:
+                last_error = exc
+                if not is_model_unavailable_error(exc):
+                    break
+
+        raise HTTPException(status_code=502, detail=f"AI coach failed: {last_error}")
     except HTTPException:
         db.rollback()
         raise

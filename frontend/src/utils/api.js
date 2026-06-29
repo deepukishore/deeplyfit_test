@@ -34,10 +34,21 @@ const request = async (method, path, body = null) => {
     options.body = JSON.stringify(body);
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, options);
+  let res;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, options);
+  } catch (err) {
+    throw new Error('Cannot reach the backend server. Make sure it is running on port 8080.');
+  }
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: 'Network error' }));
+    const err = await res.clone().json().catch(async () => {
+      const text = await res.text().catch(() => '');
+      if (/proxy error|econnrefused|failed to fetch/i.test(text)) {
+        return { detail: 'Cannot reach the backend server. Make sure it is running on port 8080.' };
+      }
+      return { detail: text || `Error ${res.status}` };
+    });
     const detail = Array.isArray(err.detail)
       ? err.detail.map((item) => item.msg || JSON.stringify(item)).join(', ')
       : err.detail;

@@ -6,6 +6,8 @@ import google.generativeai as genai
 
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"]
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODELS[0])
 
 
 FOOD_CATALOG = [
@@ -22,6 +24,23 @@ FOOD_CATALOG = [
     {"name": "Apple and almonds", "portion_hint": "1 apple with 20g almonds", "calories": 210, "protein": 5, "carbs": 23, "fat": 11, "tags": ["snack"]},
     {"name": "Turkey sandwich", "portion_hint": "1 turkey sandwich on whole grain bread", "calories": 340, "protein": 29, "carbs": 31, "fat": 9, "tags": ["balanced"]},
 ]
+
+
+def _get_gemini_model_names(configured_model: str) -> list[str]:
+    model_names = [configured_model]
+    for model_name in DEFAULT_GEMINI_MODELS:
+        if model_name not in model_names:
+            model_names.append(model_name)
+    return model_names
+
+
+def _is_model_unavailable_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return (
+        "not found" in message
+        or "not supported" in message
+        or ("model" in message and "generatecontent" in message and "404" in message)
+    )
 
 
 def _remaining_value(target: float | None, consumed: float) -> float:
@@ -110,7 +129,6 @@ def _ai_suggestions(user, summary: dict) -> dict | None:
     remaining = _build_remaining(user, summary)
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.5-pro")
         prompt = f"""
 You are helping a fitness user choose the next meal.
 Remaining macros for today:
@@ -137,7 +155,18 @@ Use practical, common foods. Respond with ONLY valid JSON in this format:
 
 Return exactly 3 suggestions.
 """
-        response = model.generate_content(prompt)
+        response = None
+        for model_name in _get_gemini_model_names(GEMINI_MODEL):
+            try:
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(prompt)
+                break
+            except Exception as exc:
+                if not _is_model_unavailable_error(exc):
+                    raise
+        if response is None:
+            return None
+
         text = response.text.strip()
         match = re.search(r"\{.*\}", text, re.DOTALL)
         if not match:

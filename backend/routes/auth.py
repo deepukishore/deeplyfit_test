@@ -16,6 +16,32 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
+def is_smtp_configured(smtp_user: str, smtp_pass: str) -> bool:
+    placeholder_values = {
+        "",
+        "your_gmail@gmail.com",
+        "your_app_password",
+        "your-email@gmail.com",
+        "your-password",
+    }
+    return smtp_user.strip() not in placeholder_values and smtp_pass.strip() not in placeholder_values
+
+
+def first_configured_value(*values: str) -> str:
+    placeholder_values = {
+        "",
+        "your_gmail@gmail.com",
+        "your_app_password",
+        "your-email@gmail.com",
+        "your-password",
+    }
+    for value in values:
+        normalized = (value or "").strip()
+        if normalized and normalized not in placeholder_values:
+            return normalized
+    return ""
+
+
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     payload = decode_token(token)
     if not payload:
@@ -100,10 +126,11 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
-    smtp_user = os.getenv("SMTP_USER", "")
-    smtp_pass = os.getenv("SMTP_PASS", "")
+    smtp_user = first_configured_value(os.getenv("SMTP_USER", ""), os.getenv("MAIL_USERNAME", ""))
+    smtp_pass = first_configured_value(os.getenv("SMTP_PASS", ""), os.getenv("MAIL_PASSWORD", ""))
+    smtp_sender = first_configured_value(os.getenv("SMTP_SENDER", ""), os.getenv("MAIL_DEFAULT_SENDER", ""), smtp_user)
 
-    if smtp_user and smtp_pass:
+    if is_smtp_configured(smtp_user, smtp_pass):
         try:
             body = f"""Hi {user.name or 'there'},
 
@@ -117,17 +144,24 @@ If you didn't request this, ignore this email.
 -- Deeply Fit Team"""
             msg = MIMEText(body)
             msg["Subject"] = "Reset your Deeply Fit password"
-            msg["From"] = smtp_user
+            msg["From"] = smtp_sender
             msg["To"] = user.email
             with smtplib.SMTP(smtp_host, smtp_port) as server:
                 server.starttls()
                 server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, user.email, msg.as_string())
+                server.sendmail(smtp_sender, user.email, msg.as_string())
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+            print(f"[SMTP] Password reset email failed for {user.email}: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail="Could not send the reset email. Check the server SMTP email settings.",
+            )
     else:
-        # Dev mode: print to console
         print(f"[DEV] Password reset link for {user.email}: {reset_url}")
+        return {
+            "message": "SMTP is not configured. Use this development reset link.",
+            "reset_url": reset_url,
+        }
 
     return {"message": "If that email exists, a reset link has been sent."}
 

@@ -1,3 +1,4 @@
+
 # ⚡ Deeply Fit
 
 > Your intelligent fitness companion — built with React, FastAPI, MySQL & Gemini AI
@@ -42,7 +43,7 @@
 | ORM          | SQLAlchemy 2.0                                          |
 | Database     | MySQL 8.0                                               |
 | Auth         | JWT (python-jose + bcrypt), SMTP password reset         |
-| AI           | Google Gemini 1.5 Flash                                 |
+| AI           | Google Gemini 2.5 Flash                                 |
 | Nutrition    | Open Food Facts API integration                         |
 
 ---
@@ -151,12 +152,12 @@ deeplyfit/
 
 Make sure these are installed before starting:
 
-| Tool | Version | Download |
-|------|---------|----------|
-| Python | 3.10+ | https://python.org |
-| Node.js | 18+ | https://nodejs.org |
-| MySQL | 8.0+ | https://dev.mysql.com/downloads/ |
-| Git | any | https://git-scm.com |
+| Tool    | Version | Download                         |
+| ------- | ------- | -------------------------------- |
+| Python  | 3.10+   | https://python.org               |
+| Node.js | 18+     | https://nodejs.org               |
+| MySQL   | 8.0+    | https://dev.mysql.com/downloads/ |
+| Git     | any     | https://git-scm.com              |
 
 ---
 
@@ -178,6 +179,8 @@ Edit `backend/.env` with your credentials:
 DATABASE_URL=mysql+pymysql://root:YOUR_PASSWORD@localhost:3306/fittrack
 SECRET_KEY=your-secret-key-change-this-in-production
 GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash
+GEMINI_VISION_MODEL=gemini-2.5-flash
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_gmail@gmail.com
@@ -185,7 +188,7 @@ SMTP_PASS=your_gmail_app_password
 ```
 
 > **Get a free Gemini API key:** https://makersuite.google.com/app/apikey
-> The app works without a Gemini key — it returns mock food data.
+> Without a Gemini key, AI chat and food scanning return a clear configuration error instead of mock data.
 > For SMTP (password reset emails), generate a Gmail App Password at: https://myaccount.google.com/apppasswords
 
 ---
@@ -219,9 +222,9 @@ cd backend
 python -m uvicorn main:app --reload --host 0.0.0.0 --port 8080
 ```
 
-- API runs at: **http://<your-computer-ip>:8080**
-- Interactive API docs: **http://<your-computer-ip>:8080/docs**
-- Health check: **http://<your-computer-ip>:8080/health**
+- API runs at: **http://<your-computer-ip></your>:8080**
+- Interactive API docs: **http://<your-computer-ip></your>:8080/docs**
+- Health check: **http://<your-computer-ip></your>:8080/health**
 
 ---
 
@@ -275,80 +278,88 @@ setup.bat
 ## 🔌 API Endpoints
 
 ### Auth
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/register` | Register new user |
-| POST | `/auth/login` | Login & get JWT |
-| GET | `/auth/me` | Get current user |
-| POST | `/auth/forgot-password` | Send reset email |
-| POST | `/auth/reset-password` | Reset password with token |
+
+| Method | Endpoint                  | Description               |
+| ------ | ------------------------- | ------------------------- |
+| POST   | `/auth/register`        | Register new user         |
+| POST   | `/auth/login`           | Login & get JWT           |
+| GET    | `/auth/me`              | Get current user          |
+| POST   | `/auth/forgot-password` | Send reset email          |
+| POST   | `/auth/reset-password`  | Reset password with token |
 
 ### Users & Allergens
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/users/onboarding` | Complete onboarding |
-| PUT | `/users/profile` | Update profile |
-| GET | `/users/allergens` | Get user allergens |
-| PUT | `/users/allergens` | Update user allergens |
+
+| Method | Endpoint              | Description           |
+| ------ | --------------------- | --------------------- |
+| POST   | `/users/onboarding` | Complete onboarding   |
+| PUT    | `/users/profile`    | Update profile        |
+| GET    | `/users/allergens`  | Get user allergens    |
+| PUT    | `/users/allergens`  | Update user allergens |
 
 ### Food & Nutrition
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/food/log` | Log food entry |
-| GET | `/food/logs/{date}` | Get food logs for date |
-| DELETE | `/food/log/{id}` | Delete food log |
-| GET | `/food/summary/{date}` | Get daily summary |
-| GET | `/food/weekly-summary` | Get 7-day summary |
-| POST | `/food/scan` | AI food scan & log |
-| POST | `/food/check-allergens` | Check food for allergens |
+
+| Method | Endpoint                  | Description              |
+| ------ | ------------------------- | ------------------------ |
+| POST   | `/food/log`             | Log food entry           |
+| GET    | `/food/logs/{date}`     | Get food logs for date   |
+| DELETE | `/food/log/{id}`        | Delete food log          |
+| GET    | `/food/summary/{date}`  | Get daily summary        |
+| GET    | `/food/weekly-summary`  | Get 7-day summary        |
+| POST   | `/food/scan`            | AI food scan & log       |
+| POST   | `/food/check-allergens` | Check food for allergens |
 
 ### Workouts
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/workouts/log` | Log workout |
-| GET | `/workouts/logs/{date}` | Get workouts for date |
-| DELETE | `/workouts/log/{id}` | Delete workout |
-| GET | `/workouts/streak` | Get current & best streak |
-| GET | `/workouts/calendar` | Get 90-day workout calendar |
+
+| Method | Endpoint                  | Description                 |
+| ------ | ------------------------- | --------------------------- |
+| POST   | `/workouts/log`         | Log workout                 |
+| GET    | `/workouts/logs/{date}` | Get workouts for date       |
+| DELETE | `/workouts/log/{id}`    | Delete workout              |
+| GET    | `/workouts/streak`      | Get current & best streak   |
+| GET    | `/workouts/calendar`    | Get 90-day workout calendar |
 
 ### Water & Weight
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/water/add-glass` | Add water glass |
-| POST | `/water/log` | Set water for day |
-| GET | `/water/log/{date}` | Get water for date |
-| POST | `/weight/log` | Log weight |
-| GET | `/weight/logs` | Get weight history |
+
+| Method | Endpoint              | Description        |
+| ------ | --------------------- | ------------------ |
+| POST   | `/water/add-glass`  | Add water glass    |
+| POST   | `/water/log`        | Set water for day  |
+| GET    | `/water/log/{date}` | Get water for date |
+| POST   | `/weight/log`       | Log weight         |
+| GET    | `/weight/logs`      | Get weight history |
 
 ### Meal Templates & Plans
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/meal-templates` | Get saved templates |
-| POST | `/meal-templates` | Save meal template |
-| DELETE | `/meal-templates/{id}` | Delete template |
-| GET | `/meal-plans` | Get meal plans |
-| POST | `/meal-plans` | Create meal plan |
+
+| Method | Endpoint                 | Description         |
+| ------ | ------------------------ | ------------------- |
+| GET    | `/meal-templates`      | Get saved templates |
+| POST   | `/meal-templates`      | Save meal template  |
+| DELETE | `/meal-templates/{id}` | Delete template     |
+| GET    | `/meal-plans`          | Get meal plans      |
+| POST   | `/meal-plans`          | Create meal plan    |
 
 ### Achievements & AI
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/achievements` | Get user achievements |
-| POST | `/ai-chat` | Chat with AI assistant |
+
+| Method | Endpoint          | Description            |
+| ------ | ----------------- | ---------------------- |
+| GET    | `/achievements` | Get user achievements  |
+| POST   | `/ai-chat`      | Chat with AI assistant |
 
 ### Community
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/community/feed` | Get social feed |
-| POST | `/community/post` | Create post |
-| POST | `/community/like/{id}` | Like a post |
-| GET | `/community/leaderboard` | Get leaderboard |
-| GET | `/community/profile/{id}` | Get public profile |
+
+| Method | Endpoint                    | Description        |
+| ------ | --------------------------- | ------------------ |
+| GET    | `/community/feed`         | Get social feed    |
+| POST   | `/community/post`         | Create post        |
+| POST   | `/community/like/{id}`    | Like a post        |
+| GET    | `/community/leaderboard`  | Get leaderboard    |
+| GET    | `/community/profile/{id}` | Get public profile |
 
 ---
 
 ## 🤖 AI Food Scanner
 
-The scanner uses **Google Gemini 1.5 Flash** vision model:
+The scanner uses **Google Gemini 2.5 Flash** vision model by default:
 
 1. User photographs food or uploads an image
 2. Image converted to Base64
@@ -358,7 +369,7 @@ The scanner uses **Google Gemini 1.5 Flash** vision model:
 6. Entry auto-saved to database
 7. Toast notification shown
 
-**Without Gemini API key:** Returns mock nutritional data so the app remains fully functional.
+**Without Gemini API key:** Food scanning is unavailable and the backend returns a setup error.
 
 ---
 
@@ -403,57 +414,61 @@ Supported allergens: `gluten`, `lactose`, `nuts`, `peanuts`, `eggs`, `soy`, `she
 ## 💎 Premium / PRO System
 
 ### Pricing
-| Plan | Price | Billed |
-|------|-------|--------|
-| Monthly | ₹99 | Every month |
-| Annual | ₹1,000 | Once a year (saves ₹188) |
+
+| Plan    | Price   | Billed                    |
+| ------- | ------- | ------------------------- |
+| Monthly | ₹99    | Every month               |
+| Annual  | ₹1,000 | Once a year (saves ₹188) |
 
 ### Payment
+
 - Pay via UPI to: **deepu004.dk-4@okaxis**
 - Open GPay / PhonePe / Paytm → send the amount → copy the transaction ID
 - Enter the transaction ID in the app → PRO activates instantly
 
 ### PRO Features
-| Feature | Free | PRO |
-|---------|------|-----|
-| AI Food Scans | 3/day | ♾️ Unlimited |
-| AI Coach Messages | 10/day | ♾️ Unlimited |
-| AI Coach Memory | None | 30 days |
-| Weekly AI Report | ❌ | ✅ Every Monday |
-| Analytics History | 7 days | 90 days |
-| Macro Protocols | Standard | 8 protocols (Keto, Vegan, Athlete…) |
-| Calorie Heatmap | ❌ | ✅ |
-| Micronutrients | ❌ | ✅ Full tracking |
-| Meal Prep Planner | ❌ | ✅ + Shopping list |
-| IF Fasting Timer | ❌ | ✅ All protocols |
-| Progress Photos | ❌ | ✅ + Timeline |
-| Body Measurements | ❌ | ✅ + Charts |
-| Export Reports | ❌ | ✅ PDF + CSV |
-| PRO Badges | ❌ | ✅ 10 exclusive |
-| PRO Profile Badge | ❌ | ✅ Gold border |
+
+| Feature           | Free     | PRO                                  |
+| ----------------- | -------- | ------------------------------------ |
+| AI Food Scans     | 3/day    | ♾️ Unlimited                       |
+| AI Coach Messages | 10/day   | ♾️ Unlimited                       |
+| AI Coach Memory   | None     | 30 days                              |
+| Weekly AI Report  | ❌       | ✅ Every Monday                      |
+| Analytics History | 7 days   | 90 days                              |
+| Macro Protocols   | Standard | 8 protocols (Keto, Vegan, Athlete…) |
+| Calorie Heatmap   | ❌       | ✅                                   |
+| Micronutrients    | ❌       | ✅ Full tracking                     |
+| Meal Prep Planner | ❌       | ✅ + Shopping list                   |
+| IF Fasting Timer  | ❌       | ✅ All protocols                     |
+| Progress Photos   | ❌       | ✅ + Timeline                        |
+| Body Measurements | ❌       | ✅ + Charts                          |
+| Export Reports    | ❌       | ✅ PDF + CSV                         |
+| PRO Badges        | ❌       | ✅ 10 exclusive                      |
+| PRO Profile Badge | ❌       | ✅ Gold border                       |
 
 ### Implementation Files
-| File | Purpose |
-|------|---------|
-| `frontend/src/utils/premium.js` | isPro(), scan/chat counters, activatePro() |
-| `frontend/src/components/PremiumModal.js` | Plan selection + UPI payment flow |
-| `frontend/src/pages/Profile.js` | Get PRO button, PRO badge, gold avatar |
-| `frontend/src/components/FoodScannerModal.js` | 3-scan/day gate |
-| `frontend/src/pages/AIAssistant.js` | 10-message/day gate |
+
+| File                                            | Purpose                                    |
+| ----------------------------------------------- | ------------------------------------------ |
+| `frontend/src/utils/premium.js`               | isPro(), scan/chat counters, activatePro() |
+| `frontend/src/components/PremiumModal.js`     | Plan selection + UPI payment flow          |
+| `frontend/src/pages/Profile.js`               | Get PRO button, PRO badge, gold avatar     |
+| `frontend/src/components/FoodScannerModal.js` | 3-scan/day gate                            |
+| `frontend/src/pages/AIAssistant.js`           | 10-message/day gate                        |
 
 ---
 
 ## 🐛 Troubleshooting
 
-| Problem | Fix |
-|---------|-----|
-| `Access denied for user 'root'` | Check `DATABASE_URL` password in `.env` |
-| `ModuleNotFoundError` | Run `pip install -r requirements.txt` again |
-| Frontend can't reach backend | Ensure backend is running on port `8080` |
-| Gemini AI is unavailable | Add a valid `GEMINI_API_KEY` to `.env` |
-| Mobile app can't connect | Set `EXPO_PUBLIC_API_URL` to your backend URL, e.g. `http://192.168.1.10:8080` |
-| `migrate.py` fails | Ensure the `fittrack` database exists in MySQL first |
-| PRO not activating | Ensure you entered the correct UPI transaction ID |
+| Problem                           | Fix                                                                               |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| `Access denied for user 'root'` | Check`DATABASE_URL` password in `.env`                                        |
+| `ModuleNotFoundError`           | Run`pip install -r requirements.txt` again                                      |
+| Frontend can't reach backend      | Ensure backend is running on port`8080`                                         |
+| Gemini AI is unavailable          | Add a valid `GEMINI_API_KEY` and use `GEMINI_MODEL=gemini-2.5-flash` in `.env` |
+| Mobile app can't connect          | Set`EXPO_PUBLIC_API_URL` to your backend URL, e.g. `http://192.168.1.10:8080` |
+| `migrate.py` fails              | Ensure the`fittrack` database exists in MySQL first                             |
+| PRO not activating                | Ensure you entered the correct UPI transaction ID                                 |
 
 ---
 

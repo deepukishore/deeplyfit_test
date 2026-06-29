@@ -7,7 +7,25 @@ import google.generativeai as genai
 from fastapi import HTTPException
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_VISION_MODEL", os.getenv("GEMINI_MODEL", "gemini-1.5-flash"))
+DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"]
+GEMINI_MODEL = os.getenv("GEMINI_VISION_MODEL", os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODELS[0]))
+
+
+def _get_gemini_model_names(configured_model: str) -> list[str]:
+    model_names = [configured_model]
+    for model_name in DEFAULT_GEMINI_MODELS:
+        if model_name not in model_names:
+            model_names.append(model_name)
+    return model_names
+
+
+def _is_model_unavailable_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return (
+        "not found" in message
+        or "not supported" in message
+        or ("model" in message and "generatecontent" in message and "404" in message)
+    )
 
 
 def _decode_image(image_base64: str) -> bytes:
@@ -51,8 +69,6 @@ def analyze_food_image(image_base64: str) -> dict:
                 detail="AI food scanner is not configured. Set GEMINI_API_KEY on the backend.",
             )
 
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel(GEMINI_MODEL)
         image_data = _decode_image(image_base64)
 
         prompt = """Analyze the image and identify the visible edible food or drink.
@@ -74,13 +90,25 @@ Rules:
 - protein, carbs, and fat are grams for the visible portion.
 - Return JSON only. No markdown, no explanation."""
 
-        response = model.generate_content([
-            prompt,
-            {
-                "mime_type": "image/jpeg",
-                "data": image_data,
-            },
-        ])
+        genai.configure(api_key=GEMINI_API_KEY)
+        last_error = None
+        for model_name in _get_gemini_model_names(GEMINI_MODEL):
+            try:
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content([
+                    prompt,
+                    {
+                        "mime_type": "image/jpeg",
+                        "data": image_data,
+                    },
+                ])
+                break
+            except Exception as exc:
+                last_error = exc
+                if not _is_model_unavailable_error(exc):
+                    raise
+        else:
+            raise HTTPException(status_code=502, detail=f"AI food scanner failed: {last_error}")
 
         data = json.loads(_clean_json_text(getattr(response, "text", "")))
         required = ["name", "calories", "protein", "carbs", "fat"]

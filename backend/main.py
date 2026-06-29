@@ -41,7 +41,20 @@ def ensure_user_premium_columns():
                 connection.execute(text(ddl))
 
 
+def ensure_user_default_values():
+    with engine.begin() as connection:
+        connection.execute(text("UPDATE users SET water_goal = 8 WHERE water_goal IS NULL"))
+        connection.execute(text("UPDATE users SET onboarding_complete = 0 WHERE onboarding_complete IS NULL"))
+        connection.execute(text("UPDATE users SET dark_mode = 0 WHERE dark_mode IS NULL"))
+        connection.execute(text("UPDATE users SET share_achievements = 1 WHERE share_achievements IS NULL"))
+        connection.execute(text("UPDATE users SET profile_visibility = 'public' WHERE profile_visibility IS NULL"))
+        connection.execute(text("UPDATE users SET premium_status = 'free' WHERE premium_status IS NULL"))
+        connection.execute(text("UPDATE users SET free_ai_scans_used = 0 WHERE free_ai_scans_used IS NULL"))
+        connection.execute(text("UPDATE users SET free_ai_messages_used = 0 WHERE free_ai_messages_used IS NULL"))
+
+
 ensure_user_premium_columns()
+ensure_user_default_values()
 
 app = FastAPI(title="Deeply Fit API", version="1.0.0")
 

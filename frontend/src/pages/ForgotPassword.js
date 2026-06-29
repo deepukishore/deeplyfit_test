@@ -8,6 +8,7 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [devResetUrl, setDevResetUrl] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
@@ -20,9 +21,10 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
-      await api.forgotPassword({ email });
+      const response = await api.forgotPassword({ email });
+      setDevResetUrl(response.reset_url || '');
       setSent(true);
-      toast.success('Reset link sent! Check your inbox.');
+      toast.success(response.reset_url ? 'Development reset link created.' : 'Reset link sent! Check your inbox.');
     } catch (err) {
       toast.error(err.message || 'Something went wrong');
     } finally {
@@ -45,8 +47,15 @@ const ForgotPassword = () => {
             <>
               <h2>Check your email</h2>
               <p className="subtitle" style={{ marginBottom: 24 }}>
-                We sent a password reset link to <strong>{email}</strong>. It expires in 1 hour.
+                {devResetUrl
+                  ? 'Email sending is not configured locally. Use the development reset link below.'
+                  : <>We sent a password reset link to <strong>{email}</strong>. It expires in 1 hour.</>}
               </p>
+              {devResetUrl && (
+                <button className="btn btn-secondary btn-full" style={{ marginBottom: 12 }} onClick={() => window.location.assign(devResetUrl)}>
+                  Open Reset Link
+                </button>
+              )}
               <button className="btn btn-primary btn-full" onClick={() => navigate('/login')}>
                 ← Back to Sign In
               </button>

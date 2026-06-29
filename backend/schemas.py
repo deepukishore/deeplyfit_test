@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, List, Dict
 from datetime import date, datetime
 
@@ -106,6 +106,33 @@ class UserResponse(BaseModel):
     free_ai_scans_reset_on: Optional[date] = None
     free_ai_messages_used: int = 0
     free_ai_messages_reset_on: Optional[date] = None
+
+    @field_validator(
+        "onboarding_complete",
+        "dark_mode",
+        "share_achievements",
+        "free_ai_scans_used",
+        "free_ai_messages_used",
+        mode="before",
+    )
+    @classmethod
+    def default_zero_ints(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("water_goal", mode="before")
+    @classmethod
+    def default_water_goal(cls, value):
+        return 8 if value is None else value
+
+    @field_validator("profile_visibility", mode="before")
+    @classmethod
+    def default_profile_visibility(cls, value):
+        return "public" if value is None else value
+
+    @field_validator("premium_status", mode="before")
+    @classmethod
+    def default_premium_status(cls, value):
+        return "free" if value is None else value
 
     class Config:
         from_attributes = True
