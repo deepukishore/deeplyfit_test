@@ -450,7 +450,7 @@ Supported allergens: `gluten`, `lactose`, `nuts`, `peanuts`, `eggs`, `soy`, `she
 | `Access denied for user 'root'` | Check `DATABASE_URL` password in `.env` |
 | `ModuleNotFoundError` | Run `pip install -r requirements.txt` again |
 | Frontend can't reach backend | Ensure backend is running on port `8080` |
-| Gemini returns mock data | Add a valid `GEMINI_API_KEY` to `.env` |
+| Gemini AI is unavailable | Add a valid `GEMINI_API_KEY` to `.env` |
 | Mobile app can't connect | Set `EXPO_PUBLIC_API_URL` to your backend URL, e.g. `http://192.168.1.10:8080` |
 | `migrate.py` fails | Ensure the `fittrack` database exists in MySQL first |
 | PRO not activating | Ensure you entered the correct UPI transaction ID |

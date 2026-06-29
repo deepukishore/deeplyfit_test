@@ -50,3 +50,9 @@ export const activatePro = (plan) => {
   localStorage.setItem('deeply_fit_pro_plan', plan);
   localStorage.setItem('deeply_fit_pro_since', TODAY());
 };
+
+export const deactivateLocalPro = () => {
+  localStorage.removeItem('deeply_fit_pro');
+  localStorage.removeItem('deeply_fit_pro_plan');
+  localStorage.removeItem('deeply_fit_pro_since');
+};

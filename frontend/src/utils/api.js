@@ -38,7 +38,10 @@ const request = async (method, path, body = null) => {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: 'Network error' }));
-    throw new Error(err.detail || `Error ${res.status}`);
+    const detail = Array.isArray(err.detail)
+      ? err.detail.map((item) => item.msg || JSON.stringify(item)).join(', ')
+      : err.detail;
+    throw new Error(typeof detail === 'string' ? detail : `Error ${res.status}`);
   }
 
   return res.json();
@@ -298,6 +301,8 @@ export const api = {
 
   // Profile
   updateProfile: (data) => request('PUT', '/users/profile', data),
+  getPremiumStatus: () => request('GET', '/users/premium/status'),
+  activatePremium: (data) => request('POST', '/users/premium/activate', data),
 
   // Food
   logFood: diaryApi.logFood,

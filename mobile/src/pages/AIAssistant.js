@@ -41,9 +41,9 @@ const AIAssistant = () => {
       const history = messages.slice(-10).map((m) => ({ role: m.role, content: m.content }));
       const response = await api.chat({ message: msg, history });
       setMessages((prev) => [...prev, { role: 'assistant', content: response.response }]);
-    } catch {
-      Toast.show({ type: 'error', text1: 'Could not reach AI coach' });
-      setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, I had trouble connecting. Please try again! 🙏' }]);
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.message || 'Could not reach AI coach' });
+      setInput(msg);
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ const AIAssistant = () => {
         )}
       </ScrollView>
 
-      {messages.length <= 1 && (
+      {false && messages.length <= 1 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.suggestions} contentContainerStyle={{ padding: spacing.sm }}>
           {QUICK_SUGGESTIONS.map((suggestion, index) => (
             <TouchableOpacity key={index} style={s.suggestionChip} onPress={() => sendMessage(suggestion)} disabled={loading}>

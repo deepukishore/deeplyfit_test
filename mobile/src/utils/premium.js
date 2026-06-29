@@ -6,7 +6,7 @@ export const PREMIUM_PLANS = {
   monthly: {
     key: 'monthly',
     title: 'Monthly',
-    price: 199,
+    price: 99,
     durationLabel: '1 month',
     durationDays: 30,
     subtitle: 'Best for trying PRO',
@@ -14,7 +14,7 @@ export const PREMIUM_PLANS = {
   annual: {
     key: 'annual',
     title: 'Annual',
-    price: 1999,
+    price: 999,
     durationLabel: '1 year',
     durationDays: 365,
     subtitle: 'Best value',

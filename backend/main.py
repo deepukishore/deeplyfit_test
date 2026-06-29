@@ -54,7 +54,7 @@ def get_cors_origins():
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -92,7 +92,6 @@ def scan_food(
 ):
     try:
         enforce_free_limit(current_user, "ai_scan")
-        db.commit()
         result = analyze_food_image(data.image_base64)
 
         # Auto-save to food log
@@ -117,6 +116,7 @@ def scan_food(
             "message": "Food scanned and logged successfully"
         }
     except HTTPException:
+        db.rollback()
         raise
     except Exception as e:
         db.rollback()

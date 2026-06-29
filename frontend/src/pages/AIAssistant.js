@@ -100,12 +100,8 @@ export default function AIAssistant() {
       incrementChatCount();
       setMessages((prev) => [...prev, { role: 'assistant', content: response.response }]);
     } catch (err) {
-      toast.error('Could not reach AI coach');
+      toast.error(err.message || 'Could not reach AI coach');
       setInput(inputSnapshotRef.current);
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: 'Sorry, I had trouble connecting. Please try again in a moment! 🙏' },
-      ]);
     } finally {
       setLoading(false);
     }
@@ -191,7 +187,7 @@ export default function AIAssistant() {
         <div ref={bottomRef} />
       </div>
 
-      {messages.length <= 1 && (
+      {false && messages.length <= 1 && (
         <div className="suggestions-container">
           <p className="suggestions-label">💡 Try asking:</p>
           <div className="suggestions-scroll">

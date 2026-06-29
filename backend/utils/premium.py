@@ -3,8 +3,8 @@ from fastapi import HTTPException
 
 UPI_ID = "deepu004.dk-4@okaxis"
 PAYMENT_DETAILS = {
-    "monthly": {"price": 199, "duration_days": 30, "label": "Monthly"},
-    "annual": {"price": 1999, "duration_days": 365, "label": "Annual"},
+    "monthly": {"price": 99, "duration_days": 30, "label": "Monthly"},
+    "annual": {"price": 999, "duration_days": 365, "label": "Annual"},
 }
 
 FREE_LIMITS = {

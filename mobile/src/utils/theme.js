@@ -1,18 +1,18 @@
-// Theme constants replacing CSS variables
+// Theme constants replacing CSS variables. The mobile app defaults to light mode.
 export const colors = {
-  bgPrimary: '#0a0a0f',
-  bgCard: '#13131a',
-  bgElevated: '#1a1a24',
-  border: 'rgba(255,255,255,0.08)',
-  textPrimary: '#f0f0f5',
-  textSecondary: '#9090a8',
-  textMuted: '#5a5a72',
-  accentLime: '#c8f135',
-  accentAmber: '#f5a623',
-  accentBlue: '#4facfe',
-  accentPurple: '#a855f7',
-  accentCoral: '#f87171',
-  textInverse: '#0a0a0f',
+  bgPrimary: '#f7f4ff',
+  bgCard: '#ffffff',
+  bgElevated: '#f0ebfa',
+  border: 'rgba(29,18,48,0.12)',
+  textPrimary: '#1d1230',
+  textSecondary: '#5f5575',
+  textMuted: '#8a819c',
+  accentLime: '#7c3aed',
+  accentAmber: '#b7791f',
+  accentBlue: '#2563eb',
+  accentPurple: '#8b5cf6',
+  accentCoral: '#dc2626',
+  textInverse: '#ffffff',
 };
 
 export const radius = {
@@ -43,7 +43,6 @@ export const typography = {
   body: { fontFamily: 'Inter_400Regular', fontWeight: '400' },
 };
 
-// Shared font size scale — use these instead of raw numbers
 export const fontSize = {
   xs: 11,
   sm: 12,

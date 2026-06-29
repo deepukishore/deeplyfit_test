@@ -124,7 +124,7 @@ const Profile = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [achievements, setAchievements] = useState([]);
   const [showPremium, setShowPremium] = useState(false);
-  const [proActive, setProActive] = useState(isPro());
+  const [proActive, setProActive] = useState(isPro() || user?.premium_status === 'active');
 
   const loadAchievements = useCallback(async () => {
     try {
@@ -138,6 +138,10 @@ const Profile = () => {
     loadAchievements();
   }, [loadAchievements]);
 
+  useEffect(() => {
+    setProActive(isPro() || user?.premium_status === 'active');
+  }, [user?.premium_status]);
+
   useRefreshRegistration(async () => {
     await Promise.all([refreshUser().catch(() => null), loadAchievements()]);
   });
@@ -148,7 +152,10 @@ const Profile = () => {
   const publicLink = `${window.location.origin}/u/${user.public_profile_slug || ''}`;
   const isDark = user.dark_mode === 1 || user.dark_mode === '1' || user.dark_mode === true;
 
-  const handleProActivated = () => setProActive(true);
+  const handleProActivated = (updatedUser) => {
+    setProActive(true);
+    if (updatedUser) updateUser(updatedUser);
+  };
 
   const handleLogout = () => {
     logout();
@@ -181,7 +188,7 @@ const Profile = () => {
         {user.bio && <p style={{ maxWidth: 320, margin: '12px auto 0', color: 'var(--text-secondary)' }}>{user.bio}</p>}
         {!proActive && (
           <button className="btn premium-btn" onClick={() => setShowPremium(true)} style={{ marginTop: 16 }}>
-            💎 Get PRO — ₹199/month
+            Get PRO - Rs 99/month
           </button>
         )}
         {proActive && (

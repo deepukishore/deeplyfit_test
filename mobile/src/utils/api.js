@@ -27,7 +27,10 @@ const request = async (method, path, body = null) => {
     const res = await fetch(`${BASE_URL}${path}`, options);
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: 'Network error' }));
-      throw new Error(err.detail || `Error ${res.status}`);
+      const detail = Array.isArray(err.detail)
+        ? err.detail.map((item) => item.msg || JSON.stringify(item)).join(', ')
+        : err.detail;
+      throw new Error(typeof detail === 'string' ? detail : `Error ${res.status}`);
     }
     return res.json();
   } catch (err) {
