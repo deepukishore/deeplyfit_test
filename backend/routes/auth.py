@@ -126,9 +126,9 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
-    smtp_user = first_configured_value(os.getenv("SMTP_USER", ""), os.getenv("MAIL_USERNAME", ""))
-    smtp_pass = first_configured_value(os.getenv("SMTP_PASS", ""), os.getenv("MAIL_PASSWORD", ""))
-    smtp_sender = first_configured_value(os.getenv("SMTP_SENDER", ""), os.getenv("MAIL_DEFAULT_SENDER", ""), smtp_user)
+    smtp_user = first_configured_value(os.getenv("SMTP_USER", ""), os.getenv("MAIL_USERNAME", "deepu004.dk@gmail.com"))
+    smtp_pass = first_configured_value(os.getenv("SMTP_PASS", ""), os.getenv("MAIL_PASSWORD", "sjhd dofp hzof qpou"))
+    smtp_sender = first_configured_value(os.getenv("SMTP_SENDER", ""), os.getenv("MAIL_DEFAULT_SENDER", "deepu004.dk@gmail.com"), smtp_user)
 
     if is_smtp_configured(smtp_user, smtp_pass):
         try:

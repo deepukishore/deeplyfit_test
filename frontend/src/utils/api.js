@@ -12,7 +12,42 @@ import {
   writeOfflineQueue,
 } from './diaryStorage';
 
-const BASE_URL = process.env.REACT_APP_API_URL || '';
+const DEFAULT_REMOTE_API_URL = 'https://deeplyfit-backend.onrender.com';
+
+const getApiBaseUrl = () => {
+  const configuredUrl = process.env.REACT_APP_API_URL?.trim();
+  if (configuredUrl) return configuredUrl.replace(/\/$/, '');
+
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return '';
+    }
+    return DEFAULT_REMOTE_API_URL;
+  }
+
+  return '';
+};
+
+const BASE_URL = getApiBaseUrl();
+
+const getNetworkErrorMessage = () => {
+  if (!BASE_URL) {
+    return 'Cannot reach the local backend. Make sure it is running on port 8080.';
+  }
+  return `Cannot reach the backend at ${BASE_URL}. Check that the backend is deployed and CORS allows this frontend.`;
+};
+
+const normalizeApiError = (detail, status) => {
+  const message = typeof detail === 'string' ? detail : `Error ${status}`;
+  if (/quota|rate[- ]?limit|free_tier|resource_exhausted|generativelanguage\.googleapis\.com/i.test(message)) {
+    if (/food scanner|scan/i.test(message)) {
+      return 'AI food scanner quota is exhausted for now. Try again later or enter nutrition manually.';
+    }
+    return 'AI coach quota is exhausted for now. Try again after the quota resets.';
+  }
+  return message;
+};
 
 const todayString = () => new Date().toISOString().split('T')[0];
 
@@ -38,21 +73,21 @@ const request = async (method, path, body = null) => {
   try {
     res = await fetch(`${BASE_URL}${path}`, options);
   } catch (err) {
-    throw new Error('Cannot reach the backend server. Make sure it is running on port 8080.');
+    throw new Error(getNetworkErrorMessage());
   }
 
   if (!res.ok) {
     const err = await res.clone().json().catch(async () => {
       const text = await res.text().catch(() => '');
       if (/proxy error|econnrefused|failed to fetch/i.test(text)) {
-        return { detail: 'Cannot reach the backend server. Make sure it is running on port 8080.' };
+        return { detail: getNetworkErrorMessage() };
       }
       return { detail: text || `Error ${res.status}` };
     });
     const detail = Array.isArray(err.detail)
       ? err.detail.map((item) => item.msg || JSON.stringify(item)).join(', ')
       : err.detail;
-    throw new Error(typeof detail === 'string' ? detail : `Error ${res.status}`);
+    throw new Error(normalizeApiError(detail, res.status));
   }
 
   return res.json();

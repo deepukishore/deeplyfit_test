@@ -28,6 +28,16 @@ def _is_model_unavailable_error(exc: Exception) -> bool:
     )
 
 
+def _is_quota_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return (
+        "429" in message
+        or "quota" in message
+        or "rate limit" in message
+        or "resource_exhausted" in message
+    )
+
+
 def _decode_image(image_base64: str) -> bytes:
     if not image_base64 or not str(image_base64).strip():
         raise HTTPException(status_code=400, detail="Food image is required")
@@ -105,9 +115,14 @@ Rules:
                 break
             except Exception as exc:
                 last_error = exc
-                if not _is_model_unavailable_error(exc):
+                if not (_is_model_unavailable_error(exc) or _is_quota_error(exc)):
                     raise
         else:
+            if last_error and _is_quota_error(last_error):
+                raise HTTPException(
+                    status_code=429,
+                    detail="AI food scanner quota is exhausted for now. Try again later or enter nutrition manually.",
+                )
             raise HTTPException(status_code=502, detail=f"AI food scanner failed: {last_error}")
 
         data = json.loads(_clean_json_text(getattr(response, "text", "")))
@@ -134,4 +149,9 @@ Rules:
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=f"AI food scan returned invalid nutrition data: {exc}")
     except Exception as exc:
+        if _is_quota_error(exc):
+            raise HTTPException(
+                status_code=429,
+                detail="AI food scanner quota is exhausted for now. Try again later or enter nutrition manually.",
+            )
         raise HTTPException(status_code=502, detail=f"AI food scanner failed: {exc}")

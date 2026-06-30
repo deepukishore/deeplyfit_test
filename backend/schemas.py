@@ -72,6 +72,11 @@ class PremiumActivationRequest(BaseModel):
     payment_method: str = "upi"
 
 
+class PremiumApprovalRequest(BaseModel):
+    payment_reference: str
+    admin_key: str
+
+
 class UserResponse(BaseModel):
     id: int
     email: str
@@ -102,6 +107,9 @@ class UserResponse(BaseModel):
     premium_activated_at: Optional[datetime] = None
     premium_expires_at: Optional[datetime] = None
     premium_payment_ref: Optional[str] = None
+    premium_pending_plan: Optional[str] = None
+    premium_pending_payment_ref: Optional[str] = None
+    premium_pending_requested_at: Optional[datetime] = None
     free_ai_scans_used: int = 0
     free_ai_scans_reset_on: Optional[date] = None
     free_ai_messages_used: int = 0

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../utils/api';
-import { activatePro } from '../utils/premium';
+import { deactivateLocalPro } from '../utils/premium';
 
 const UPI_ID = 'deepu004.dk-4@okaxis';
 
@@ -45,12 +45,12 @@ const PremiumModal = ({ onClose, onActivated }) => {
         payment_reference: paymentReference,
         payment_method: 'upi',
       });
-      activatePro(plan);
-      toast.success('PRO activated successfully');
+      deactivateLocalPro();
+      toast.success('Payment reference submitted for verification');
       onActivated?.(updatedUser);
       onClose();
     } catch (err) {
-      toast.error(err.message || 'Could not activate PRO');
+      toast.error(err.message || 'Could not submit payment reference');
     } finally {
       setVerifying(false);
     }
@@ -126,7 +126,7 @@ const PremiumModal = ({ onClose, onActivated }) => {
                 <button className="btn btn-secondary btn-sm" onClick={handleCopyUPI}>Copy</button>
               </div>
               <p className="premium-upi-hint">
-                Open any UPI app and send <strong>{selectedPlan.price}</strong> to this UPI ID, then enter your transaction ID.
+                Open any UPI app and send <strong>{selectedPlan.price}</strong> to this UPI ID, then enter your transaction ID for manual verification.
               </p>
             </div>
 
@@ -140,7 +140,7 @@ const PremiumModal = ({ onClose, onActivated }) => {
             </div>
 
             <button className="btn btn-primary btn-full" style={{ marginTop: 16 }} onClick={handleVerify} disabled={verifying}>
-              {verifying ? <><span className="spinner" /> Activating PRO...</> : 'I have paid - Activate PRO'}
+              {verifying ? <><span className="spinner" /> Submitting...</> : 'I have paid - Submit for verification'}
             </button>
             <button className="btn btn-ghost btn-full" style={{ marginTop: 8 }} onClick={() => setStep('plans')}>Back</button>
           </>

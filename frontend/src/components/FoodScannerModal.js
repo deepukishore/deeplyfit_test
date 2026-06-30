@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import { compressImageFile } from '../utils/image';
 import { canScan, incrementScanCount, scansLeft, isPro } from '../utils/premium';
 import PremiumModal from './PremiumModal';
@@ -9,6 +10,7 @@ import '../styles/scanner.css';
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snacks'];
 
 const FoodScannerModal = ({ onClose, onSuccess, defaultMeal = 'breakfast', date }) => {
+  const { user } = useAuth();
   const [mode, setMode] = useState('ai');
   const [imagePreview, setImagePreview] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
@@ -29,6 +31,7 @@ const FoodScannerModal = ({ onClose, onSuccess, defaultMeal = 'breakfast', date 
   const streamRef = useRef(null);
   const rafRef = useRef(null);
   const detectorRef = useRef(null);
+  const premiumActive = isPro(user);
 
   const stopCamera = () => {
     if (rafRef.current) {
@@ -102,7 +105,7 @@ const FoodScannerModal = ({ onClose, onSuccess, defaultMeal = 'breakfast', date 
       toast.error('Please select a food image first');
       return;
     }
-    if (!canScan()) {
+    if (!canScan(premiumActive)) {
       setShowPremium(true);
       return;
     }
@@ -228,12 +231,12 @@ const FoodScannerModal = ({ onClose, onSuccess, defaultMeal = 'breakfast', date 
           <p className="scanner-subtitle">Use AI photos for meals or barcode lookup for packaged foods.</p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-          {!isPro() && (
+          {!premiumActive && (
             <span className="badge badge-amber" style={{ cursor: 'pointer' }} onClick={() => setShowPremium(true)}>
-              {scansLeft()} scan{scansLeft() !== 1 ? 's' : ''} left today
+              {scansLeft(premiumActive)} scan{scansLeft(premiumActive) !== 1 ? 's' : ''} left today
             </span>
           )}
-          {isPro() && <span className="badge badge-pro">💎 PRO</span>}
+          {premiumActive && <span className="badge badge-pro">💎 PRO</span>}
           <button className="scanner-close" onClick={onClose}>x</button>
         </div>
       </div>
@@ -328,7 +331,7 @@ const FoodScannerModal = ({ onClose, onSuccess, defaultMeal = 'breakfast', date 
             <div className="scan-footer">
               {!result ? (
                 <>
-                  {!isPro() && scansLeft() === 0 ? (
+                  {!premiumActive && scansLeft(premiumActive) === 0 ? (
                     <div className="scan-limit-wall">
                       <p className="scan-limit-msg">You've used all your free scans for today.</p>
                       <p className="scan-limit-sub">Upgrade to PRO for unlimited AI food scanning ✨</p>
@@ -336,7 +339,7 @@ const FoodScannerModal = ({ onClose, onSuccess, defaultMeal = 'breakfast', date 
                     </div>
                   ) : (
                     <button className="btn btn-primary btn-full" onClick={handleScan} disabled={!imageBase64 || scanning}>
-                      {scanning ? <><span className="spinner" /> Analyzing...</> : `Scan with AI${!isPro() ? ` (${scansLeft()} left)` : ''}`}
+                      {scanning ? <><span className="spinner" /> Analyzing...</> : `Scan with AI${!premiumActive ? ` (${scansLeft(premiumActive)} left)` : ''}`}
                     </button>
                   )}
                 </>

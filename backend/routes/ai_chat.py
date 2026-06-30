@@ -50,6 +50,54 @@ def is_model_unavailable_error(exc: Exception) -> bool:
     )
 
 
+def is_quota_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return (
+        "429" in message
+        or "quota" in message
+        or "rate limit" in message
+        or "resource_exhausted" in message
+    )
+
+
+def build_quota_fallback_response(user: User, db: Session, message: str) -> str:
+    metrics = get_daily_metrics(user, db)
+    lower_message = message.lower()
+    quota_note = "Gemini is temporarily out of free-tier quota, so I'm using your logged Deeply Fit data for this answer."
+
+    if any(word in lower_message for word in ["breakfast", "recipe", "eat", "meal", "food"]):
+        protein_gap = round(metrics["protein_remaining"])
+        calorie_gap = round(metrics["calories_remaining"])
+        if protein_gap >= 20:
+            suggestion = "Try a protein-heavy breakfast like paneer bhurji with 2 rotis, or Greek yogurt with oats and fruit."
+        elif calorie_gap >= 350:
+            suggestion = "Try oats with banana and milk, or idli with sambar plus a boiled egg or paneer on the side."
+        else:
+            suggestion = "Keep it light: fruit with curd, a small veggie omelette, or sprouts chaat would fit better."
+        return f"{quota_note} You have about {calorie_gap} kcal and {protein_gap}g protein remaining today. {suggestion} Log it in Diary so your targets stay accurate."
+
+    if any(word in lower_message for word in ["protein", "calorie", "macro", "remaining"]):
+        return (
+            f"{quota_note} Today you have logged {round(metrics['calories_consumed'])} kcal, "
+            f"{round(metrics['protein_consumed'])}g protein, {round(metrics['carbs_consumed'])}g carbs, "
+            f"and {round(metrics['fat_consumed'])}g fat. Remaining: {round(metrics['calories_remaining'])} kcal, "
+            f"{round(metrics['protein_remaining'])}g protein, {round(metrics['carbs_remaining'])}g carbs, "
+            f"{round(metrics['fat_remaining'])}g fat."
+        )
+
+    if any(word in lower_message for word in ["workout", "exercise", "train"]):
+        return (
+            f"{quota_note} Based on your goal ({user.fitness_goal or 'general fitness'}), "
+            "do 25-35 minutes today: 5 minutes warm-up, 3 rounds of squats, push-ups, rows, lunges, and planks, then a short walk."
+        )
+
+    return (
+        f"{quota_note} I can still see today's basics: {round(metrics['calories_consumed'])} kcal eaten, "
+        f"{round(metrics['water_glasses'])} glasses of water, and {len(metrics['workouts_today'])} workouts logged. "
+        "Try again after the quota resets, or add billing/upgrade the Gemini quota for continuous AI replies."
+    )
+
+
 def get_daily_metrics(user: User, db: Session) -> dict:
     today = date.today()
 
@@ -236,8 +284,12 @@ Respond as the AI coach using the data above. Be specific, warm, and actionable.
                 raise
             except Exception as exc:
                 last_error = exc
-                if not is_model_unavailable_error(exc):
+                if not (is_model_unavailable_error(exc) or is_quota_error(exc)):
                     break
+
+        if last_error and is_quota_error(last_error):
+            db.commit()
+            return ChatResponse(response=build_quota_fallback_response(current_user, db, request.message))
 
         raise HTTPException(status_code=502, detail=f"AI coach failed: {last_error}")
     except HTTPException:
@@ -245,4 +297,6 @@ Respond as the AI coach using the data above. Be specific, warm, and actionable.
         raise
     except Exception as exc:
         db.rollback()
+        if is_quota_error(exc):
+            raise HTTPException(status_code=429, detail="AI coach quota is exhausted for now. Try again after the quota resets or upgrade the Gemini API plan.")
         raise HTTPException(status_code=502, detail=f"AI coach failed: {exc}")

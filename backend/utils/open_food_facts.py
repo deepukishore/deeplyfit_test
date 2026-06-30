@@ -14,6 +14,17 @@ OPEN_FOOD_FACTS_FIELDS = (
     "quantity,image_front_small_url,nutriments"
 )
 OPEN_FOOD_FACTS_USER_AGENT = "FitTrackAI/1.0 (contact@fittrack.local)"
+LOCAL_FOOD_FALLBACKS = [
+    {"name": "Paneer", "brand": "Local estimate", "calories": 265, "protein": 18.3, "carbs": 1.2, "fat": 20.8, "fiber": 0, "sugar": 1.2, "sodium": 22, "tags": ["paneer", "cottage cheese"]},
+    {"name": "Cooked white rice", "brand": "Local estimate", "calories": 130, "protein": 2.7, "carbs": 28.2, "fat": 0.3, "fiber": 0.4, "sugar": 0.1, "sodium": 1, "tags": ["rice", "white rice", "chawal"]},
+    {"name": "Chapati / Roti", "brand": "Local estimate", "calories": 120, "protein": 3.5, "carbs": 18, "fat": 3.7, "fiber": 3, "sugar": 0.5, "sodium": 120, "tags": ["chapati", "roti", "phulka"]},
+    {"name": "Boiled egg", "brand": "Local estimate", "calories": 78, "protein": 6.3, "carbs": 0.6, "fat": 5.3, "fiber": 0, "sugar": 0.6, "sodium": 62, "tags": ["egg", "boiled egg"]},
+    {"name": "Chicken breast", "brand": "Local estimate", "calories": 165, "protein": 31, "carbs": 0, "fat": 3.6, "fiber": 0, "sugar": 0, "sodium": 74, "tags": ["chicken", "chicken breast"]},
+    {"name": "Dal", "brand": "Local estimate", "calories": 116, "protein": 9, "carbs": 20, "fat": 0.4, "fiber": 7.9, "sugar": 1.8, "sodium": 2, "tags": ["dal", "lentil", "lentils"]},
+    {"name": "Curd / Yogurt", "brand": "Local estimate", "calories": 61, "protein": 3.5, "carbs": 4.7, "fat": 3.3, "fiber": 0, "sugar": 4.7, "sodium": 46, "tags": ["curd", "yogurt", "dahi"]},
+    {"name": "Oats", "brand": "Local estimate", "calories": 389, "protein": 16.9, "carbs": 66.3, "fat": 6.9, "fiber": 10.6, "sugar": 0.9, "sodium": 2, "tags": ["oats", "oatmeal"]},
+    {"name": "Banana", "brand": "Local estimate", "calories": 89, "protein": 1.1, "carbs": 22.8, "fat": 0.3, "fiber": 2.6, "sugar": 12.2, "sodium": 1, "tags": ["banana", "kela"]},
+]
 
 
 def _to_float(value) -> Optional[float]:
@@ -112,6 +123,47 @@ def _normalize_product(product: dict, fallback_name: str) -> dict:
     }
 
 
+def _local_food_results(query_text: str, page: int, page_size: int) -> dict:
+    query_lower = query_text.lower()
+    matches = [
+        item for item in LOCAL_FOOD_FALLBACKS
+        if query_lower in item["name"].lower() or any(query_lower in tag for tag in item["tags"])
+    ]
+    start = (page - 1) * page_size
+    selected = matches[start:start + page_size]
+    return {
+        "query": query_text,
+        "total_results": len(matches),
+        "page": page,
+        "page_size": page_size,
+        "results": [
+            {
+                "code": f"local-{item['name'].lower().replace(' ', '-').replace('/', '-')}",
+                "name": item["name"],
+                "brand": item["brand"],
+                "image_url": None,
+                "quantity_label": "100g estimate",
+                "serving_size": "100g",
+                "nutrition_basis": "per 100g estimate",
+                "calories": item["calories"],
+                "protein": item["protein"],
+                "carbs": item["carbs"],
+                "fat": item["fat"],
+                "fiber": item["fiber"],
+                "sugar": item["sugar"],
+                "sodium": item["sodium"],
+                "vitamin_c": 0,
+                "vitamin_d": 0,
+                "vitamin_b12": 0,
+                "iron": 0,
+                "calcium": 0,
+                "potassium": 0,
+            }
+            for item in selected
+        ],
+    }
+
+
 def fetch_barcode_nutrition(barcode: str) -> dict:
     query = urlencode({"fields": OPEN_FOOD_FACTS_FIELDS})
     url = OPEN_FOOD_FACTS_URL.format(barcode=barcode.strip()) + "?" + query
@@ -173,15 +225,21 @@ def search_foods(query_text: str, page: int = 1, page_size: int = 12) -> dict:
     url = OPEN_FOOD_FACTS_SEARCH_URL + "?" + query
     request = Request(url, headers={"User-Agent": OPEN_FOOD_FACTS_USER_AGENT})
 
+    local_fallback = _local_food_results(query_text, safe_page, safe_page_size)
+
     try:
         with urlopen(request, timeout=12) as response:
             payload = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
+        if local_fallback["results"]:
+            return local_fallback
         if exc.code == 503:
-            raise HTTPException(status_code=503, detail="Open Food Facts search is busy right now. Try again shortly.")
+            raise HTTPException(status_code=503, detail="Open Food Facts search is busy right now. Try again shortly. You can still enter nutrition manually.")
         raise HTTPException(status_code=exc.code, detail="Food search failed")
     except URLError:
-        raise HTTPException(status_code=503, detail="Open Food Facts is unavailable right now")
+        if local_fallback["results"]:
+            return local_fallback
+        raise HTTPException(status_code=503, detail="Open Food Facts is unavailable right now. You can still enter nutrition manually.")
 
     products = payload.get("products") or []
     results = []
@@ -189,6 +247,9 @@ def search_foods(query_text: str, page: int = 1, page_size: int = 12) -> dict:
         normalized = _normalize_product(product, "Open Food Facts item")
         if normalized["name"] and normalized["code"]:
             results.append(normalized)
+
+    if not results and local_fallback["results"]:
+        return local_fallback
 
     return {
         "query": query_text,

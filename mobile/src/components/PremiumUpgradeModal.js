@@ -39,12 +39,12 @@ const PremiumUpgradeModal = ({ visible, onClose, onActivated, currentUser }) => 
         payment_reference: reference,
         payment_method: 'upi',
       });
-      Toast.show({ type: 'success', text1: 'PRO activated successfully' });
+      Toast.show({ type: 'success', text1: 'Payment reference submitted for verification' });
       setPaymentReference('');
       if (onActivated) onActivated(updatedUser);
       onClose();
     } catch (err) {
-      Toast.show({ type: 'error', text1: err.message || 'Could not activate PRO' });
+      Toast.show({ type: 'error', text1: err.message || 'Could not submit payment reference' });
     } finally {
       setLoading(false);
     }
@@ -106,7 +106,7 @@ const PremiumUpgradeModal = ({ visible, onClose, onActivated, currentUser }) => 
               <Text style={s.payBtnText}>Open UPI App to Pay ₹{selectedPlan.price}</Text>
             </TouchableOpacity>
             <Text style={s.noteText}>
-              After payment, enter your UTR or transaction reference below. Your {selectedPlan.durationLabel.toLowerCase()} subscription starts from activation.
+              After payment, enter your UTR or transaction reference below. PRO starts only after manual verification.
             </Text>
           </View>
 
@@ -120,7 +120,7 @@ const PremiumUpgradeModal = ({ visible, onClose, onActivated, currentUser }) => 
               onChangeText={setPaymentReference}
             />
             <TouchableOpacity style={[s.activateBtn, loading && s.disabled]} onPress={handleActivate} disabled={loading}>
-              {loading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.activateBtnText}>I’ve paid, activate PRO</Text>}
+              {loading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.activateBtnText}>I’ve paid, submit for verification</Text>}
             </TouchableOpacity>
           </View>
 

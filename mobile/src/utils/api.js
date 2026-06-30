@@ -11,6 +11,17 @@ const BASE_URL = getApiBaseUrl();
 
 const todayString = () => new Date().toISOString().split('T')[0];
 
+const normalizeApiError = (detail, status) => {
+  const message = typeof detail === 'string' ? detail : `Error ${status}`;
+  if (/quota|rate[- ]?limit|free_tier|resource_exhausted|generativelanguage\.googleapis\.com/i.test(message)) {
+    if (/food scanner|scan/i.test(message)) {
+      return 'AI food scanner quota is exhausted for now. Try again later or enter nutrition manually.';
+    }
+    return 'AI coach quota is exhausted for now. Try again after the quota resets.';
+  }
+  return message;
+};
+
 const getHeaders = async () => {
   const token = await getToken();
   return {
@@ -30,7 +41,7 @@ const request = async (method, path, body = null) => {
       const detail = Array.isArray(err.detail)
         ? err.detail.map((item) => item.msg || JSON.stringify(item)).join(', ')
         : err.detail;
-      throw new Error(typeof detail === 'string' ? detail : `Error ${res.status}`);
+      throw new Error(normalizeApiError(detail, res.status));
     }
     return res.json();
   } catch (err) {

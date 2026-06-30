@@ -29,6 +29,9 @@ def ensure_user_premium_columns():
         "premium_activated_at": "ALTER TABLE users ADD COLUMN premium_activated_at DATETIME NULL",
         "premium_expires_at": "ALTER TABLE users ADD COLUMN premium_expires_at DATETIME NULL",
         "premium_payment_ref": "ALTER TABLE users ADD COLUMN premium_payment_ref VARCHAR(120) NULL",
+        "premium_pending_plan": "ALTER TABLE users ADD COLUMN premium_pending_plan VARCHAR(20) NULL",
+        "premium_pending_payment_ref": "ALTER TABLE users ADD COLUMN premium_pending_payment_ref VARCHAR(120) NULL",
+        "premium_pending_requested_at": "ALTER TABLE users ADD COLUMN premium_pending_requested_at DATETIME NULL",
         "free_ai_scans_used": "ALTER TABLE users ADD COLUMN free_ai_scans_used INTEGER DEFAULT 0",
         "free_ai_scans_reset_on": "ALTER TABLE users ADD COLUMN free_ai_scans_reset_on DATE NULL",
         "free_ai_messages_used": "ALTER TABLE users ADD COLUMN free_ai_messages_used INTEGER DEFAULT 0",
@@ -60,7 +63,10 @@ app = FastAPI(title="Deeply Fit API", version="1.0.0")
 
 
 def get_cors_origins():
-    origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+    origins = os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000,https://deeplyfit.vercel.app",
+    )
     return [origin.strip() for origin in origins.split(",") if origin.strip()]
 
 

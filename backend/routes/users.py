@@ -1,8 +1,11 @@
+import os
+import re
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, FoodLog, WaterLog, WeightLog, Workout, CommunityPost
-from schemas import OnboardingData, PublicProfileResponse, UserUpdate, UserResponse, AllergenUpdate, PremiumActivationRequest
+from schemas import OnboardingData, PublicProfileResponse, UserUpdate, UserResponse, AllergenUpdate, PremiumActivationRequest, PremiumApprovalRequest
 from routes.auth import get_current_user
 from utils.achievements import build_achievements
 from utils.community import serialize_post
@@ -12,6 +15,29 @@ from utils.premium import PAYMENT_DETAILS, get_subscription_status, is_premium_a
 from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+PAYMENT_REFERENCE_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{7,63}$")
+
+
+def normalize_payment_reference(value: str) -> str:
+    reference = (value or "").strip()
+    if not PAYMENT_REFERENCE_PATTERN.fullmatch(reference):
+        raise HTTPException(
+            status_code=400,
+            detail="Enter a valid UPI transaction reference or UTR, 8-64 characters.",
+        )
+    return reference
+
+
+def ensure_payment_reference_is_unused(db: Session, reference: str, current_user_id: int | None = None):
+    existing_user = db.query(User).filter(
+        or_(
+            User.premium_payment_ref == reference,
+            User.premium_pending_payment_ref == reference,
+        )
+    ).first()
+    if existing_user and existing_user.id != current_user_id:
+        raise HTTPException(status_code=409, detail="This payment reference was already submitted")
 
 
 @router.post("/premium/activate", response_model=UserResponse)
@@ -23,22 +49,60 @@ def activate_premium(
     plan = data.plan.lower()
     if plan not in PAYMENT_DETAILS:
         raise HTTPException(status_code=400, detail="Invalid premium plan")
-    if not data.payment_reference.strip():
-        raise HTTPException(status_code=400, detail="Payment reference is required")
+    payment_reference = normalize_payment_reference(data.payment_reference)
+    ensure_payment_reference_is_unused(db, payment_reference, current_user.id)
 
     try:
         now = datetime.utcnow()
-        current_expires = current_user.premium_expires_at if is_premium_active(current_user) else None
-        base_time = current_expires if current_expires and current_expires > now else now
-        extension_days = PAYMENT_DETAILS[plan]["duration_days"]
-        current_user.premium_status = "active"
-        current_user.premium_plan = plan
-        current_user.premium_activated_at = now
-        current_user.premium_expires_at = base_time + timedelta(days=extension_days)
-        current_user.premium_payment_ref = data.payment_reference.strip()
+        if not is_premium_active(current_user):
+            current_user.premium_status = "pending"
+        current_user.premium_pending_plan = plan
+        current_user.premium_pending_payment_ref = payment_reference
+        current_user.premium_pending_requested_at = now
         db.commit()
         db.refresh(current_user)
         return current_user
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/premium/approve", response_model=UserResponse)
+def approve_premium_payment(
+    data: PremiumApprovalRequest,
+    db: Session = Depends(get_db),
+):
+    admin_key = os.getenv("PREMIUM_ADMIN_KEY", "").strip()
+    if not admin_key:
+        raise HTTPException(status_code=503, detail="Premium approval is not configured")
+    if data.admin_key != admin_key:
+        raise HTTPException(status_code=403, detail="Invalid premium admin key")
+
+    payment_reference = normalize_payment_reference(data.payment_reference)
+    user = db.query(User).filter(User.premium_pending_payment_ref == payment_reference).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Pending payment reference not found")
+
+    plan = (user.premium_pending_plan or "").lower()
+    if plan not in PAYMENT_DETAILS:
+        raise HTTPException(status_code=400, detail="Pending payment has an invalid plan")
+
+    try:
+        now = datetime.utcnow()
+        current_expires = user.premium_expires_at if is_premium_active(user) else None
+        base_time = current_expires if current_expires and current_expires > now else now
+        extension_days = PAYMENT_DETAILS[plan]["duration_days"]
+        user.premium_status = "active"
+        user.premium_plan = plan
+        user.premium_activated_at = now
+        user.premium_expires_at = base_time + timedelta(days=extension_days)
+        user.premium_payment_ref = payment_reference
+        user.premium_pending_plan = None
+        user.premium_pending_payment_ref = None
+        user.premium_pending_requested_at = None
+        db.commit()
+        db.refresh(user)
+        return user
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -52,6 +116,9 @@ def premium_status(current_user: User = Depends(get_current_user)):
         "plan": current_user.premium_plan,
         "activated_at": current_user.premium_activated_at,
         "expires_at": current_user.premium_expires_at,
+        "pending_plan": current_user.premium_pending_plan,
+        "pending_payment_ref": current_user.premium_pending_payment_ref,
+        "pending_requested_at": current_user.premium_pending_requested_at,
         "upi_id": "deepu004.dk-4@okaxis",
         "plans": {
             key: {"price": value["price"], "duration_days": value["duration_days"], "label": value["label"]}

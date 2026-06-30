@@ -185,6 +185,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_gmail@gmail.com
 SMTP_PASS=your_gmail_app_password
+PREMIUM_ADMIN_KEY=choose_a_private_admin_key
 ```
 
 > **Get a free Gemini API key:** https://makersuite.google.com/app/apikey
@@ -424,7 +425,8 @@ Supported allergens: `gluten`, `lactose`, `nuts`, `peanuts`, `eggs`, `soy`, `she
 
 - Pay via UPI to: **deepu004.dk-4@okaxis**
 - Open GPay / PhonePe / Paytm → send the amount → copy the transaction ID
-- Enter the transaction ID in the app → PRO activates instantly
+- Enter the transaction ID in the app → request goes to pending verification
+- Approve verified payments with `POST /users/premium/approve` using `PREMIUM_ADMIN_KEY`
 
 ### PRO Features
 
@@ -450,7 +452,7 @@ Supported allergens: `gluten`, `lactose`, `nuts`, `peanuts`, `eggs`, `soy`, `she
 
 | File                                            | Purpose                                    |
 | ----------------------------------------------- | ------------------------------------------ |
-| `frontend/src/utils/premium.js`               | isPro(), scan/chat counters, activatePro() |
+| `frontend/src/utils/premium.js`               | isPro(), scan/chat counters, local cleanup helpers |
 | `frontend/src/components/PremiumModal.js`     | Plan selection + UPI payment flow          |
 | `frontend/src/pages/Profile.js`               | Get PRO button, PRO badge, gold avatar     |
 | `frontend/src/components/FoodScannerModal.js` | 3-scan/day gate                            |
@@ -468,7 +470,7 @@ Supported allergens: `gluten`, `lactose`, `nuts`, `peanuts`, `eggs`, `soy`, `she
 | Gemini AI is unavailable          | Add a valid `GEMINI_API_KEY` and use `GEMINI_MODEL=gemini-2.5-flash` in `.env` |
 | Mobile app can't connect          | Set`EXPO_PUBLIC_API_URL` to your backend URL, e.g. `http://192.168.1.10:8080` |
 | `migrate.py` fails              | Ensure the`fittrack` database exists in MySQL first                             |
-| PRO not activating                | Ensure you entered the correct UPI transaction ID                                 |
+| PRO not activating                | Verify the payment manually and approve it with `POST /users/premium/approve`    |
 
 ---
 

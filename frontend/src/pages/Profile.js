@@ -124,7 +124,7 @@ const Profile = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [achievements, setAchievements] = useState([]);
   const [showPremium, setShowPremium] = useState(false);
-  const [proActive, setProActive] = useState(isPro() || user?.premium_status === 'active');
+  const [proActive, setProActive] = useState(isPro(user));
 
   const loadAchievements = useCallback(async () => {
     try {
@@ -139,8 +139,8 @@ const Profile = () => {
   }, [loadAchievements]);
 
   useEffect(() => {
-    setProActive(isPro() || user?.premium_status === 'active');
-  }, [user?.premium_status]);
+    setProActive(isPro(user));
+  }, [user]);
 
   useRefreshRegistration(async () => {
     await Promise.all([refreshUser().catch(() => null), loadAchievements()]);
@@ -153,7 +153,7 @@ const Profile = () => {
   const isDark = user.dark_mode === 1 || user.dark_mode === '1' || user.dark_mode === true;
 
   const handleProActivated = (updatedUser) => {
-    setProActive(true);
+    setProActive(isPro(updatedUser));
     if (updatedUser) updateUser(updatedUser);
   };
 
@@ -190,6 +190,12 @@ const Profile = () => {
           <button className="btn premium-btn" onClick={() => setShowPremium(true)} style={{ marginTop: 16 }}>
             Get PRO - Rs 99/month
           </button>
+        )}
+        {!proActive && user.premium_status === 'pending' && (
+          <div className="pro-active-banner">
+            <span>Payment verification pending</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>PRO will unlock after your payment is approved</span>
+          </div>
         )}
         {proActive && (
           <div className="pro-active-banner">

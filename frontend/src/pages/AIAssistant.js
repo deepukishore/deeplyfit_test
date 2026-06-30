@@ -63,6 +63,7 @@ export default function AIAssistant() {
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
   const inputSnapshotRef = useRef('');
+  const premiumActive = isPro(user);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -79,7 +80,7 @@ export default function AIAssistant() {
     const userMessage = text || input.trim();
     if (!userMessage || loading) return;
 
-    if (!canChat()) {
+    if (!canChat(premiumActive)) {
       setShowPremium(true);
       return;
     }
@@ -154,12 +155,12 @@ export default function AIAssistant() {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {!isPro() && (
+          {!premiumActive && (
             <span className="badge badge-amber" style={{ cursor: 'pointer' }} onClick={() => setShowPremium(true)}>
-              {chatsLeft()} msg{chatsLeft() !== 1 ? 's' : ''} left
+              {chatsLeft(premiumActive)} msg{chatsLeft(premiumActive) !== 1 ? 's' : ''} left
             </span>
           )}
-          {isPro() && <span className="badge badge-pro">💎 PRO</span>}
+          {premiumActive && <span className="badge badge-pro">💎 PRO</span>}
           <button className="btn btn-ghost btn-sm" onClick={clearChat}>
             Clear
           </button>
@@ -201,7 +202,7 @@ export default function AIAssistant() {
       )}
 
       <div className="chat-input-container">
-        {!isPro() && chatsLeft() === 0 ? (
+        {!premiumActive && chatsLeft(premiumActive) === 0 ? (
           <div className="chat-limit-wall">
             <p className="scan-limit-msg">You've used all 10 free messages for today.</p>
             <p className="scan-limit-sub">Upgrade to PRO for unlimited AI coaching ✨</p>
@@ -214,7 +215,7 @@ export default function AIAssistant() {
             <textarea
               ref={textareaRef}
               className="chat-input"
-              placeholder={isPro() ? 'Ask your AI coach anything...' : `Ask your AI coach anything... (${chatsLeft()} left today)`}
+              placeholder={premiumActive ? 'Ask your AI coach anything...' : `Ask your AI coach anything... (${chatsLeft(premiumActive)} left today)`}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}

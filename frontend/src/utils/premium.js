@@ -2,7 +2,11 @@
 
 const TODAY = () => new Date().toISOString().split('T')[0];
 
-export const isPro = () => localStorage.getItem('deeply_fit_pro') === 'true';
+export const isPro = (user = null) => {
+  if (!user || user.premium_status !== 'active') return false;
+  if (!user.premium_expires_at) return true;
+  return new Date(user.premium_expires_at) > new Date();
+};
 
 // --- scan counter ---
 const SCAN_KEY = 'deeply_fit_scans';
@@ -21,8 +25,8 @@ export const incrementScanCount = () => {
   return count;
 };
 
-export const canScan = () => isPro() || getScanCount() < FREE_SCAN_LIMIT;
-export const scansLeft = () => isPro() ? Infinity : Math.max(0, FREE_SCAN_LIMIT - getScanCount());
+export const canScan = (premiumActive = false) => premiumActive || getScanCount() < FREE_SCAN_LIMIT;
+export const scansLeft = (premiumActive = false) => premiumActive ? Infinity : Math.max(0, FREE_SCAN_LIMIT - getScanCount());
 
 // --- AI chat counter ---
 const CHAT_KEY = 'deeply_fit_chats';
@@ -41,15 +45,8 @@ export const incrementChatCount = () => {
   return count;
 };
 
-export const canChat = () => isPro() || getChatCount() < FREE_CHAT_LIMIT;
-export const chatsLeft = () => isPro() ? Infinity : Math.max(0, FREE_CHAT_LIMIT - getChatCount());
-
-// --- activate pro (called after payment confirmation) ---
-export const activatePro = (plan) => {
-  localStorage.setItem('deeply_fit_pro', 'true');
-  localStorage.setItem('deeply_fit_pro_plan', plan);
-  localStorage.setItem('deeply_fit_pro_since', TODAY());
-};
+export const canChat = (premiumActive = false) => premiumActive || getChatCount() < FREE_CHAT_LIMIT;
+export const chatsLeft = (premiumActive = false) => premiumActive ? Infinity : Math.max(0, FREE_CHAT_LIMIT - getChatCount());
 
 export const deactivateLocalPro = () => {
   localStorage.removeItem('deeply_fit_pro');
