@@ -23,15 +23,16 @@ def ensure_user_premium_columns():
         return
 
     existing_columns = {column["name"] for column in inspector.get_columns("users")}
+    datetime_type = "TIMESTAMP" if engine.dialect.name == "postgresql" else "DATETIME"
     column_statements = {
         "premium_status": "ALTER TABLE users ADD COLUMN premium_status VARCHAR(20) DEFAULT 'free'",
         "premium_plan": "ALTER TABLE users ADD COLUMN premium_plan VARCHAR(20) NULL",
-        "premium_activated_at": "ALTER TABLE users ADD COLUMN premium_activated_at DATETIME NULL",
-        "premium_expires_at": "ALTER TABLE users ADD COLUMN premium_expires_at DATETIME NULL",
+        "premium_activated_at": f"ALTER TABLE users ADD COLUMN premium_activated_at {datetime_type} NULL",
+        "premium_expires_at": f"ALTER TABLE users ADD COLUMN premium_expires_at {datetime_type} NULL",
         "premium_payment_ref": "ALTER TABLE users ADD COLUMN premium_payment_ref VARCHAR(120) NULL",
         "premium_pending_plan": "ALTER TABLE users ADD COLUMN premium_pending_plan VARCHAR(20) NULL",
         "premium_pending_payment_ref": "ALTER TABLE users ADD COLUMN premium_pending_payment_ref VARCHAR(120) NULL",
-        "premium_pending_requested_at": "ALTER TABLE users ADD COLUMN premium_pending_requested_at DATETIME NULL",
+        "premium_pending_requested_at": f"ALTER TABLE users ADD COLUMN premium_pending_requested_at {datetime_type} NULL",
         "free_ai_scans_used": "ALTER TABLE users ADD COLUMN free_ai_scans_used INTEGER DEFAULT 0",
         "free_ai_scans_reset_on": "ALTER TABLE users ADD COLUMN free_ai_scans_reset_on DATE NULL",
         "free_ai_messages_used": "ALTER TABLE users ADD COLUMN free_ai_messages_used INTEGER DEFAULT 0",
