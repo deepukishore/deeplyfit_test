@@ -176,9 +176,12 @@ const buildLogPayload = (form, meal, date) => ({
 
 const FoodSearchBox = ({ onSelect, compact = false }) => {
   const [query, setQuery] = useState('');
+  const [quantity, setQuantity] = useState('1');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
+
+  const selectedQuantity = Math.max(parseFloat(quantity) || 1, 0.1);
 
   const handleSearch = async () => {
     const cleaned = query.trim();
@@ -205,12 +208,23 @@ const FoodSearchBox = ({ onSelect, compact = false }) => {
       <div className="food-search-head">
         <div>
           <p className="food-search-title">Search 500,000+ foods</p>
-          <p className="food-search-copy">Search Open Food Facts and tap a result to fill nutrition instantly.</p>
+          <p className="food-search-copy">Choose a quantity, then tap a result to log it instantly.</p>
         </div>
         {!compact && <span className="badge badge-blue">No camera needed</span>}
       </div>
       <div className="food-search-row">
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try: yogurt, oats, chicken breast" />
+        <input
+          type="number"
+          value={quantity}
+          min="0.1"
+          step="0.5"
+          onChange={(event) => setQuantity(event.target.value)}
+          aria-label="Quantity"
+          title="Quantity"
+          placeholder="Qty"
+          style={{ maxWidth: 92 }}
+        />
         <button className="btn btn-secondary btn-sm" onClick={handleSearch} disabled={searching}>
           {searching ? 'Searching...' : 'Search'}
         </button>
@@ -218,12 +232,12 @@ const FoodSearchBox = ({ onSelect, compact = false }) => {
       {results.length > 0 && (
         <div className="food-search-results">
           {results.slice(0, compact ? 4 : 6).map((result) => (
-            <button key={`${result.code}-${result.name}`} className="food-search-result" onClick={() => onSelect(result)}>
+            <button key={`${result.code}-${result.name}`} className="food-search-result" onClick={() => onSelect(result, selectedQuantity)}>
               <div style={{ flex: 1, textAlign: 'left' }}>
                 <p className="food-search-result-name">{result.name}</p>
                 <p className="food-search-result-meta">{result.brand || 'Open Food Facts'} · {result.nutrition_basis}</p>
               </div>
-              <span className="badge badge-amber">{Math.round(result.calories || 0)} kcal</span>
+              <span className="badge badge-amber">{Math.round((result.calories || 0) * selectedQuantity)} kcal</span>
             </button>
           ))}
         </div>
@@ -417,6 +431,27 @@ const AddFoodModal = ({ meal, date, onClose, onSave }) => {
   const [loading, setLoading] = useState(false);
   const [showMicros, setShowMicros] = useState(false);
 
+  const handleSearchLog = async (result, quantity) => {
+    const searchedForm = {
+      ...fillFoodForm(result),
+      quantity: String(quantity),
+    };
+
+    setForm(searchedForm);
+    setShowMicros(true);
+    setLoading(true);
+    try {
+      await api.logFood(buildLogPayload(searchedForm, meal, date));
+      toast.success(navigator.onLine ? `${result.name} logged` : 'Saved offline and queued');
+      await onSave();
+      onClose();
+    } catch (err) {
+      toast.error(err.message || 'Could not save food');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!form.food_name || !form.calories) {
       toast.error('Food name and calories are required');
@@ -442,7 +477,7 @@ const AddFoodModal = ({ meal, date, onClose, onSave }) => {
         <div className="modal-handle" />
         <h3 className="modal-title">{getMealIcon(meal)} Add to {meal.charAt(0).toUpperCase() + meal.slice(1)}</h3>
         <div className="modal-form">
-          <FoodSearchBox onSelect={(result) => { setForm(fillFoodForm(result)); setShowMicros(true); toast.success('Filled from Open Food Facts'); }} />
+          <FoodSearchBox onSelect={handleSearchLog} />
           <div className="input-group">
             <label>Food Name</label>
             <input value={form.food_name} onChange={(event) => setForm((current) => ({ ...current, food_name: event.target.value }))} placeholder="Example: Greek yogurt" autoFocus />
@@ -565,7 +600,10 @@ const RecipeBuilderModal = ({ onClose, onSaved }) => {
             <input type="number" value={servings} onChange={(event) => setServings(event.target.value)} min="1" step="1" />
           </div>
 
-          <FoodSearchBox onSelect={(result) => { setIngredientForm(fillFoodForm(result)); toast.success('Ingredient filled from search'); }} compact />
+          <FoodSearchBox onSelect={(result, quantity) => {
+            setIngredientForm({ ...fillFoodForm(result), quantity: String(quantity) });
+            toast.success('Ingredient filled from search');
+          }} compact />
 
           <div className="planner-grid">
             <div className="input-group">

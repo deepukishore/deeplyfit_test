@@ -746,7 +746,7 @@
 
 .food-search-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) 92px auto;
   gap: 10px;
   margin-bottom: 12px;
 }
@@ -1750,7 +1750,7 @@
   }
 
   .food-search-row {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) 76px auto;
   }
 
   .profile-header {
