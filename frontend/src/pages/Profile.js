@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { ChevronRight, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
@@ -237,6 +238,13 @@ const Profile = () => {
             </div>
             <div className={`toggle ${isDark ? 'on' : ''}`}><div className="toggle-thumb" /></div>
           </div>
+          <button className="settings-item settings-item-button" type="button" onClick={() => navigate('/about')}>
+            <div className="settings-item-left">
+              <div className="settings-item-icon"><Info size={18} /></div>
+              <span className="settings-item-label">About Deeply Fit</span>
+            </div>
+            <ChevronRight size={18} className="settings-chevron" />
+          </button>
         </div>
 
         <div className="settings-section animate-slide-up" style={{ marginBottom: 16, padding: 16 }}>

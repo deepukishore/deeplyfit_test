@@ -9,6 +9,7 @@ const initializeTheme = () => {
 
     document.documentElement.classList.toggle('light', useLightTheme);
     document.documentElement.style.colorScheme = useLightTheme ? 'light' : 'dark';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', useLightTheme ? '#f6f2ff' : '#0a0a0f');
   } catch (err) {
     // Ignore storage or media query errors and fall back to the CSS default.
   }

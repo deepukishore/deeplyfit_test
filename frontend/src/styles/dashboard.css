@@ -32,7 +32,7 @@
   font-family: var(--font-display);
   font-size: 20px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .header-avatar {
@@ -127,7 +127,7 @@
   font-size: 46px;
   font-weight: 800;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   color: var(--accent-lime);
   animation: countUp 0.5s ease forwards;
 }
@@ -814,7 +814,7 @@
   font-family: var(--font-display);
   font-size: 24px;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   color: var(--accent-lime);
   margin-bottom: 4px;
 }
@@ -1017,6 +1017,25 @@
 .settings-item-value {
   font-size: 14px;
   color: var(--text-muted);
+}
+
+.settings-item-button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+}
+
+.settings-chevron {
+  color: var(--text-muted);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.settings-item-button:hover .settings-chevron {
+  color: var(--accent-lime);
+  transform: translateX(3px);
 }
 
 .achievement-grid {

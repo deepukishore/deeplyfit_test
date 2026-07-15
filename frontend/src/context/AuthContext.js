@@ -14,6 +14,7 @@ const applyTheme = (darkMode) => {
   const isDark = isDarkModeEnabled(darkMode);
   document.documentElement.classList.toggle('light', !isDark);
   document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? '#0a0a0f' : '#f6f2ff');
 
   if (typeof window !== 'undefined' && window.localStorage) {
     window.localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light');

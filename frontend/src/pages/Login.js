@@ -145,6 +145,7 @@ const Login = () => {
         <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 12, marginTop: 24 }}>
           By continuing, you agree to our Terms & Privacy Policy
         </p>
+        <p className="auth-about-link"><Link to="/about">About Deeply Fit</Link></p>
       </div>
     </div>
   );

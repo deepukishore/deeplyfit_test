@@ -1,4 +1,3 @@
-
 # ⚡ Deeply Fit
 
 > Your intelligent fitness companion — built with React, FastAPI, MySQL & Gemini AI
@@ -450,27 +449,27 @@ Supported allergens: `gluten`, `lactose`, `nuts`, `peanuts`, `eggs`, `soy`, `she
 
 ### Implementation Files
 
-| File                                            | Purpose                                    |
-| ----------------------------------------------- | ------------------------------------------ |
+| File                                            | Purpose                                            |
+| ----------------------------------------------- | -------------------------------------------------- |
 | `frontend/src/utils/premium.js`               | isPro(), scan/chat counters, local cleanup helpers |
-| `frontend/src/components/PremiumModal.js`     | Plan selection + UPI payment flow          |
-| `frontend/src/pages/Profile.js`               | Get PRO button, PRO badge, gold avatar     |
-| `frontend/src/components/FoodScannerModal.js` | 3-scan/day gate                            |
-| `frontend/src/pages/AIAssistant.js`           | 10-message/day gate                        |
+| `frontend/src/components/PremiumModal.js`     | Plan selection + UPI payment flow                  |
+| `frontend/src/pages/Profile.js`               | Get PRO button, PRO badge, gold avatar             |
+| `frontend/src/components/FoodScannerModal.js` | 3-scan/day gate                                    |
+| `frontend/src/pages/AIAssistant.js`           | 10-message/day gate                                |
 
 ---
 
 ## 🐛 Troubleshooting
 
-| Problem                           | Fix                                                                               |
-| --------------------------------- | --------------------------------------------------------------------------------- |
-| `Access denied for user 'root'` | Check`DATABASE_URL` password in `.env`                                        |
-| `ModuleNotFoundError`           | Run`pip install -r requirements.txt` again                                      |
-| Frontend can't reach backend      | Ensure backend is running on port`8080`                                         |
-| Gemini AI is unavailable          | Add a valid `GEMINI_API_KEY` and use `GEMINI_MODEL=gemini-2.5-flash` in `.env` |
-| Mobile app can't connect          | Set`EXPO_PUBLIC_API_URL` to your backend URL, e.g. `http://192.168.1.10:8080` |
-| `migrate.py` fails              | Ensure the`fittrack` database exists in MySQL first                             |
-| PRO not activating                | Verify the payment manually and approve it with `POST /users/premium/approve`    |
+| Problem                           | Fix                                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------------------- |
+| `Access denied for user 'root'` | Check`DATABASE_URL` password in `.env`                                          |
+| `ModuleNotFoundError`           | Run`pip install -r requirements.txt` again                                        |
+| Frontend can't reach backend      | Ensure backend is running on port`8080`                                           |
+| Gemini AI is unavailable          | Add a valid`GEMINI_API_KEY` and use `GEMINI_MODEL=gemini-2.5-flash` in `.env` |
+| Mobile app can't connect          | Set`EXPO_PUBLIC_API_URL` to your backend URL, e.g. `http://192.168.1.10:8080`   |
+| `migrate.py` fails              | Ensure the`fittrack` database exists in MySQL first                               |
+| PRO not activating                | Verify the payment manually and approve it with`POST /users/premium/approve`      |
 
 ---
 

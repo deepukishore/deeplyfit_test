@@ -6,6 +6,7 @@ import { NetworkProvider } from './context/NetworkContext';
 import { RefreshProvider } from './context/RefreshContext';
 
 import BottomNav from './components/BottomNav';
+import AmbientScene from './components/AmbientScene';
 import OfflineBanner from './components/OfflineBanner';
 import PullToRefreshShell from './components/PullToRefreshShell';
 
@@ -23,6 +24,7 @@ const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const AIAssistant = lazy(() => import('./pages/AIAssistant'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const About = lazy(() => import('./pages/About'));
 
 const RouteSkeleton = () => (
   <div className="page-content route-skeleton">
@@ -158,6 +160,10 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/about"
+          element={user ? <AppLayout><About /></AppLayout> : <About />}
+        />
         <Route path="/u/:slug" element={<div className="app-container"><PublicProfile /></div>} />
         <Route path="/" element={<Navigate to={user ? (user.onboarding_complete ? '/home' : '/onboarding') : '/login'} replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -169,6 +175,7 @@ const AppRoutes = () => {
 const App = () => {
   return (
     <BrowserRouter>
+      <AmbientScene />
       <AuthProvider>
         <NetworkProvider>
           <AppRoutes />

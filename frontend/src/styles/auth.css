@@ -14,10 +14,7 @@
 .auth-bg {
   position: fixed;
   inset: 0;
-  background:
-    radial-gradient(ellipse at 20% 20%, rgba(var(--accent-primary-rgb), 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 80%, rgba(var(--accent-secondary-rgb), 0.08) 0%, transparent 60%),
-    var(--bg-primary);
+  background: rgba(var(--accent-primary-rgb), 0.025);
   z-index: 0;
 }
 
@@ -52,7 +49,7 @@
   font-size: 24px;
   font-weight: 800;
   color: var(--text-primary);
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .auth-logo p {
@@ -67,6 +64,12 @@
   border-radius: var(--radius-xl);
   padding: var(--space-xl);
   box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+.light .auth-card {
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .auth-card h2 {
@@ -131,6 +134,21 @@
 .auth-switch button:hover {
   color: var(--accent-lime-dim);
   text-decoration: underline;
+}
+
+.auth-about-link {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.auth-about-link a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.auth-about-link a:hover {
+  color: var(--accent-lime);
 }
 
 /* Onboarding */
@@ -429,7 +447,7 @@
 .onboarding-title {
   font-size: 22px;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   margin-bottom: 8px;
 }
 
