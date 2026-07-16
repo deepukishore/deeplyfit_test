@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
+import { createEmptySummary, getCachedDiaryDate } from '../utils/diaryStorage';
 import { addDays, formatDate, formatDisplayDate, getMealIcon } from '../utils/fitness';
 import FoodScannerModal from '../components/FoodScannerModal';
 import '../styles/dashboard.css';
@@ -916,9 +917,11 @@ const MealSection = ({ meal, items, onAdd, onScan, onDelete, onFavorite, onSaveT
 
 const Diary = () => {
   const [date, setDate] = useState(formatDate(new Date()));
-  const [items, setItems] = useState([]);
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState(() => getCachedDiaryDate(formatDate(new Date())).logs || []);
+  const [summary, setSummary] = useState(() => (
+    getCachedDiaryDate(formatDate(new Date())).summary || createEmptySummary(formatDate(new Date()))
+  ));
+  const [loading, setLoading] = useState(false);
   const [addModal, setAddModal] = useState(null);
   const [scanModal, setScanModal] = useState(null);
   const [templates, setTemplates] = useState([]);
@@ -931,7 +934,7 @@ const Diary = () => {
   const [showMealPlanner, setShowMealPlanner] = useState(false);
   const [weekStart, setWeekStart] = useState(startOfWeek(formatDate(new Date())));
   const [mealPlan, setMealPlan] = useState(null);
-  const [mealPlanLoading, setMealPlanLoading] = useState(true);
+  const [mealPlanLoading, setMealPlanLoading] = useState(false);
   const swipeStartRef = useRef(null);
   const swipeModeRef = useRef('idle');
 
@@ -947,7 +950,10 @@ const Diary = () => {
   }, []);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
+    const cached = getCachedDiaryDate(date);
+    setItems(cached.logs || []);
+    setSummary(cached.summary || createEmptySummary(date));
+    setLoading(false);
     try {
       const [logs, dailySummary] = await Promise.all([api.getFoodLogs(date), api.getDailySummary(date)]);
       setItems(logs);
@@ -960,7 +966,6 @@ const Diary = () => {
   }, [date]);
 
   const loadMealPlan = useCallback(async () => {
-    setMealPlanLoading(true);
     try {
       setMealPlan(await api.getWeeklyMealPlan(weekStart));
     } catch (err) {

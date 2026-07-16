@@ -41,17 +41,17 @@ const CAPABILITIES = [
 const TEAM = [
   {
     name: 'Deepthi',
-    role: 'Founder',
-    focus: 'Vision, product, and fitness intelligence',
+    role: 'Co-Founder & CEO',
+    focus: 'Owns the vision',
     initials: 'D',
-    copy: 'The founder shaped Deeply Fit around a simple idea: useful fitness technology should understand real routines, make daily tracking easier, and help people act on their own data with confidence.',
+    copy: 'Deepthi leads the product vision for Deeply Fit, shaping how intelligent fitness guidance can make daily tracking clearer, more personal, and easier to act on.',
   },
   {
     name: 'Deepu Kishore',
-    role: 'Co-founder',
-    focus: 'Experience, community, and platform',
+    role: 'Co-Founder & CTO',
+    focus: 'Owns the technology',
     initials: 'DK',
-    copy: 'The co-founder helps turn that vision into a dependable experience, connecting thoughtful design, practical tools, and a community layer that keeps progress human and motivating.',
+    copy: 'Deepu Kishore leads the technology behind Deeply Fit, turning the product vision into a secure, dependable platform across AI coaching, nutrition, progress, and community tools.',
   },
 ];
 
@@ -140,7 +140,7 @@ const About = () => {
       <section className="about-team about-section" aria-labelledby="about-team-title">
         <div className="about-section-heading compact">
           <span>The people behind the product</span>
-          <h2 id="about-team-title">Founder and co-founder</h2>
+          <h2 id="about-team-title">One vision. One technology foundation.</h2>
         </div>
         <div className="about-team-grid">
           {TEAM.map((member) => (

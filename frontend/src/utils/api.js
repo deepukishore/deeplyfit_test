@@ -13,6 +13,10 @@ import {
 } from './diaryStorage';
 
 const DEFAULT_REMOTE_API_URL = 'https://deeplyfit-backend.onrender.com';
+const configuredTimeout = Number(process.env.REACT_APP_API_TIMEOUT_MS);
+const DEFAULT_REQUEST_TIMEOUT_MS = Number.isFinite(configuredTimeout) && configuredTimeout > 0
+  ? configuredTimeout
+  : 10000;
 
 const getApiBaseUrl = () => {
   const configuredUrl = process.env.REACT_APP_API_URL?.trim();
@@ -59,10 +63,14 @@ const getHeaders = () => {
   };
 };
 
-const request = async (method, path, body = null) => {
+const request = async (method, path, body = null, config = {}) => {
+  const controller = new AbortController();
+  const timeoutMs = config.timeoutMs || DEFAULT_REQUEST_TIMEOUT_MS;
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   const options = {
     method,
     headers: getHeaders(),
+    signal: controller.signal,
   };
 
   if (body) {
@@ -73,7 +81,12 @@ const request = async (method, path, body = null) => {
   try {
     res = await fetch(`${BASE_URL}${path}`, options);
   } catch (err) {
+    if (err.name === 'AbortError' || controller.signal.aborted) {
+      throw new Error('The server took too long to respond. Showing available data instead.');
+    }
     throw new Error(getNetworkErrorMessage());
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 
   if (!res.ok) {
@@ -93,10 +106,9 @@ const request = async (method, path, body = null) => {
   return res.json();
 };
 
-const isOfflineError = (err) => (
-  typeof navigator !== 'undefined' &&
-  !navigator.onLine &&
-  /network|failed to fetch|load failed/i.test(err.message || '')
+const isRecoverableNetworkError = (err) => (
+  (typeof navigator !== 'undefined' && !navigator.onLine) ||
+  /network|failed to fetch|load failed|cannot reach|too long to respond/i.test(err.message || '')
 );
 
 const queueDiaryOperation = (operation) => {
@@ -200,7 +212,7 @@ const diaryApi = {
       return logs;
     } catch (err) {
       const cached = getCachedDiaryDate(date);
-      if (isOfflineError(err) && cached.logs) {
+      if (isRecoverableNetworkError(err) && cached.logs) {
         return cached.logs;
       }
       throw err;
@@ -243,7 +255,7 @@ const diaryApi = {
       return summary;
     } catch (err) {
       const cached = getCachedSummaryOrFallback(date);
-      if (isOfflineError(err) && cached) {
+      if (isRecoverableNetworkError(err) && cached) {
         return cached;
       }
       throw err;
@@ -338,7 +350,7 @@ export const api = {
   // Auth
   register: (data) => request('POST', '/auth/register', data),
   login: (data) => request('POST', '/auth/login', data),
-  me: () => request('GET', '/auth/me'),
+  me: () => request('GET', '/auth/me', null, { timeoutMs: 20000 }),
   forgotPassword: (data) => request('POST', '/auth/forgot-password', data),
   resetPassword: (data) => request('POST', '/auth/reset-password', data),
 
@@ -381,10 +393,10 @@ export const api = {
   },
 
   // AI Coach
-  chat: (data) => request('POST', '/ai/chat', data),
+  chat: (data) => request('POST', '/ai/chat', data, { timeoutMs: 45000 }),
 
   // Scan
-  scanFood: (data) => request('POST', '/food/scan', data),
+  scanFood: (data) => request('POST', '/food/scan', data, { timeoutMs: 45000 }),
 
   // Meal templates
   getMealTemplates: () => request('GET', '/templates/meals'),

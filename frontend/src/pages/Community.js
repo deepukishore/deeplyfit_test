@@ -98,14 +98,13 @@ const Community = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [tab, setTab] = useState('feed');
-  const [loading, setLoading] = useState(true);
-  const [challengeLoading, setChallengeLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [challengeLoading, setChallengeLoading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [commentDrafts, setCommentDrafts] = useState({});
   const [challenges, setChallenges] = useState([]);
 
   const loadPosts = useCallback(async () => {
-    setLoading(true);
     try {
       setPosts(await api.getCommunityPosts());
     } catch (err) {
@@ -117,7 +116,6 @@ const Community = () => {
   }, []);
 
   const loadChallenges = useCallback(async () => {
-    setChallengeLoading(true);
     try {
       setChallenges(await api.getCommunityChallenges());
     } catch (err) {

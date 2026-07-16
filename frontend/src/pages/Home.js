@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
+import { createEmptySummary, getCachedDiaryDate } from '../utils/diaryStorage';
 import {
   getGreeting, getDailyQuote, formatDate, getWorkoutSuggestions, getInitials
 } from '../utils/fitness';
@@ -14,23 +15,12 @@ import '../styles/animations.css';
 
 const MACRO_COLORS = ['#4facfe', '#a855f7', '#f5a623'];
 
-const HomeSkeleton = () => (
-  <div className="page-content">
-    <div className="page-header">
-      <div className="page-header-inner">
-        <div>
-          <div className="skeleton" style={{ width: 100, height: 14, marginBottom: 8, borderRadius: 8 }} />
-          <div className="skeleton" style={{ width: 180, height: 30, borderRadius: 12 }} />
-        </div>
-        <div className="skeleton" style={{ width: 44, height: 44, borderRadius: 16 }} />
-      </div>
-    </div>
-    <div className="page-scroll">
-      {[1, 2, 3, 4, 5].map((item) => (
-        <div key={item} className="skeleton" style={{ height: item === 2 ? 190 : 110, borderRadius: 24 }} />
-      ))}
-    </div>
-  </div>
+const getInitialHomeSummary = (date, user) => (
+  getCachedDiaryDate(date).summary || createEmptySummary(date, {
+    calories_target: user?.calorie_target || 2000,
+    water_glasses: 0,
+    workouts: [],
+  })
 );
 
 const HydrationGoalModal = ({ user, currentGoal, onClose, onSave }) => {
@@ -233,16 +223,15 @@ const LogWeightModal = ({ onClose, onSave }) => {
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [summary, setSummary] = useState(null);
+  const today = formatDate(new Date());
+  const [summary, setSummary] = useState(() => getInitialHomeSummary(today, user));
   const [suggestionsData, setSuggestionsData] = useState(null);
   const [recentWorkoutHistory, setRecentWorkoutHistory] = useState([]);
   const [calorieStreak, setCalorieStreak] = useState(null);
   const [waterGoal, setWaterGoal] = useState(8);
   const [showHydrationModal, setShowHydrationModal] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [showPlanner, setShowPlanner] = useState(false);
-  const today = formatDate(new Date());
 
   const loadSuggestions = useCallback(async () => {
     try {
@@ -253,29 +242,17 @@ const Home = () => {
     }
   }, [today]);
 
-  const loadWorkoutHistory = useCallback(async () => {
-    try {
-      const data = await api.getWorkoutHistory(3);
-      setRecentWorkoutHistory(data);
-    } catch (err) {
-      setRecentWorkoutHistory([]);
-    }
-  }, []);
-
   const loadSummary = useCallback(async () => {
-    try {
-      const data = await api.getDailySummary(today);
-      setSummary(data);
-      await loadSuggestions();
-      await loadWorkoutHistory();
-    } catch (err) {
-      setSummary({ calories_consumed: 0, calories_burned: 0, calories_target: user?.calorie_target || 2000, protein: 0, carbs: 0, fat: 0, water_glasses: 0, food_logs: [], workouts: [] });
-      await loadSuggestions();
-      await loadWorkoutHistory();
-    } finally {
-      setLoading(false);
-    }
-  }, [loadSuggestions, loadWorkoutHistory, today, user]);
+    const [summaryResult, suggestionsResult, workoutResult] = await Promise.allSettled([
+      api.getDailySummary(today),
+      api.getMealSuggestions(today),
+      api.getWorkoutHistory(3),
+    ]);
+
+    if (summaryResult.status === 'fulfilled') setSummary(summaryResult.value);
+    if (suggestionsResult.status === 'fulfilled') setSuggestionsData(suggestionsResult.value);
+    if (workoutResult.status === 'fulfilled') setRecentWorkoutHistory(workoutResult.value);
+  }, [today]);
 
   useEffect(() => { loadSummary(); }, [loadSummary]);
 
@@ -285,8 +262,8 @@ const Home = () => {
   }, []);
 
   useRefreshRegistration(async () => {
-    await loadSummary();
-    const [streak, water] = await Promise.all([
+    const [, streak, water] = await Promise.all([
+      loadSummary(),
       api.getCalorieStreak().catch(() => null),
       api.getWaterGoal().catch(() => null),
     ]);
@@ -315,8 +292,6 @@ const Home = () => {
       toast.error('Failed to log water');
     }
   };
-
-  if (loading) return <HomeSkeleton />;
 
   const remaining = (summary?.calories_target || 0) - (summary?.calories_consumed || 0) + (summary?.calories_burned || 0);
   const progress = Math.min(((summary?.calories_consumed || 0) / (summary?.calories_target || 2000)) * 100, 100);
