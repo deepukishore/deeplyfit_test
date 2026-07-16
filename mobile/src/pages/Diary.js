@@ -4,7 +4,7 @@ import Toast from 'react-native-toast-message';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
 import { addDays, formatDate, formatDisplayDate, getMealIcon } from '../utils/fitness';
-import { getFavorites, setFavorites as saveFavorites } from '../utils/storage';
+import { createEmptySummary, getCachedDiaryDate, getFavorites, setFavorites as saveFavorites } from '../utils/storage';
 import FoodScannerModal from '../components/FoodScannerModal';
 import { colors, radius, spacing } from '../utils/theme';
 
@@ -163,20 +163,20 @@ const MealSection = ({ meal, items, onAdd, onScan, onDelete, onFavorite }) => {
 const Diary = () => {
   const [date, setDate] = useState(formatDate(new Date()));
   const [items, setItems] = useState([]);
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState(() => createEmptySummary(formatDate(new Date())));
   const [refreshing, setRefreshing] = useState(false);
   const [addModal, setAddModal] = useState(null);
   const [scanModal, setScanModal] = useState(null);
   const [favorites, setFavorites] = useState([]);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
+    const cached = await getCachedDiaryDate(date);
+    setItems(cached.logs || []);
+    setSummary(cached.summary || createEmptySummary(date));
     try {
       const [logs, dailySummary] = await Promise.all([api.getFoodLogs(date), api.getDailySummary(date)]);
       setItems(logs); setSummary(dailySummary);
     } catch (err) { Toast.show({ type: 'error', text1: err.message || 'Failed to load diary' }); }
-    finally { setLoading(false); }
   }, [date]);
 
   useEffect(() => { loadData(); getFavorites().then(setFavorites); }, [loadData]);
@@ -267,13 +267,9 @@ const Diary = () => {
           </View>
         )}
 
-        {loading ? (
-          <ActivityIndicator color={colors.accentLime} style={{ marginTop: 40 }} />
-        ) : (
-          MEALS.map((meal) => (
-            <MealSection key={meal} meal={meal} items={items} onAdd={setAddModal} onScan={setScanModal} onDelete={handleDelete} onFavorite={handleFavorite} />
-          ))
-        )}
+        {MEALS.map((meal) => (
+          <MealSection key={meal} meal={meal} items={items} onAdd={setAddModal} onScan={setScanModal} onDelete={handleDelete} onFavorite={handleFavorite} />
+        ))}
         <View style={{ height: 20 }} />
       </ScrollView>
 

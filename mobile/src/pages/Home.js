@@ -4,6 +4,7 @@ import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
+import { createEmptySummary, getCachedDiaryDate } from '../utils/storage';
 import { getGreeting, getDailyQuote, formatDate, getWorkoutSuggestions, getInitials } from '../utils/fitness';
 import { colors, radius, spacing } from '../utils/theme';
 import WorkoutPlannerModal from '../components/WorkoutPlannerModal';
@@ -119,29 +120,28 @@ const LogWeightModal = ({ onClose, onSave }) => {
 
 const Home = ({ navigation }) => {
   const { user } = useAuth();
-  const [summary, setSummary] = useState(null);
+  const today = formatDate(new Date());
+  const [summary, setSummary] = useState(() => createEmptySummary(today, { calories_target: user?.calorie_target || 2000 }));
   const [suggestionsData, setSuggestionsData] = useState(null);
   const [recentWorkoutHistory, setRecentWorkoutHistory] = useState([]);
   const [calorieStreak, setCalorieStreak] = useState(null);
   const [waterGoal, setWaterGoal] = useState(8);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [modal, setModal] = useState(null);
   const [showPlanner, setShowPlanner] = useState(false);
-  const today = formatDate(new Date());
-
   const loadSummary = useCallback(async () => {
-    try {
-      const data = await api.getDailySummary(today);
-      setSummary(data);
-      api.getMealSuggestions(today).then(setSuggestionsData).catch(() => {});
-      api.getWorkoutHistory(3).then(setRecentWorkoutHistory).catch(() => {});
-    } catch {
-      setSummary({ calories_consumed: 0, calories_burned: 0, calories_target: user?.calorie_target || 2000, protein: 0, carbs: 0, fat: 0, water_glasses: 0, food_logs: [], workouts: [] });
-    } finally {
-      setLoading(false);
-    }
-  }, [today, user]);
+    const cached = await getCachedDiaryDate(today);
+    if (cached.summary) setSummary(cached.summary);
+
+    const [summaryResult, suggestionsResult, workoutsResult] = await Promise.allSettled([
+      api.getDailySummary(today),
+      api.getMealSuggestions(today),
+      api.getWorkoutHistory(3),
+    ]);
+    if (summaryResult.status === 'fulfilled') setSummary(summaryResult.value);
+    if (suggestionsResult.status === 'fulfilled') setSuggestionsData(suggestionsResult.value);
+    if (workoutsResult.status === 'fulfilled') setRecentWorkoutHistory(workoutsResult.value);
+  }, [today]);
 
   useEffect(() => {
     loadSummary();
@@ -160,8 +160,6 @@ const Home = ({ navigation }) => {
       Toast.show({ type: 'success', text1: 'Hydration tracked! 💧' });
     } catch { Toast.show({ type: 'error', text1: 'Failed to log water' }); }
   };
-
-  if (loading) return <View style={s.loading}><ActivityIndicator size="large" color={colors.accentLime} /></View>;
 
   const remaining = (summary?.calories_target || 0) - (summary?.calories_consumed || 0) + (summary?.calories_burned || 0);
   const progress = Math.min(((summary?.calories_consumed || 0) / (summary?.calories_target || 2000)) * 100, 100);
@@ -286,7 +284,6 @@ const Home = ({ navigation }) => {
 
 const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  loading: { flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.bgCard, borderBottomWidth: 1, borderBottomColor: colors.border },
   greeting: { fontSize: 11, color: colors.textMuted, letterSpacing: 0.4, textTransform: 'uppercase' },
   name: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },

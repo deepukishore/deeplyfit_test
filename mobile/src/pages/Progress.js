@@ -90,12 +90,11 @@ const Progress = () => {
   const [weightLogs, setWeightLogs] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
   const [bmiHistory, setBmiHistory] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showWeightModal, setShowWeightModal] = useState(false);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
     try {
       const [weights, weekly, bmi] = await Promise.all([
         api.getWeightLogs(30),

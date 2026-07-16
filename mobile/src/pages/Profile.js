@@ -227,6 +227,10 @@ const Profile = ({ navigation }) => {
             <Text style={s.settingsLabel}>{user.dark_mode ? '🌙 Dark mode' : '☀️ Light mode'}</Text>
             <View style={[s.toggle, !user.dark_mode && s.toggleOn]}><View style={s.toggleThumb} /></View>
           </TouchableOpacity>
+          <TouchableOpacity style={s.settingsItem} onPress={() => navigation.navigate('About')}>
+            <Text style={s.settingsLabel}>About Deeply Fit</Text>
+            <Text style={s.settingsArrow}>{'>'}</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={s.settingsSection}>

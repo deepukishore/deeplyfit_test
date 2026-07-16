@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const CACHE_KEY = 'deeply_fit_diary_cache_v1';
 const QUEUE_KEY = 'deeply_fit_diary_queue_v1';
 const TEMP_ID_KEY = 'deeply_fit_diary_temp_id_v1';
+const USER_CACHE_KEY = 'deeply_fit_user_cache_v1';
 
 const MICRONUTRIENT_RDA = {
   fiber: 28, sugar: 50, sodium: 2300, vitamin_c: 90,
@@ -104,6 +105,19 @@ export const findCachedLogDate = async (logId) => {
 export const getToken = () => AsyncStorage.getItem('deeply_fit_token');
 export const setToken = (t) => AsyncStorage.setItem('deeply_fit_token', t);
 export const removeToken = () => AsyncStorage.removeItem('deeply_fit_token');
+
+export const getCachedUser = async () => {
+  try {
+    const raw = await AsyncStorage.getItem(USER_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+};
+
+export const setCachedUser = async (user) => {
+  try { await AsyncStorage.setItem(USER_CACHE_KEY, JSON.stringify(user)); } catch {}
+};
+
+export const removeCachedUser = () => AsyncStorage.removeItem(USER_CACHE_KEY);
 
 export const getFavorites = async () => {
   try {

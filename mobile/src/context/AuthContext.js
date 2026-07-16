@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../utils/api';
-import { getToken, setToken, removeToken } from '../utils/storage';
+import {
+  getCachedUser,
+  getToken,
+  removeCachedUser,
+  removeToken,
+  setCachedUser,
+  setToken,
+} from '../utils/storage';
 
 const AuthContext = createContext(null);
 
@@ -11,11 +18,21 @@ export const AuthProvider = ({ children }) => {
   const loadUser = useCallback(async () => {
     const token = await getToken();
     if (!token) { setLoading(false); return; }
+    const cachedUser = await getCachedUser();
+    if (cachedUser) {
+      setUser(cachedUser);
+      setLoading(false);
+    }
     try {
       const userData = await api.me();
       setUser(userData);
-    } catch {
-      await removeToken();
+      await setCachedUser(userData);
+    } catch (err) {
+      if (err?.status === 401) {
+        await Promise.all([removeToken(), removeCachedUser()]);
+        setUser(null);
+      }
+      // Other failures keep a valid cached session available during backend outages.
     } finally {
       setLoading(false);
     }
@@ -28,6 +45,7 @@ export const AuthProvider = ({ children }) => {
     await setToken(data.access_token);
     const userData = await api.me();
     setUser(userData);
+    await setCachedUser(userData);
     return userData;
   };
 
@@ -36,20 +54,25 @@ export const AuthProvider = ({ children }) => {
     await setToken(data.access_token);
     const userData = await api.me();
     setUser(userData);
+    await setCachedUser(userData);
     return userData;
   };
 
   const logout = async () => {
-    await removeToken();
+    await Promise.all([removeToken(), removeCachedUser()]);
     setUser(null);
   };
 
-  const updateUser = (updatedUser) => setUser(updatedUser);
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser);
+    setCachedUser(updatedUser);
+  };
 
   const refreshUser = async () => {
     try {
       const userData = await api.me();
       setUser(userData);
+      await setCachedUser(userData);
       return userData;
     } catch {}
   };
@@ -60,6 +83,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const updated = await api.updateProfile({ dark_mode: newMode });
       setUser(updated);
+      await setCachedUser(updated);
     } catch {}
   };
 

@@ -17,6 +17,7 @@ import AIAssistant from '../pages/AIAssistant';
 import ForgotPassword from '../pages/ForgotPassword';
 import ResetPassword from '../pages/ResetPassword';
 import PublicProfile from '../pages/PublicProfile';
+import About from '../pages/About';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -81,6 +82,7 @@ const AppNavigator = () => {
         <>
           <Stack.Screen name="Main" component={MainTabs} />
           <Stack.Screen name="PublicProfile" component={PublicProfile} />
+          <Stack.Screen name="About" component={About} />
         </>
       )}
     </Stack.Navigator>

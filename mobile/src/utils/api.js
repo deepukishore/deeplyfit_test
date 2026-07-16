@@ -8,6 +8,8 @@ import {
 import { getApiBaseUrl, getNetworkErrorMessage } from './apiBase';
 
 const BASE_URL = getApiBaseUrl();
+const configuredTimeout = Number(process.env.EXPO_PUBLIC_API_TIMEOUT_MS || 10000);
+const DEFAULT_TIMEOUT_MS = Number.isFinite(configuredTimeout) && configuredTimeout > 0 ? configuredTimeout : 10000;
 
 const todayString = () => new Date().toISOString().split('T')[0];
 
@@ -30,9 +32,13 @@ const getHeaders = async () => {
   };
 };
 
-const request = async (method, path, body = null) => {
+const request = async (method, path, body = null, config = {}) => {
   const headers = await getHeaders();
-  const options = { method, headers };
+  const controller = new AbortController();
+  const requestedTimeout = Number(config.timeoutMs || DEFAULT_TIMEOUT_MS);
+  const timeoutMs = Number.isFinite(requestedTimeout) && requestedTimeout > 0 ? requestedTimeout : DEFAULT_TIMEOUT_MS;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const options = { method, headers, signal: controller.signal };
   if (body) options.body = JSON.stringify(body);
   try {
     const res = await fetch(`${BASE_URL}${path}`, options);
@@ -41,14 +47,21 @@ const request = async (method, path, body = null) => {
       const detail = Array.isArray(err.detail)
         ? err.detail.map((item) => item.msg || JSON.stringify(item)).join(', ')
         : err.detail;
-      throw new Error(normalizeApiError(detail, res.status));
+      const apiError = new Error(normalizeApiError(detail, res.status));
+      apiError.status = res.status;
+      throw apiError;
     }
     return res.json();
   } catch (err) {
+    if (controller.signal.aborted || err?.name === 'AbortError') {
+      throw new Error('The server took too long to respond. Showing available data instead.');
+    }
     if (/failed to fetch|network request failed|network error|connect/i.test(String(err?.message || ''))) {
       throw new Error(getNetworkErrorMessage(BASE_URL));
     }
     throw err;
+  } finally {
+    clearTimeout(timeout);
   }
 };
 
@@ -57,9 +70,11 @@ const isOnline = async () => {
   return state.isConnected && state.isInternetReachable !== false;
 };
 
-const isOfflineError = async (err) => {
+const isRecoverableNetworkError = async (err) => {
+  const message = String(err?.message || '');
+  if (/network|failed to fetch|load failed|cannot reach|too long to respond/i.test(message)) return true;
   const online = await isOnline();
-  return !online && /network|failed to fetch|load failed/i.test(err.message || '');
+  return !online;
 };
 
 const queueDiaryOperation = async (operation) => {
@@ -125,7 +140,7 @@ const diaryApi = {
       return logs;
     } catch (err) {
       const cached = await getCachedDiaryDate(date);
-      if ((await isOfflineError(err)) && cached.logs) return cached.logs;
+      if ((await isRecoverableNetworkError(err)) && Array.isArray(cached.logs)) return cached.logs;
       throw err;
     }
   },
@@ -157,7 +172,12 @@ const diaryApi = {
       return summary;
     } catch (err) {
       const cached = await getCachedDiaryDate(date);
-      if ((await isOfflineError(err)) && cached.summary) return cached.summary;
+      if (await isRecoverableNetworkError(err)) {
+        if (cached.summary) return cached.summary;
+        if (Array.isArray(cached.logs)) {
+          return rebuildSummaryFromLogs(date, cached.logs, createEmptySummary(date));
+        }
+      }
       throw err;
     }
   },
@@ -197,7 +217,7 @@ export const api = {
   resetPassword: (token, new_password) => request('POST', '/auth/reset-password', { token, new_password }),
   register: (data) => request('POST', '/auth/register', data),
   login: (data) => request('POST', '/auth/login', data),
-  me: () => request('GET', '/auth/me'),
+  me: () => request('GET', '/auth/me', null, { timeoutMs: 20000 }),
   getPremiumStatus: () => request('GET', '/users/premium/status'),
   activatePremium: (data) => request('POST', '/users/premium/activate', data),
   completeOnboarding: (data) => request('POST', '/users/onboarding', data),
@@ -222,8 +242,8 @@ export const api = {
     await queueDiaryOperation({ type: 'copyMeals', payload: data });
     return { message: 'Copy queued for sync', count: 0 };
   },
-  chat: (data) => request('POST', '/ai/chat', data),
-  scanFood: (data) => request('POST', '/food/scan', data),
+  chat: (data) => request('POST', '/ai/chat', data, { timeoutMs: 45000 }),
+  scanFood: (data) => request('POST', '/food/scan', data, { timeoutMs: 45000 }),
   getMealTemplates: () => request('GET', '/templates/meals'),
   createMealTemplate: (data) => request('POST', '/templates/meals', data),
   applyMealTemplate: async (id, data) => {

@@ -82,15 +82,14 @@ const CreatePostModal = ({ visible, onClose, onCreated }) => {
 const Community = ({ navigation }) => {
   const [posts, setPosts] = useState([]);
   const [tab, setTab] = useState('feed');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [commentDrafts, setCommentDrafts] = useState({});
-  const [challengeLoading, setChallengeLoading] = useState(true);
+  const [challengeLoading, setChallengeLoading] = useState(false);
   const [challenges, setChallenges] = useState([]);
 
   const loadPosts = useCallback(async () => {
-    setLoading(true);
     try { setPosts(await api.getCommunityPosts()); }
     catch (err) { Toast.show({ type: 'error', text1: err.message || 'Could not load posts' }); setPosts([]); }
     finally { setLoading(false); }
@@ -100,7 +99,6 @@ const Community = ({ navigation }) => {
   useRefreshRegistration(loadPosts);
 
   const loadChallenges = useCallback(async () => {
-    setChallengeLoading(true);
     try {
       setChallenges(await api.getCommunityChallenges());
     } catch (err) {
