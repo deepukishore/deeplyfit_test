@@ -75,11 +75,11 @@ const OnboardingRoute = ({ children }) => {
 const AppLayout = ({ children }) => {
   return (
     <RefreshProvider>
+      <BottomNav />
       <PullToRefreshShell>
         <div className="app-container">
           <OfflineBanner />
           {children}
-          <BottomNav />
         </div>
       </PullToRefreshShell>
     </RefreshProvider>

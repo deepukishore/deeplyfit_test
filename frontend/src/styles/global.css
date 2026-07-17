@@ -94,6 +94,7 @@
 
 html, body, #root {
   height: 100%;
+  min-height: 100dvh;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -121,7 +122,7 @@ html.light {
 .app-container {
   max-width: 420px;
   margin: 0 auto;
-  min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
   background: transparent;
   z-index: 1;
@@ -151,7 +152,8 @@ html.light {
 /* Page content with bottom nav space */
 .page-content {
   padding-bottom: calc(var(--nav-height) + 16px);
-  min-height: 100vh;
+  min-height: 100dvh;
+  min-width: 0;
 }
 
 .pull-refresh-shell {
@@ -554,14 +556,38 @@ select {
   font-family: var(--font-body) !important;
 }
 
+@media (min-width: 600px) and (max-width: 899px) {
+  .app-container {
+    width: min(100%, 820px);
+    max-width: none;
+  }
+
+  .page-content {
+    padding-bottom: calc(var(--nav-height) + 28px);
+  }
+
+  .route-skeleton-body {
+    padding-right: 24px;
+    padding-left: 24px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .modal-overlay {
+    align-items: center;
+    padding: 28px;
+  }
+
+  .modal-sheet {
+    max-width: 640px;
+    border-radius: var(--radius-xl);
+  }
+}
+
 @media (min-width: 900px) {
   :root {
     --nav-width: 240px;
     --content-max: 1280px;
-  }
-
-  html, body, #root {
-    min-width: 900px;
   }
 
   .app-container {
@@ -575,6 +601,7 @@ select {
     width: min(100%, var(--content-max));
     margin: 0 auto;
     padding: 0 32px 48px;
+    min-height: 100dvh;
   }
 
   .page-header {
@@ -611,6 +638,31 @@ select {
 
   .btn:active {
     transform: none;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1099px) {
+  :root {
+    --nav-width: 220px;
+  }
+
+  .page-content {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+
+  .page-header {
+    margin-right: -24px;
+    margin-left: -24px;
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+}
+
+@media (min-width: 1500px) {
+  :root {
+    --nav-width: 248px;
+    --content-max: 1360px;
   }
 }
 

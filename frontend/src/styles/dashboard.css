@@ -5,9 +5,23 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  min-height: 72px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   background: rgba(10,10,15,0.9);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(10, 10, 15, 0.05);
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent-lime), var(--accent-blue), var(--accent-amber));
+  opacity: 0.28;
 }
 
 .light .page-header {
@@ -1396,6 +1410,57 @@
 
   .planner-set-row {
     grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 899px) {
+  .page-header {
+    padding: 22px 24px 14px;
+  }
+
+  .page-scroll {
+    padding: 20px 24px 0;
+    gap: 18px;
+  }
+
+  .greeting-name {
+    font-size: 24px;
+  }
+
+  .quick-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .meal-suggestions-grid,
+  .template-grid,
+  .favorite-grid,
+  .achievement-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .progress-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .micro-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .profile-header {
+    padding: 34px 24px 26px;
+  }
+
+  .profile-avatar-large {
+    width: 96px;
+    height: 96px;
+    font-size: 36px;
+  }
+
+  .settings-section,
+  .feed-post,
+  .meal-section {
+    border-radius: var(--radius-lg);
   }
 }
 
