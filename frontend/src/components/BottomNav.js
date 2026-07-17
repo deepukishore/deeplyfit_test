@@ -4,6 +4,7 @@ import {
   Bot,
   BookOpenText,
   ChartNoAxesCombined,
+  Download as DownloadIcon,
   House,
   Info,
   UserRound,
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { path: '/ai', icon: Bot, label: 'Coach' },
   { path: '/progress', icon: ChartNoAxesCombined, label: 'Progress' },
   { path: '/profile', icon: UserRound, label: 'Profile' },
+  { path: '/download', icon: DownloadIcon, label: 'Download', desktopOnly: true, bottomStart: true },
   { path: '/about', icon: Info, label: 'About', desktopOnly: true },
 ];
 
@@ -38,7 +40,7 @@ const BottomNav = () => {
         return (
           <button
             key={item.path}
-            className={`nav-item ${isActive ? 'active' : ''} ${item.desktopOnly ? 'nav-item-desktop-only nav-item-about' : ''}`}
+            className={`nav-item ${isActive ? 'active' : ''} ${item.desktopOnly ? 'nav-item-desktop-only' : ''} ${item.bottomStart ? 'nav-item-bottom-start' : ''}`}
             onClick={() => navigate(item.path)}
             aria-label={item.label}
             aria-current={isActive ? 'page' : undefined}

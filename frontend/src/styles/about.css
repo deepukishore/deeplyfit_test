@@ -35,6 +35,12 @@
   box-shadow: var(--shadow-lime);
 }
 
+.about-public-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .about-hero {
   min-height: 520px;
   display: grid;
@@ -412,6 +418,7 @@
 }
 
 @media (max-width: 430px) {
+  .about-public-actions .btn-ghost { display: none; }
   .about-hero-actions { flex-direction: column; }
   .about-hero-actions .btn { width: 100%; }
   .about-signal { font-size: 11px; padding: 8px 9px; }

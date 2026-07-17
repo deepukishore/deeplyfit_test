@@ -25,6 +25,7 @@ const AIAssistant = lazy(() => import('./pages/AIAssistant'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const About = lazy(() => import('./pages/About'));
+const Download = lazy(() => import('./pages/Download'));
 
 const RouteSkeleton = () => (
   <div className="page-content route-skeleton">
@@ -163,6 +164,10 @@ const AppRoutes = () => {
         <Route
           path="/about"
           element={user ? <AppLayout><About /></AppLayout> : <About />}
+        />
+        <Route
+          path="/download"
+          element={user ? <AppLayout><Download /></AppLayout> : <Download />}
         />
         <Route path="/u/:slug" element={<div className="app-container"><PublicProfile /></div>} />
         <Route path="/" element={<Navigate to={user ? (user.onboarding_complete ? '/home' : '/onboarding') : '/login'} replace />} />

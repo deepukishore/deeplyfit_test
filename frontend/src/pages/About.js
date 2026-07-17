@@ -72,7 +72,10 @@ const About = () => {
           <button type="button" className="about-public-brand" onClick={() => navigate('/')}>
             <span><Zap size={17} fill="currentColor" /></span> Deeply Fit
           </button>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate('/login')}>Sign in</button>
+          <div className="about-public-actions">
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigate('/download')}>Download app</button>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate('/login')}>Sign in</button>
+          </div>
         </nav>
       )}
       <header className="about-hero">

@@ -1,0 +1,334 @@
+.download-page {
+  position: relative;
+  overflow: hidden;
+}
+
+.download-public-nav {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.download-public-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.download-public-brand > span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--accent-lime);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-lime);
+}
+
+.download-public-actions,
+.download-hero-actions,
+.download-trust-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.download-public-actions { gap: 8px; }
+
+.download-hero {
+  min-height: 650px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+  align-items: center;
+  gap: 64px;
+  padding: 54px 0 48px;
+  border-bottom: 1px solid var(--border);
+}
+
+.download-hero-copy {
+  position: relative;
+  z-index: 2;
+  max-width: 710px;
+}
+
+.download-kicker,
+.download-section-heading > span,
+.download-account-band span,
+.download-final-cta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--accent-lime);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.download-kicker {
+  padding: 7px 10px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(var(--accent-primary-rgb), 0.24);
+  border-radius: var(--radius-sm);
+  background: rgba(var(--accent-primary-rgb), 0.08);
+}
+
+.download-hero h1 {
+  max-width: 680px;
+  margin-bottom: 22px;
+  color: var(--text-primary);
+  font-size: 68px;
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.download-hero-lead {
+  max-width: 670px;
+  color: var(--text-secondary);
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.download-hero-actions {
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.download-apk-button {
+  text-decoration: none;
+}
+
+.download-trust-row {
+  gap: 18px;
+  margin-top: 24px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.download-trust-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.download-trust-row svg { color: var(--success); }
+
+.download-device-stage {
+  position: relative;
+  min-height: 590px;
+  display: grid;
+  place-items: center;
+}
+
+.download-device-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  width: 290px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(10, 10, 15, 0.28);
+  filter: blur(15px);
+  transform: translateX(-50%);
+}
+
+.download-phone {
+  position: relative;
+  width: 276px;
+  aspect-ratio: 390 / 844;
+  padding: 9px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 34px;
+  background: #0a0a0f;
+  box-shadow: 0 28px 70px rgba(10, 10, 15, 0.34), 0 0 0 7px rgba(var(--accent-primary-rgb), 0.06);
+  transform: rotate(2deg);
+  animation: downloadPhoneFloat 6s ease-in-out infinite;
+}
+
+.download-phone img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 26px;
+}
+
+.download-phone-speaker {
+  position: absolute;
+  z-index: 2;
+  top: 17px;
+  left: 50%;
+  width: 54px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-50%);
+}
+
+.download-device-note {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(22, 22, 31, 0.9);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.light .download-device-note { background: rgba(255, 255, 255, 0.92); }
+.download-device-note-top { top: 22%; right: 0; }
+.download-device-note-bottom { left: 0; bottom: 19%; }
+.download-device-note svg { color: var(--accent-blue); }
+
+.download-overview {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.28fr);
+  gap: 72px;
+  padding: 78px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.download-section-heading > span { margin-bottom: 14px; }
+
+.download-section-heading h2 {
+  max-width: 480px;
+  font-size: 34px;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.download-feature-list { border-top: 1px solid var(--border); }
+
+.download-feature {
+  display: grid;
+  grid-template-columns: 38px 44px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.download-feature-number {
+  padding-top: 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.download-feature-icon,
+.download-account-mark {
+  display: grid;
+  place-items: center;
+  color: var(--accent-lime);
+  border: 1px solid rgba(var(--accent-primary-rgb), 0.24);
+  border-radius: var(--radius-sm);
+  background: rgba(var(--accent-primary-rgb), 0.08);
+}
+
+.download-feature-icon { width: 44px; height: 44px; }
+.download-feature h3 { margin-bottom: 7px; font-size: 17px; }
+.download-feature p { max-width: 650px; color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+
+.download-account-band {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  padding: 54px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.download-account-mark { width: 64px; height: 64px; }
+.download-account-band span { margin-bottom: 10px; }
+.download-account-band h2 { max-width: 800px; margin-bottom: 10px; font-size: 28px; line-height: 1.3; }
+.download-account-band p { max-width: 760px; color: var(--text-secondary); line-height: 1.7; }
+
+.download-final-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  margin: 72px 0 24px;
+  padding: 36px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.download-final-cta span { margin-bottom: 9px; }
+.download-final-cta h2 { margin-bottom: 7px; font-size: 28px; line-height: 1.25; }
+.download-final-cta p { color: var(--text-secondary); }
+.download-final-button { flex-shrink: 0; }
+
+@keyframes downloadPhoneFloat {
+  0%, 100% { transform: translateY(0) rotate(2deg); }
+  50% { transform: translateY(-10px) rotate(0deg); }
+}
+
+@media (max-width: 899px) {
+  .download-page { padding: 0 16px calc(var(--nav-height) + 24px); }
+  .download-page-public { padding-bottom: 34px; }
+
+  .download-hero {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 46px 0 34px;
+  }
+
+  .download-hero h1 { max-width: 560px; font-size: 48px; }
+  .download-hero-lead { font-size: 15px; }
+  .download-device-stage { min-height: 520px; }
+  .download-phone { width: 236px; }
+
+  .download-overview {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 52px 0;
+  }
+
+  .download-section-heading h2 { font-size: 27px; }
+  .download-account-band { padding: 42px 0; }
+  .download-account-band h2 { font-size: 24px; }
+  .download-final-cta { margin-top: 52px; align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 480px) {
+  .download-public-nav { height: 68px; }
+  .download-public-actions .btn-ghost { display: none; }
+  .download-hero-actions { align-items: stretch; flex-direction: column; }
+  .download-hero-actions .btn { width: 100%; }
+  .download-trust-row { display: grid; gap: 8px; }
+  .download-device-stage { min-height: 500px; }
+  .download-device-note { font-size: 11px; padding: 8px; }
+  .download-device-note-top { right: 0; }
+  .download-device-note-bottom { left: 0; }
+  .download-feature { grid-template-columns: 30px 40px 1fr; gap: 10px; }
+  .download-feature-icon { width: 40px; height: 40px; }
+  .download-account-band { grid-template-columns: 1fr; }
+  .download-account-mark { width: 54px; height: 54px; }
+  .download-final-button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .download-phone { animation: none; }
+}
