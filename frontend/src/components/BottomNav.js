@@ -21,7 +21,7 @@ const PRIMARY_NAV_ITEMS = [
   { path: '/home', icon: House, label: 'Home' },
   { path: '/diary', icon: BookOpenText, label: 'Diary' },
   { path: '/community', icon: UsersRound, label: 'Community' },
-  { path: '/ai', icon: Bot, label: 'Coach' },
+  { path: '/ai', icon: Bot, label: 'AI Coach', featured: true },
   { path: '/progress', icon: ChartNoAxesCombined, label: 'Progress' },
   { path: '/profile', icon: UserRound, label: 'Profile' },
 ];
@@ -50,7 +50,7 @@ const BottomNav = () => {
     return (
       <button
         key={item.path}
-        className={`nav-item ${isActive ? 'active' : ''}`}
+        className={`nav-item ${isActive ? 'active' : ''} ${item.featured ? 'nav-item-featured' : ''}`}
         onClick={() => navigate(item.path)}
         aria-label={item.label}
         aria-current={isActive ? 'page' : undefined}

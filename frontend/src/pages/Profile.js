@@ -1,7 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ChevronRight, Download as DownloadIcon, Info } from 'lucide-react';
+import {
+  ChevronRight,
+  Download as DownloadIcon,
+  Info,
+  LogOut,
+  Moon,
+  Pencil,
+  Sun,
+  UsersRound,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
@@ -180,6 +189,7 @@ const Profile = () => {
       </div>
 
       <div className="profile-header animate-slide-up">
+        <div className="profile-banner" aria-hidden="true" />
         <div className={`profile-avatar-large ${proActive ? 'pro-avatar' : ''}`}>{initials}</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
           <h2 className="profile-name" style={{ margin: 0 }}>{user.name || 'Athlete'}</h2>
@@ -224,24 +234,35 @@ const Profile = () => {
         )}
 
         <div className="settings-section animate-slide-up" style={{ marginBottom: 16 }}>
-          <div className="settings-item" onClick={() => setShowEditModal(true)}>
+          <button className="settings-item settings-item-button" type="button" onClick={() => setShowEditModal(true)}>
             <div className="settings-item-left">
-              <div className="settings-item-icon">Edit</div>
+              <div className="settings-item-icon settings-icon-lime"><Pencil size={17} /></div>
               <span className="settings-item-label">Goals, public profile, and privacy</span>
             </div>
-            <span className="settings-item-value">Open</span>
-          </div>
-          <div className="settings-item" onClick={toggleDarkMode}>
+            <ChevronRight size={18} className="settings-chevron" />
+          </button>
+          <button className="settings-item settings-item-button" type="button" onClick={toggleDarkMode}>
             <div className="settings-item-left">
-              <div className="settings-item-icon">{isDark ? 'Dark' : 'Light'}</div>
+              <div className="settings-item-icon settings-icon-amber">{isDark ? <Moon size={17} /> : <Sun size={17} />}</div>
               <span className="settings-item-label">Dark mode</span>
             </div>
-            <div className={`toggle ${isDark ? 'on' : ''}`}><div className="toggle-thumb" /></div>
-          </div>
+            <div className={`toggle theme-toggle ${isDark ? 'on' : ''}`} aria-hidden="true">
+              <Sun size={12} className="theme-toggle-sun" />
+              <Moon size={12} className="theme-toggle-moon" />
+              <div className="toggle-thumb" />
+            </div>
+          </button>
           <button className="settings-item settings-item-button" type="button" onClick={() => navigate('/about')}>
             <div className="settings-item-left">
               <div className="settings-item-icon"><Info size={18} /></div>
               <span className="settings-item-label">About Deeply Fit</span>
+            </div>
+            <ChevronRight size={18} className="settings-chevron" />
+          </button>
+          <button className="settings-item settings-item-button profile-community-link" type="button" onClick={() => navigate('/community')}>
+            <div className="settings-item-left">
+              <div className="settings-item-icon"><UsersRound size={18} /></div>
+              <span className="settings-item-label">Community</span>
             </div>
             <ChevronRight size={18} className="settings-chevron" />
           </button>
@@ -302,8 +323,8 @@ const Profile = () => {
           </div>
         )}
 
-        <button className="btn btn-secondary btn-full" onClick={handleLogout} style={{ marginBottom: 16, borderColor: 'rgba(255,107,107,0.3)', color: 'var(--accent-coral)' }}>
-          Log Out
+        <button className="btn btn-secondary btn-full profile-logout-btn" onClick={handleLogout}>
+          <LogOut size={17} /> Log Out
         </button>
       </div>
 

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { Camera, ChevronDown, ChevronLeft, ChevronRight, Plus, ScanLine } from 'lucide-react';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
 import { createEmptySummary, getCachedDiaryDate } from '../utils/diaryStorage';
@@ -10,7 +11,18 @@ import '../styles/scanner.css';
 import '../styles/animations.css';
 
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snacks'];
+const MEAL_BUDGETS = { breakfast: 600, lunch: 700, dinner: 750, snacks: 350 };
 const FAVORITES_KEY = 'deeply_fit_favorite_foods_v1';
+
+const getFoodEmoji = (name = '') => {
+  const normalized = name.toLowerCase();
+  if (/(chicken|meat|beef|steak|fish|egg)/.test(normalized)) return '🍗';
+  if (/(rice|pasta|bread|oat|cereal)/.test(normalized)) return '🍚';
+  if (/(apple|banana|fruit|berry|orange)/.test(normalized)) return '🍎';
+  if (/(salad|vegetable|spinach|paneer)/.test(normalized)) return '🥗';
+  if (/(milk|yogurt|cheese)/.test(normalized)) return '🥛';
+  return '🍽️';
+};
 
 const MICRO_FIELDS = [
   { key: 'fiber', label: 'Fiber', unit: 'g', accent: 'var(--accent-lime)' },
@@ -340,7 +352,7 @@ const QuickAddModal = ({ meal, date, onClose, onSave }) => {
             />
           </div>
           {parsed && (
-            <div style={{ background: 'rgba(200,241,53,0.08)', border: '1px solid rgba(200,241,53,0.2)', borderRadius: 'var(--radius-lg)', padding: 14 }}>
+            <div style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: 'var(--radius-lg)', padding: 14 }}>
               <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>Detected</p>
               <div className="stat-row">
                 <span className="stat-label">{parsed.food_name}</span>
@@ -869,12 +881,18 @@ const SwipeableFoodItem = ({ item, onDelete, onFavorite }) => {
         <span className="food-item-action delete">Delete</span>
       </div>
       <div className="food-item" style={{ transform: `translateX(${offset}px)` }} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}>
-        <div style={{ flex: 1 }}>
-          <p className="food-item-name">{item.food_name}</p>
-          <p className="food-item-macros">P: {Math.round(item.protein)}g · C: {Math.round(item.carbs)}g · F: {Math.round(item.fat)}g · Fiber: {Math.round(item.fiber || 0)}g</p>
+        <span className="food-item-emoji" aria-hidden="true">{getFoodEmoji(item.food_name)}</span>
+        <div className="food-item-copy">
+          <p className="food-item-name">{item.food_name}{item.quantity && item.quantity !== 1 ? ` (${item.quantity}x)` : ''}</p>
+          <p className="food-item-macros">P: {Math.round(item.protein)}g · C: {Math.round(item.carbs)}g · F: {Math.round(item.fat)}g</p>
+          <div className="food-macro-dots" aria-hidden="true">
+            <span className="protein" style={{ flex: Math.max(item.protein || 0, 1) }} />
+            <span className="carbs" style={{ flex: Math.max(item.carbs || 0, 1) }} />
+            <span className="fat" style={{ flex: Math.max(item.fat || 0, 1) }} />
+          </div>
         </div>
-        <span className="food-item-cal">{Math.round(item.calories)}</span>
-        <button className="food-item-delete" onClick={() => onDelete(item.id)} title="Delete">x</button>
+        <span className="food-item-cal">{Math.round(item.calories)}<small>kcal</small></span>
+        <button className="food-item-delete" onClick={() => onDelete(item.id)} title="Delete" aria-label={`Delete ${item.food_name}`}>x</button>
       </div>
     </div>
   );
@@ -886,20 +904,21 @@ const MealSection = ({ meal, items, onAdd, onScan, onDelete, onFavorite, onSaveT
   const mealCalories = mealItems.reduce((sum, item) => sum + item.calories, 0);
 
   return (
-    <div className="meal-section animate-slide-up">
+    <div className={`meal-section meal-section-${meal} animate-slide-up`}>
       <div className="meal-header" onClick={() => setExpanded((current) => !current)}>
         <div className="meal-header-left">
           <span className="meal-icon">{getMealIcon(meal)}</span>
           <div>
             <p className="meal-name">{meal.charAt(0).toUpperCase() + meal.slice(1)}</p>
-            <p className="meal-calories">{Math.round(mealCalories)} kcal</p>
+            <p className="meal-calories">{Math.round(mealCalories)} / {MEAL_BUDGETS[meal]} kcal suggested</p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="meal-header-actions">
           {mealItems.length > 0 && <button className="btn btn-ghost btn-sm" onClick={(event) => { event.stopPropagation(); onSaveTemplate(meal, mealItems); }}>Save</button>}
-          <button className="btn btn-ghost btn-sm" onClick={(event) => { event.stopPropagation(); onScan(meal); }}>Scan</button>
+          <button className="btn btn-ghost btn-sm meal-scan-btn" onClick={(event) => { event.stopPropagation(); onScan(meal); }}><ScanLine size={15} /> Scan</button>
           <button className="btn btn-ghost btn-sm" onClick={(event) => { event.stopPropagation(); onQuickAdd(meal); }}>Quick</button>
-          <button className="meal-add-btn tap-feedback" onClick={(event) => { event.stopPropagation(); onAdd(meal); }}>+</button>
+          <button className="meal-add-btn tap-feedback" onClick={(event) => { event.stopPropagation(); onAdd(meal); }} aria-label={`Add to ${meal}`}><Plus size={18} /></button>
+          <ChevronDown className={`meal-chevron ${expanded ? 'expanded' : ''}`} size={18} />
         </div>
       </div>
       {expanded && (
@@ -1107,6 +1126,12 @@ const Diary = () => {
   };
 
   const totalCalories = items.reduce((sum, item) => sum + item.calories, 0);
+  const todayDate = formatDate(new Date());
+  const dateOptions = Array.from({ length: 5 }, (_, index) => addDays(date, index - 2));
+  const caloriePercent = summary?.calories_target
+    ? Math.min((summary.calories_consumed / summary.calories_target) * 100, 100)
+    : 0;
+  const proteinPercent = Math.min(((summary?.protein || 0) / (summary?.protein_target || 140)) * 100, 100);
 
   return (
     <div className="page-content" onTouchStart={handlePageTouchStart} onTouchMove={handlePageTouchMove} onTouchEnd={handlePageTouchEnd} onTouchCancel={handlePageTouchEnd}>
@@ -1120,11 +1145,32 @@ const Diary = () => {
         </div>
       </div>
 
-      <div className="diary-date-nav">
-        <button className="date-nav-btn" onClick={() => navigateDate(-1)}>{'<'}</button>
-        <div className="date-display">{formatDisplayDate(date)}</div>
-        <button className="date-nav-btn" onClick={() => navigateDate(1)} disabled={date >= formatDate(new Date())}>{'>'}</button>
+      <div className="diary-date-nav" aria-label="Diary date">
+        <button className="date-nav-btn" onClick={() => navigateDate(-1)} aria-label="Previous day"><ChevronLeft size={19} /></button>
+        <div className="diary-date-scroller">
+          {dateOptions.map((option) => {
+            const optionDate = new Date(`${option}T12:00:00`);
+            const isActive = option === date;
+            const isToday = option === todayDate;
+            return (
+              <button
+                type="button"
+                key={option}
+                className={`diary-day-pill ${isActive ? 'active' : ''}`}
+                onClick={() => setDate(option)}
+                disabled={option > todayDate}
+                aria-current={isActive ? 'date' : undefined}
+              >
+                <span>{optionDate.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                <strong>{optionDate.getDate()}</strong>
+                {isToday && <i aria-label="Today" />}
+              </button>
+            );
+          })}
+        </div>
+        <button className="date-nav-btn" onClick={() => navigateDate(1)} disabled={date >= todayDate} aria-label="Next day"><ChevronRight size={19} /></button>
       </div>
+      <p className="diary-selected-date">{formatDisplayDate(date)}</p>
 
       <div className="diary-action-row">
         <button className="btn btn-secondary btn-sm" onClick={() => setShowCopyMeals(true)}>Copy meals</button>
@@ -1136,26 +1182,27 @@ const Diary = () => {
       </div>
 
       {summary && (
-        <div style={{ padding: '0 16px 16px' }}>
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '12px 16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{Math.round(summary.calories_consumed)} / {Math.round(summary.calories_target)} kcal</span>
-              <span style={{ fontSize: 13, color: summary.calories_consumed > summary.calories_target ? 'var(--accent-coral)' : 'var(--accent-lime)', fontWeight: 600 }}>
-                {summary.calories_consumed > summary.calories_target ? 'Over' : `${Math.round(summary.calories_target - summary.calories_consumed)} left`}
+        <div className="diary-summary-wrap">
+          <section className="diary-summary-strip">
+            <div className="diary-summary-copy">
+              <strong>{Math.round(summary.calories_consumed).toLocaleString()} <small>/ {Math.round(summary.calories_target).toLocaleString()} kcal</small></strong>
+              <span>Protein {Math.round(proteinPercent)}%</span>
+              <span className={summary.calories_consumed > summary.calories_target ? 'over' : 'on-track'}>
+                {summary.calories_consumed > summary.calories_target ? 'Over target' : 'On track'}
               </span>
             </div>
-            <div className="progress-bar">
-              <div className={`progress-bar-fill ${summary.calories_consumed >= summary.calories_target ? 'danger' : 'success'}`} style={{ width: `${Math.min((summary.calories_consumed / summary.calories_target) * 100, 100)}%` }} />
+            <div className="diary-summary-progress">
+              <span className={summary.calories_consumed >= summary.calories_target ? 'over' : ''} style={{ width: `${caloriePercent}%` }} />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 13 }}>
+            <div className="diary-macro-summary">
               {[{ label: 'Protein', value: summary.protein, color: 'var(--accent-blue)' }, { label: 'Carbs', value: summary.carbs, color: 'var(--accent-lime)' }, { label: 'Fat', value: summary.fat, color: 'var(--accent-amber)' }].map((macro) => (
-                <div key={macro.label} style={{ textAlign: 'center' }}>
-                  <div style={{ fontWeight: 700, color: macro.color, fontFamily: 'var(--font-display)' }}>{Math.round(macro.value)}g</div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{macro.label}</div>
+                <div key={macro.label}>
+                  <strong style={{ color: macro.color }}>{Math.round(macro.value)}g</strong>
+                  <span>{macro.label}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         </div>
       )}
 
@@ -1332,9 +1379,14 @@ const Diary = () => {
         )}
       </div>
 
-      <div style={{ margin: '16px 16px 0', padding: '14px 16px', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.18)', borderRadius: 'var(--radius-md)' }}>
+      <div style={{ margin: '16px 16px 0', padding: '14px 16px', background: 'rgba(var(--accent-primary-rgb),0.06)', border: '1px solid var(--border-active)', borderRadius: 'var(--radius-md)' }}>
         <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Search foods, save recipes, plan your week, and keep an eye on fiber, sodium, vitamins, and minerals alongside macros.</p>
       </div>
+
+      <button className="diary-scan-fab" type="button" onClick={() => setScanModal('breakfast')} aria-label="Open AI food scanner">
+        <span><Camera size={23} /><ScanLine size={15} /></span>
+        <strong>AI Scan</strong>
+      </button>
 
       {addModal && <AddFoodModal meal={addModal} date={date} onClose={() => setAddModal(null)} onSave={loadData} />}
       {scanModal && <FoodScannerModal defaultMeal={scanModal} date={date} onClose={() => setScanModal(null)} onSuccess={loadData} />}

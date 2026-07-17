@@ -132,7 +132,7 @@ export const COMMUNITY_POSTS = [
     id: 4,
     user: 'Sam T.',
     initials: 'ST',
-    color: '#a78bfa',
+    color: '#c084fc',
     time: '1d ago',
     content: '💧 30-day hydration challenge complete! 8 glasses every single day. My skin is glowing and energy levels are through the roof.',
     likes: 45,

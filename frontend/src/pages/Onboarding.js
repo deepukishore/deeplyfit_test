@@ -184,20 +184,17 @@ const Onboarding = () => {
 
   return (
     <div className="onboarding-page">
-      <div style={{
-        position: 'fixed', inset: 0,
-        background: 'radial-gradient(ellipse at 30% 10%, rgba(168,85,247,0.12) 0%, transparent 60%), radial-gradient(ellipse at 80% 90%, rgba(192,132,252,0.08) 0%, transparent 60%), var(--bg-primary)',
-        zIndex: 0
-      }} />
+      <div className="onboarding-backdrop" />
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 420, margin: '0 auto' }}>
         <div className="onboarding-header">
-          <div className="onboarding-step-indicator">
-            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-              <div key={i} className={`step-dot ${i === step ? 'active' : i < step ? 'completed' : ''}`} />
-            ))}
+          <div className="onboarding-progress-copy">
+            <span>Step {step + 1} of {TOTAL_STEPS}</span>
+            <strong>{Math.round(((step + 1) / TOTAL_STEPS) * 100)}%</strong>
           </div>
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>Step {step + 1} of {TOTAL_STEPS}</p>
+          <div className="onboarding-step-indicator" aria-label={`Step ${step + 1} of ${TOTAL_STEPS}`}>
+            <span style={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }} />
+          </div>
           <div className="onboarding-visual-wrap animate-fade-in">
             <OnboardingVisual step={step} calculated={calculated} />
           </div>

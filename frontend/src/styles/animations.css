@@ -60,6 +60,66 @@
   50% { box-shadow: 0 0 24px rgba(var(--accent-primary-rgb), 0.42); }
 }
 
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes aurora {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(30px, -20px, 0) scale(1.05); }
+  66% { transform: translate3d(-20px, 10px, 0) scale(0.98); }
+}
+
+@keyframes logoPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(var(--accent-primary-rgb), 0.3); }
+  50% { box-shadow: 0 0 60px rgba(var(--accent-primary-rgb), 0.55), 0 0 100px rgba(var(--accent-primary-rgb), 0.18); }
+}
+
+@keyframes tickerMove {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blinkCaret {
+  50% { border-color: transparent; }
+}
+
+@keyframes ringDraw {
+  from { stroke-dashoffset: 502; }
+}
+
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes waveShift {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes typingDot {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-8px); }
+}
+
+@keyframes navCoachPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-primary-rgb), 0.25), var(--shadow-lime); }
+  50% { box-shadow: 0 0 0 8px rgba(var(--accent-primary-rgb), 0), var(--shadow-lime); }
+}
+
+@keyframes badgeUnlock {
+  0% { opacity: 0; transform: scale(0.65) rotate(-10deg); }
+  70% { transform: scale(1.08) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
 /* Animation classes */
 .animate-fade-in { animation: fadeIn 0.4s ease forwards; }
 .animate-slide-up { animation: slideUp 0.4s ease forwards; }
@@ -68,6 +128,14 @@
 .animate-pulse { animation: pulse 2s ease infinite; }
 .animate-bounce { animation: bounce 1s ease infinite; }
 .animate-glow { animation: glow 2s ease infinite; }
+/* Usage: apply to route-level containers. */
+.animate-page-enter { animation: pageEnter 300ms ease both; }
+/* Usage: apply to decorative aurora layers. */
+.animate-aurora { animation: aurora 14s ease-in-out infinite; }
+/* Usage: apply to progress fills with transform-origin:left. */
+.animate-bar-grow { animation: barGrow 800ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+/* Usage: apply when an achievement is first revealed. */
+.animate-badge-unlock { animation: badgeUnlock 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 
 /* Staggered children */
 .stagger > *:nth-child(1) { animation-delay: 0ms; }
@@ -142,4 +210,22 @@
 
 .tap-feedback:active::after {
   opacity: 1;
+}
+
+button,
+.btn {
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease, border-color 180ms ease;
+}
+
+button:active,
+.btn:active {
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

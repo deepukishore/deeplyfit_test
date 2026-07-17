@@ -1,5 +1,5 @@
 /* ===== FITTRACK AI - GLOBAL STYLES ===== */
-/* Aesthetic: Dark luxury fitness — obsidian + electric lime + warm amber */
+/* Aesthetic: Deeplyfit purple, obsidian, blue, and warm amber */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -41,8 +41,8 @@
   --error: #f87171;
 
   /* Fonts */
-  --font-display: 'Plus Jakarta Sans', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-display: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Manrope', sans-serif;
 
   /* Spacing */
   --space-xs: 4px;
@@ -72,7 +72,7 @@
   --transition-slow: 400ms ease;
 
   /* Bottom nav height */
-  --nav-height: 64px;
+  --nav-height: 72px;
 }
 
 /* Light mode */
@@ -154,6 +154,7 @@ html.light {
   padding-bottom: calc(var(--nav-height) + 16px);
   min-height: 100dvh;
   min-width: 0;
+  animation: pageEnter 300ms ease both;
 }
 
 .pull-refresh-shell {

@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
+import {
+  BookOpenText,
+  Droplets,
+  Dumbbell,
+  Flame,
+  Play,
+  RefreshCw,
+  Scale,
+  Settings,
+  Target,
+  Utensils,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
@@ -13,7 +24,7 @@ import WorkoutPlannerModal from '../components/WorkoutPlannerModal';
 import '../styles/dashboard.css';
 import '../styles/animations.css';
 
-const MACRO_COLORS = ['#4facfe', '#a855f7', '#f5a623'];
+const MACRO_COLORS = ['var(--accent-blue)', 'var(--accent-lime)', 'var(--accent-amber)'];
 
 const getInitialHomeSummary = (date, user) => (
   getCachedDiaryDate(date).summary || createEmptySummary(date, {
@@ -295,157 +306,171 @@ const Home = () => {
 
   const remaining = (summary?.calories_target || 0) - (summary?.calories_consumed || 0) + (summary?.calories_burned || 0);
   const progress = Math.min(((summary?.calories_consumed || 0) / (summary?.calories_target || 2000)) * 100, 100);
-
-  const macroData = [
-    { name: 'Protein', value: Math.round(summary?.protein || 0) },
-    { name: 'Carbs', value: Math.round(summary?.carbs || 0) },
-    { name: 'Fat', value: Math.round(summary?.fat || 0) },
-  ].filter(m => m.value > 0);
+  const hour = new Date().getHours();
+  const timeTheme = hour >= 6 && hour < 12
+    ? 'morning'
+    : hour >= 12 && hour < 17
+      ? 'afternoon'
+      : hour >= 17 && hour < 21
+        ? 'evening'
+        : 'night';
+  const displayDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+  const macroRows = [
+    { name: 'Protein', value: summary?.protein || 0, target: user?.protein_target || 140, color: MACRO_COLORS[0] },
+    { name: 'Carbs', value: summary?.carbs || 0, target: user?.carbs_target || 200, color: MACRO_COLORS[1] },
+    { name: 'Fat', value: summary?.fat || 0, target: user?.fat_target || 65, color: MACRO_COLORS[2] },
+  ];
+  const streakDays = Math.min(calorieStreak?.current_streak || 0, 7);
 
   const suggestions = getWorkoutSuggestions(user?.fitness_goal, user?.activity_level);
   const initials = getInitials(user?.name, user?.email);
 
   return (
     <div className="page-content">
-      {/* Header */}
-      <div className="page-header">
+      <div className={`page-header home-hero home-hero-${timeTheme}`}>
         <div className="page-header-inner">
           <div>
             <p className="greeting-text">{getGreeting()}</p>
-            <h1 className="greeting-name">{user?.name || user?.email?.split('@')[0] || 'Athlete'} 👋</h1>
+            <h1 className="greeting-name">{user?.name || user?.email?.split('@')[0] || 'Athlete'}</h1>
+            <p className="home-streak-subtitle">
+              {calorieStreak?.current_streak
+                ? `You're ${calorieStreak.current_streak} days into your streak.`
+                : 'Make today count.'}
+            </p>
           </div>
-          <div className="header-avatar" onClick={() => navigate('/profile')}>{initials}</div>
+          <div className="home-hero-actions">
+            <span className="home-date-pill">{displayDate}</span>
+            <button className="header-avatar" type="button" onClick={() => navigate('/profile')} aria-label="Open profile">{initials}</button>
+          </div>
         </div>
       </div>
 
       <div className="page-scroll stagger">
-        {/* Quote */}
         <div className="quote-card animate-fade-in">
-          <div className="quote-icon">💬</div>
-          <p className="quote-text">"{getDailyQuote()}"</p>
+          <span className="quote-mark" aria-hidden="true">&ldquo;</span>
+          <p className="quote-text">{getDailyQuote()}</p>
         </div>
 
-        {/* Calories */}
-        <div className="calories-card animate-slide-up">
-          <div className="calories-main">
-            <div className="calories-remaining">
-              <p className="calories-remaining-label">Calories remaining</p>
-              <div className={`calories-remaining-value ${remaining < 0 ? 'over' : ''}`}>
-                {Math.abs(Math.round(remaining))}
-              </div>
-              {remaining < 0 && <p style={{ fontSize: 12, color: 'var(--accent-coral)', marginTop: 4 }}>Over goal by {Math.abs(Math.round(remaining))} kcal</p>}
-            </div>
-            <div className="calories-formula">
-              <div className="formula-row"><span className="label">Goal</span><span className="value goal">{Math.round(summary?.calories_target || 0)}</span></div>
-              <div className="formula-row"><span className="label">Food</span><span className="op">−</span><span className="value">{Math.round(summary?.calories_consumed || 0)}</span></div>
-              <div className="formula-row"><span className="label">Exercise</span><span className="op">+</span><span className="value">{Math.round(summary?.calories_burned || 0)}</span></div>
-            </div>
-          </div>
-          <div className="calories-progress">
-            <div className="progress-label">
-              <span>0</span>
-              <span>{Math.round(progress)}% of goal</span>
-              <span>{Math.round(summary?.calories_target || 0)}</span>
-            </div>
-            <div className="progress-bar">
-              <div className={`progress-bar-fill ${progress >= 100 ? 'danger' : progress >= 80 ? 'warning' : 'success'}`} style={{ width: `${progress}%` }} />
+        <section className="calories-card calorie-command-card animate-slide-up">
+          <div className="calorie-ring-wrap">
+            <svg className="calorie-ring" viewBox="0 0 200 200" role="img" aria-label={`${Math.round(progress)} percent of calorie goal`}>
+              <defs>
+                <linearGradient id="homeLimeGradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="var(--accent-lime)" />
+                  <stop offset="100%" stopColor="var(--accent-amber)" />
+                </linearGradient>
+              </defs>
+              <circle className="calorie-ring-track" cx="100" cy="100" r="80" />
+              <circle
+                className="calorie-ring-progress"
+                cx="100"
+                cy="100"
+                r="80"
+                style={{ strokeDashoffset: 502 - (502 * progress) / 100 }}
+              />
+            </svg>
+            <div className="calorie-ring-copy">
+              <strong className={remaining < 0 ? 'over' : ''}>{Math.abs(Math.round(remaining)).toLocaleString()}</strong>
+              <span>{remaining < 0 ? 'kcal over goal' : 'kcal remaining'}</span>
             </div>
           </div>
-        </div>
+          <div className="calorie-mini-stats">
+            <span><Utensils size={15} /><strong>{Math.round(summary?.calories_consumed || 0).toLocaleString()}</strong> eaten</span>
+            <span><Dumbbell size={15} /><strong>{Math.round(summary?.calories_burned || 0).toLocaleString()}</strong> burned</span>
+            <span><Target size={15} /><strong>{Math.round(summary?.calories_target || 0).toLocaleString()}</strong> goal</span>
+          </div>
+        </section>
 
-        {/* Calorie Streak */}
         {calorieStreak && (
-          <div className="animate-slide-up" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-lg)' }}>
-            <div className="section-header" style={{ marginBottom: 12 }}>
-              <h2 className="section-title">🎯 Calorie Streak</h2>
-              <span className="badge badge-lime">Within goal</span>
-            </div>
-            <div style={{ display: 'flex', gap: 16 }}>
-              <div style={{ flex: 1, background: 'var(--bg-elevated)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 800, color: 'var(--accent-lime)', lineHeight: 1 }}>{calorieStreak.current_streak}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Current streak</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{calorieStreak.current_streak === 1 ? 'day' : 'days'} 🔥</div>
+          <section className="streak-command-card animate-slide-up">
+            <div className="streak-command-head">
+              <span className={`streak-fire ${calorieStreak.current_streak >= 3 ? 'is-hot' : ''}`}><Flame size={30} fill="currentColor" /></span>
+              <div>
+                <h2>{calorieStreak.current_streak}-Day Streak</h2>
+                <p>Best run: {calorieStreak.best_streak} days</p>
               </div>
-              <div style={{ flex: 1, background: 'var(--bg-elevated)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 800, color: 'var(--accent-amber)', lineHeight: 1 }}>{calorieStreak.best_streak}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Best streak</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{calorieStreak.best_streak === 1 ? 'day' : 'days'} 🏆</div>
-              </div>
+              <strong>{streakDays}/7</strong>
             </div>
-          </div>
+            <div className="streak-progress"><span style={{ width: `${(streakDays / 7) * 100}%` }} /></div>
+            <div className="streak-week" aria-label={`${streakDays} completed days this week`}>
+              {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((day, index) => (
+                <span key={day} className={index < streakDays ? 'complete' : ''}>
+                  <i>{index < streakDays ? '\u2713' : ''}</i>{day}
+                </span>
+              ))}
+            </div>
+            <p className="streak-nudge">
+              {streakDays === 7 ? 'Week Warrior unlocked.' : `Keep going. ${7 - streakDays} more ${7 - streakDays === 1 ? 'day' : 'days'} to unlock Week Warrior.`}
+            </p>
+          </section>
         )}
 
-        {/* Macros */}
-        {(summary?.protein > 0 || summary?.carbs > 0 || summary?.fat > 0) ? (
-          <div className="macros-card animate-slide-up">
-            <div className="section-header">
-              <h2 className="section-title">Macros</h2>
-              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Today</span>
-            </div>
-            <div className="macros-chart-wrapper">
-              <div style={{ width: 120, height: 120 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={macroData} cx="50%" cy="50%" innerRadius={35} outerRadius={55} paddingAngle={3} dataKey="value">
-                      {macroData.map((_, i) => <Cell key={i} fill={MACRO_COLORS[i]} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="macros-legend">
-                {[
-                  { name: 'Protein', val: summary?.protein, color: MACRO_COLORS[0], target: user?.protein_target },
-                  { name: 'Carbs', val: summary?.carbs, color: MACRO_COLORS[1], target: user?.carbs_target },
-                  { name: 'Fat', val: summary?.fat, color: MACRO_COLORS[2], target: user?.fat_target },
-                ].map(m => (
-                  <div key={m.name} className="macro-legend-item">
-                    <div className="macro-legend-dot" style={{ background: m.color }} />
-                    <span className="macro-legend-label">{m.name}</span>
-                    <span className="macro-legend-value">{Math.round(m.val || 0)}g{m.target ? ` / ${Math.round(m.target)}` : ''}</span>
+        <section className="macros-card macro-bars-card animate-slide-up">
+          <div className="section-header">
+            <h2 className="section-title">Macro balance</h2>
+            <span className="section-kicker">Today</span>
+          </div>
+          <div className="macro-bars">
+            {macroRows.map((macro) => {
+              const macroProgress = Math.min((macro.value / macro.target) * 100, 100);
+              return (
+                <div className="macro-bar-row" key={macro.name}>
+                  <div className="macro-bar-copy">
+                    <span><i style={{ background: macro.color }} />{macro.name}</span>
+                    <strong>{Math.round(macro.value)}g <small>/ {Math.round(macro.target)}g</small></strong>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <div className="macro-bar-track">
+                    <span style={{ width: `${macroProgress}%`, background: macro.color }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ) : (
-          <div className="macros-card animate-slide-up">
-            <div className="section-header"><h2 className="section-title">Macros</h2></div>
-            <p style={{ fontSize: 14, color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>Log food to see your macro breakdown</p>
-          </div>
-        )}
+          {!macroRows.some((macro) => macro.value > 0) && (
+            <p className="macro-empty">Log food to start building your macro picture.</p>
+          )}
+        </section>
 
-        {/* Water Tracker */}
-        <div className="water-card animate-slide-up">
-          <div className="water-header">
-            <div>
-              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4 }}>Water intake</p>
-              <div className="water-count">{summary?.water_glasses || 0}</div>
-              <p className="water-target">of {waterGoal} glasses</p>
+        <section className="water-card water-command-card animate-slide-up">
+          <div className="water-command-copy">
+            <span className="section-kicker">Hydration</span>
+            <h2>Water balance</h2>
+            <p>Small sips. Better energy. Sharper recovery.</p>
+            <button className="water-goal-btn" type="button" onClick={() => setShowHydrationModal(true)}>
+              <Settings size={15} /> Set goal
+            </button>
+          </div>
+          <div className="water-bottle" aria-label={`${summary?.water_glasses || 0} of ${waterGoal} glasses`}>
+            <div
+              className="water-bottle-fill"
+              style={{ height: `${Math.min(((summary?.water_glasses || 0) / waterGoal) * 100, 100)}%` }}
+            >
+              <span />
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>💧</div>
-              <div style={{ fontSize: 13, color: 'var(--accent-blue)' }}>
-                {(Math.min((summary?.water_glasses || 0) / waterGoal, 1) * 100).toFixed(0)}%
-              </div>
-              <button className="btn btn-ghost btn-sm" style={{ marginTop: 6, fontSize: 11 }} onClick={() => setShowHydrationModal(true)}>⚙️ Goal</button>
+            <div className="water-bottle-copy">
+              <strong>{summary?.water_glasses || 0}/{waterGoal}</strong>
+              <span>glasses</span>
             </div>
           </div>
-          <div className="water-glasses">
-            {Array.from({ length: waterGoal }).map((_, i) => (
-              <div key={i} className={`water-glass ${i < (summary?.water_glasses || 0) ? 'filled' : ''}`}>💧</div>
-            ))}
-          </div>
-          <button className="btn btn-secondary water-add-btn btn-full btn-sm" onClick={handleAddGlass} disabled={(summary?.water_glasses || 0) >= waterGoal}>
-            + Add Glass
+          <button
+            className="btn btn-secondary water-add-btn"
+            type="button"
+            onClick={handleAddGlass}
+            disabled={(summary?.water_glasses || 0) >= waterGoal}
+          >
+            <Droplets size={17} /> Add Glass
           </button>
-        </div>
+        </section>
 
         {suggestionsData && (
           <div className="meal-suggestions-card animate-slide-up">
             <div className="section-header">
               <h2 className="section-title">AI Meal Suggestions</h2>
-              <button className="btn btn-ghost btn-sm" onClick={loadSuggestions}>Refresh</button>
+              <button className="btn btn-ghost btn-sm icon-text-btn" onClick={loadSuggestions}><RefreshCw size={14} /> Refresh</button>
             </div>
             <p className="meal-suggestions-summary">{suggestionsData.summary_text}</p>
             <div className="meal-suggestions-grid">
@@ -468,40 +493,46 @@ const Home = () => {
           </div>
         )}
 
-        {/* Quick Actions */}
-        <div>
+        <div className="quick-actions-section">
           <div className="section-header"><h2 className="section-title">Quick Actions</h2></div>
           <div className="quick-actions">
             {[
-              { icon: '🍽️', label: 'Log Food', color: 'rgba(168,85,247,0.12)', action: () => setModal('food') },
-              { icon: '🏋️', label: 'Log Workout', color: 'rgba(245,166,35,0.1)', action: () => setModal('workout') },
-              { icon: '⚖️', label: 'Log Weight', color: 'rgba(79,172,254,0.1)', action: () => setModal('weight') },
-              { icon: '📚', label: 'Planner', color: 'rgba(192,132,252,0.12)', action: () => setShowPlanner(true) },
-            ].map(a => (
-              <button key={a.label} className="quick-action-btn tap-feedback" onClick={a.action}>
-                <div className="quick-action-icon" style={{ background: a.color }}>{a.icon}</div>
-                <span className="quick-action-label">{a.label}</span>
-              </button>
-            ))}
+              { icon: Utensils, label: 'Log Food', tone: 'lime', action: () => setModal('food') },
+              { icon: Dumbbell, label: 'Workout', tone: 'amber', action: () => setModal('workout') },
+              { icon: Scale, label: 'Weight', tone: 'blue', action: () => setModal('weight') },
+              { icon: BookOpenText, label: 'Planner', tone: 'purple', action: () => setShowPlanner(true) },
+            ].map((action) => {
+              const Icon = action.icon;
+              return (
+                <button key={action.label} className={`quick-action-btn quick-action-${action.tone} tap-feedback`} onClick={action.action}>
+                  <span className="quick-action-icon"><Icon size={23} /></span>
+                  <span className="quick-action-label">{action.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Workout Suggestions */}
         <div className="workout-card animate-slide-up">
           <div className="section-header">
             <h2 className="section-title">Suggested Workouts</h2>
             <span className="badge badge-lime">{user?.fitness_goal || 'maintain'}</span>
           </div>
-          {suggestions.map((s, i) => (
-            <div key={i} className="workout-suggestion">
-              <div className="workout-suggestion-icon">{s.icon}</div>
-              <div className="workout-suggestion-info">
-                <p className="workout-suggestion-name">{s.name}</p>
-                <p className="workout-suggestion-detail">{s.detail}</p>
-              </div>
-              <span className="workout-suggestion-cal">~{s.calories} kcal</span>
-            </div>
-          ))}
+          <div className="workout-suggestions-scroll">
+            {suggestions.map((suggestion, index) => (
+              <article key={suggestion.name} className={`workout-suggestion workout-tone-${index % 4}`}>
+                <div className="workout-suggestion-icon">{suggestion.icon}</div>
+                <div className="workout-suggestion-info">
+                  <p className="workout-suggestion-name">{suggestion.name}</p>
+                  <p className="workout-suggestion-detail">{suggestion.detail}</p>
+                  <span className="workout-suggestion-cal">~{suggestion.calories} kcal</span>
+                </div>
+                <button type="button" className="workout-start-btn" onClick={() => setShowPlanner(true)} aria-label={`Start ${suggestion.name}`}>
+                  <Play size={14} fill="currentColor" /> Start
+                </button>
+              </article>
+            ))}
+          </div>
         </div>
 
         {recentWorkoutHistory.length > 0 && (

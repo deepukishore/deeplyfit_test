@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts';
 import toast from 'react-hot-toast';
+import { Flame, Lock, Scale, Target, TrendingDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
@@ -83,25 +84,51 @@ const LogWeightModal = ({ onClose, onSave }) => {
   );
 };
 
+const BmiGauge = ({ value, category }) => {
+  const percent = value ? Math.min(Math.max(((value - 15) / 20) * 100, 0), 100) : 0;
+  const angle = -90 + (percent * 1.8);
+
+  return (
+    <div className="bmi-gauge">
+      <svg viewBox="0 0 240 135" role="img" aria-label={`BMI ${value?.toFixed(1) || 'not available'}, ${category || ''}`}>
+        <path className="bmi-arc bmi-under" pathLength="100" d="M30 110 A90 90 0 0 1 210 110" />
+        <path className="bmi-arc bmi-normal" pathLength="100" d="M30 110 A90 90 0 0 1 210 110" />
+        <path className="bmi-arc bmi-overweight" pathLength="100" d="M30 110 A90 90 0 0 1 210 110" />
+        <path className="bmi-arc bmi-obese" pathLength="100" d="M30 110 A90 90 0 0 1 210 110" />
+        <line className="bmi-needle" x1="120" y1="110" x2="120" y2="42" transform={`rotate(${angle} 120 110)`} />
+        <circle className="bmi-needle-hub" cx="120" cy="110" r="8" />
+      </svg>
+      <div className="bmi-gauge-copy">
+        <strong>{value?.toFixed(1) || '-'}</strong>
+        <span>{category || 'Add your body stats'}</span>
+      </div>
+      <div className="bmi-gauge-labels"><span>Under</span><span>Normal</span><span>Over</span><span>Obese</span></div>
+    </div>
+  );
+};
+
 const Progress = () => {
   const { user } = useAuth();
   const [weightLogs, setWeightLogs] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
   const [bmiHistory, setBmiHistory] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [achievements, setAchievements] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showWeightModal, setShowWeightModal] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
       const canLoadBmiHistory = Boolean(user?.height);
-      const [weights, weekly, bmi] = await Promise.all([
+      const [weights, weekly, bmi, achievementData] = await Promise.all([
         api.getWeightLogs(30),
         api.getWeeklySummary(),
         canLoadBmiHistory ? api.getBMIHistory(30).catch(() => null) : Promise.resolve(null),
+        api.getAchievements().catch(() => []),
       ]);
       setWeightLogs(weights);
       setWeeklyData(weekly);
       setBmiHistory(bmi);
+      setAchievements(achievementData);
     } catch (err) {
       toast.error('Failed to load progress data');
     } finally {
@@ -127,17 +154,22 @@ const Progress = () => {
   const weightChange = latestWeight && startWeight ? (latestWeight - startWeight).toFixed(1) : 0;
   const kgToGoal = latestWeight && user?.goal_weight ? Math.abs(latestWeight - user.goal_weight).toFixed(1) : '-';
   const latestBmi = bmiHistory?.latest_bmi;
-  const bmiMarker = latestBmi ? Math.min(Math.max(((latestBmi - 15) / 20) * 100, 0), 100) : 0;
-  const healthyStart = ((18.5 - 15) / 20) * 100;
-  const healthyWidth = ((24.9 - 18.5) / 20) * 100;
 
   const streak = Math.min(weightLogs.length, 7);
+  const currentWeek = weeklyData.slice(-7);
+  const previousWeek = weeklyData.length >= 14 ? weeklyData.slice(-14, -7) : [];
+  const averageCalories = (rows) => rows.length
+    ? Math.round(rows.reduce((sum, row) => sum + (row.calories || 0), 0) / rows.length)
+    : null;
+  const currentAverage = averageCalories(currentWeek);
+  const previousAverage = averageCalories(previousWeek);
+  const averageChange = currentAverage !== null && previousAverage !== null ? currentAverage - previousAverage : null;
 
   const stats = [
-    { icon: '🔥', label: 'Day Streak', value: streak, color: 'var(--accent-amber)' },
-    { icon: '⚖️', label: 'kg to Goal', value: kgToGoal, color: 'var(--accent-lime)' },
-    { icon: '📉', label: 'Weight Change', value: `${weightChange > 0 ? '+' : ''}${weightChange}kg`, color: weightChange < 0 ? 'var(--accent-lime)' : weightChange > 0 ? 'var(--accent-coral)' : 'var(--text-primary)' },
-    { icon: '🎯', label: 'Goal Weight', value: `${user?.goal_weight || '-'}kg`, color: 'var(--accent-blue)' },
+    { icon: Flame, label: 'Day Streak', value: streak, color: 'var(--accent-amber)' },
+    { icon: Scale, label: 'kg to Goal', value: kgToGoal, color: 'var(--accent-lime)' },
+    { icon: TrendingDown, label: 'Weight Change', value: `${weightChange > 0 ? '+' : ''}${weightChange}kg`, color: weightChange < 0 ? 'var(--accent-lime)' : weightChange > 0 ? 'var(--accent-coral)' : 'var(--text-primary)' },
+    { icon: Target, label: 'Goal Weight', value: `${user?.goal_weight || '-'}kg`, color: 'var(--accent-blue)' },
   ];
 
   return (
@@ -156,14 +188,30 @@ const Progress = () => {
           </div>
         ) : (
           <>
+            <section className="progress-hero animate-slide-up">
+              <div>
+                <span className="section-kicker">Latest weight</span>
+                <h2>{latestWeight ? `${latestWeight} kg` : 'Start tracking'}</h2>
+                <p className={Number(weightChange) <= 0 ? 'positive' : 'negative'}>
+                  {weightLogs.length >= 2
+                    ? `${Number(weightChange) > 0 ? '+' : ''}${weightChange} kg across your logged period`
+                    : 'Log another entry to reveal your trend.'}
+                </p>
+              </div>
+              <div className="progress-hero-mark"><Scale size={30} /></div>
+            </section>
+
             <div className="progress-stats-grid animate-slide-up" style={{ marginBottom: 16 }}>
-              {stats.map((stat) => (
-                <div key={stat.label} className="stat-card">
-                  <div className="stat-card-icon">{stat.icon}</div>
-                  <div className="stat-card-value" style={{ color: stat.color }}>{stat.value}</div>
-                  <div className="stat-card-label">{stat.label}</div>
-                </div>
-              ))}
+              {stats.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={stat.label} className="stat-card">
+                    <div className="stat-card-icon"><Icon size={19} /></div>
+                    <div className="stat-card-value" style={{ color: stat.color }}>{stat.value}</div>
+                    <div className="stat-card-label">{stat.label}</div>
+                  </div>
+                );
+              })}
             </div>
 
             {bmiHistory && (
@@ -172,28 +220,8 @@ const Progress = () => {
                   <p className="chart-title" style={{ marginBottom: 0 }}>BMI Tracker</p>
                   <span className="badge badge-lime">{bmiHistory.bmi_category}</span>
                 </div>
-                <div className="bmi-summary-row">
-                  <div>
-                    <p className="bmi-summary-label">Current BMI</p>
-                    <div className="bmi-summary-value">{latestBmi?.toFixed(1)}</div>
-                  </div>
-                  <div>
-                    <p className="bmi-summary-label">Healthy weight range</p>
-                    <div className="bmi-summary-meta">{bmiHistory.healthy_weight_min} - {bmiHistory.healthy_weight_max} kg</div>
-                  </div>
-                </div>
-                <div className="bmi-range-visual">
-                  <div className="bmi-range-track">
-                    <div className="bmi-range-good" style={{ left: `${healthyStart}%`, width: `${healthyWidth}%` }} />
-                    <div className="bmi-range-marker" style={{ left: `${bmiMarker}%` }} />
-                  </div>
-                  <div className="bmi-range-labels">
-                    <span>15</span>
-                    <span>18.5</span>
-                    <span>24.9</span>
-                    <span>35</span>
-                  </div>
-                </div>
+                <BmiGauge value={latestBmi} category={bmiHistory.bmi_category} />
+                <p className="bmi-healthy-copy">Healthy weight range: <strong>{bmiHistory.healthy_weight_min} - {bmiHistory.healthy_weight_max} kg</strong></p>
                 {bmiData.length >= 2 && (
                   <ResponsiveContainer width="100%" height={200}>
                     <LineChart data={bmiData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
@@ -261,8 +289,8 @@ const Progress = () => {
                   <AreaChart data={weeklyData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                     <defs>
                       <linearGradient id="calGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#a855f7" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+                        <stop offset="5%" stopColor="var(--accent-lime)" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="var(--accent-lime)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -285,6 +313,50 @@ const Progress = () => {
                 </ResponsiveContainer>
               )}
             </div>
+
+            <section className="comparison-card animate-slide-up">
+              <div className="section-header">
+                <div>
+                  <span className="section-kicker">Comparison</span>
+                  <h2 className="section-title">Daily calorie average</h2>
+                </div>
+                {averageChange !== null && (
+                  <span className={`comparison-change ${averageChange <= 0 ? 'positive' : 'negative'}`}>
+                    {averageChange > 0 ? '+' : ''}{averageChange} kcal
+                  </span>
+                )}
+              </div>
+              <div className="comparison-grid">
+                <div><span>This week</span><strong>{currentAverage !== null ? currentAverage.toLocaleString() : '-'}</strong><small>kcal per day</small></div>
+                <div><span>Last week</span><strong>{previousAverage !== null ? previousAverage.toLocaleString() : '-'}</strong><small>{previousAverage !== null ? 'kcal per day' : 'Keep logging'}</small></div>
+              </div>
+            </section>
+
+            {achievements.length > 0 && (
+              <section className="achievement-wall animate-slide-up">
+                <div className="section-header">
+                  <div>
+                    <span className="section-kicker">Milestones</span>
+                    <h2 className="section-title">Achievement wall</h2>
+                  </div>
+                  <span className="badge badge-lime">{achievements.filter((item) => item.unlocked).length} unlocked</span>
+                </div>
+                <div className="achievement-wall-grid">
+                  {achievements.slice(0, 8).map((achievement, index) => (
+                    <article
+                      className={`progress-achievement ${achievement.unlocked ? 'unlocked animate-badge-unlock' : 'locked'}`}
+                      key={achievement.key}
+                      style={{ animationDelay: `${index * 70}ms` }}
+                    >
+                      <span className="progress-achievement-icon">{achievement.unlocked ? achievement.icon : <Lock size={20} />}</span>
+                      <strong>{achievement.name}</strong>
+                      <small>{achievement.unlocked ? 'Unlocked' : `${achievement.progress.current}/${achievement.progress.target}`}</small>
+                      {achievement.unlocked && index === 0 && <i>New</i>}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {weightLogs.length > 0 && (
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '16px', marginBottom: 16 }}>

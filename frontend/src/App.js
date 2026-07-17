@@ -26,6 +26,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const About = lazy(() => import('./pages/About'));
 const Download = lazy(() => import('./pages/Download'));
+const Landing = lazy(() => import('./pages/Landing'));
 
 const RouteSkeleton = () => (
   <div className="page-content route-skeleton">
@@ -170,7 +171,7 @@ const AppRoutes = () => {
           element={user ? <AppLayout><Download /></AppLayout> : <Download />}
         />
         <Route path="/u/:slug" element={<div className="app-container"><PublicProfile /></div>} />
-        <Route path="/" element={<Navigate to={user ? (user.onboarding_complete ? '/home' : '/onboarding') : '/login'} replace />} />
+        <Route path="/" element={<Landing />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

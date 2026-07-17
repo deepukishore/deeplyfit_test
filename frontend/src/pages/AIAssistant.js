@@ -1,21 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Bot, Camera, Send, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import toast from 'react-hot-toast';
 import { canChat, incrementChatCount, chatsLeft, isPro } from '../utils/premium';
 import PremiumModal from '../components/PremiumModal';
 import '../styles/assistant.css';
-
-const QUICK_SUGGESTIONS = [
-  'What should I eat for lunch? 🍽️',
-  'Why am I not losing weight? 🤔',
-  'How much protein did I have today? 💪',
-  'Give me a workout suggestion 🏋️',
-  'Am I on track this week? 📊',
-  'What is my calorie deficit today? 🔥',
-  'Motivate me! ⚡',
-  'Best foods for my goal? 🥗',
-];
 
 function Message({ msg, userInitials }) {
   const isUser = msg.role === 'user';
@@ -38,7 +28,7 @@ function Message({ msg, userInitials }) {
         </>
       ) : (
         <>
-          <div className="assistant-avatar">🤖</div>
+          <div className="assistant-avatar"><Bot size={17} /></div>
           <div className="message-bubble assistant-bubble">
             <div className="message-text">{msg.content}</div>
             <div className="message-time">{timeStr}</div>
@@ -145,7 +135,7 @@ export default function AIAssistant() {
     <div className="assistant-page">
       <div className="assistant-header">
         <div className="assistant-header-left">
-          <div className="assistant-icon">🤖</div>
+          <div className="assistant-icon"><Bot size={23} /></div>
           <div>
             <h1 className="assistant-title">AI Coach</h1>
             <p className="assistant-status">
@@ -161,8 +151,8 @@ export default function AIAssistant() {
             </span>
           )}
           {premiumActive && <span className="badge badge-pro">💎 PRO</span>}
-          <button className="btn btn-ghost btn-sm" onClick={clearChat}>
-            Clear
+          <button className="btn btn-ghost btn-sm assistant-clear-btn" onClick={clearChat} aria-label="Clear chat" title="Clear chat">
+            <Trash2 size={16} />
           </button>
         </div>
       </div>
@@ -174,7 +164,7 @@ export default function AIAssistant() {
 
         {loading && (
           <div className="chat-message assistant">
-            <div className="assistant-avatar">🤖</div>
+            <div className="assistant-avatar"><Bot size={17} /></div>
             <div className="message-bubble assistant-bubble typing-bubble">
               <div className="typing-dots">
                 <span />
@@ -188,19 +178,6 @@ export default function AIAssistant() {
         <div ref={bottomRef} />
       </div>
 
-      {false && messages.length <= 1 && (
-        <div className="suggestions-container">
-          <p className="suggestions-label">💡 Try asking:</p>
-          <div className="suggestions-scroll">
-            {QUICK_SUGGESTIONS.map((suggestion, i) => (
-              <button key={i} className="suggestion-chip" onClick={() => sendMessage(suggestion)} disabled={loading}>
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="chat-input-container">
         {!premiumActive && chatsLeft(premiumActive) === 0 ? (
           <div className="chat-limit-wall">
@@ -212,6 +189,7 @@ export default function AIAssistant() {
           </div>
         ) : (
           <div className="chat-input-wrapper">
+            <span className="chat-camera-icon" aria-hidden="true"><Camera size={19} /></span>
             <textarea
               ref={textareaRef}
               className="chat-input"
@@ -227,7 +205,7 @@ export default function AIAssistant() {
               onClick={() => sendMessage()}
               disabled={!input.trim() || loading}
             >
-              {loading ? <span className="spinner" /> : <span>↑</span>}
+              {loading ? <span className="spinner" /> : <Send size={17} />}
             </button>
           </div>
         )}
