@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '../utils/theme';
 
@@ -54,7 +54,9 @@ const About = ({ navigation }) => {
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         <View style={s.hero}>
-          <Animated.View style={[s.heroMark, floatStyle]}><Text style={s.heroMarkText}>DF</Text></Animated.View>
+          <Animated.View style={[s.heroMark, floatStyle]}>
+            <Image source={require('../../assets/icon.png')} style={s.heroLogo} resizeMode="cover" />
+          </Animated.View>
           <Text style={s.kicker}>INTELLIGENTLY DEEP. DEEPLY FIT.</Text>
           <Text style={s.title}>Deeply Fit</Text>
           <Text style={s.lead}>
@@ -126,8 +128,8 @@ const s = StyleSheet.create({
   headerSpacer: { width: 38 },
   content: { padding: spacing.lg, paddingBottom: 44 },
   hero: { alignItems: 'center', paddingVertical: 34, borderBottomWidth: 1, borderBottomColor: colors.border },
-  heroMark: { width: 82, height: 82, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentPurple, marginBottom: 22, shadowColor: colors.accentPurple, shadowOpacity: 0.35, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 8 },
-  heroMarkText: { color: '#fff', fontSize: 25, fontWeight: '900' },
+  heroMark: { width: 82, height: 82, borderRadius: radius.lg, marginBottom: 22, shadowColor: colors.accentPurple, shadowOpacity: 0.35, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 8, overflow: 'hidden' },
+  heroLogo: { width: '100%', height: '100%' },
   kicker: { color: colors.accentLime, fontSize: 10, fontWeight: '800', marginBottom: 10 },
   title: { color: colors.textPrimary, fontSize: 40, fontWeight: '900', marginBottom: 12 },
   lead: { color: colors.textSecondary, fontSize: 15, lineHeight: 23, textAlign: 'center', maxWidth: 330 },

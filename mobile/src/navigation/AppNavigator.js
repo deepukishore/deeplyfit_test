@@ -1,7 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View, ActivityIndicator, StyleSheet } from 'react-native';
+import { Text, View, Image, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { RefreshProvider } from '../context/RefreshContext';
 import { colors } from '../utils/theme';
@@ -61,7 +61,7 @@ const AppNavigator = () => {
   if (loading) {
     return (
       <View style={styles.loading}>
-        <Text style={{ fontSize: 48, marginBottom: 16 }}>{'\u26A1'}</Text>
+        <Image source={require('../../assets/icon.png')} style={styles.loadingLogo} resizeMode="cover" />
         <ActivityIndicator size="large" color={colors.accentLime} />
         <Text style={styles.loadingText}>Loading Deeply Fit...</Text>
       </View>
@@ -91,6 +91,7 @@ const AppNavigator = () => {
 
 const styles = StyleSheet.create({
   loading: { flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' },
+  loadingLogo: { width: 76, height: 76, borderRadius: 20, marginBottom: 18 },
   loadingText: { color: colors.textSecondary, marginTop: 14, fontSize: 14 },
 });
 

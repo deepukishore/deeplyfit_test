@@ -10,8 +10,8 @@ import {
   ShieldCheck,
   Smartphone,
   WifiOff,
-  Zap,
 } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import '../styles/download.css';
 import '../styles/animations.css';
@@ -62,7 +62,7 @@ const Download = () => {
       {!user && (
         <nav className="download-public-nav" aria-label="Download page navigation">
           <button type="button" className="download-public-brand" onClick={() => navigate('/')}>
-            <span><Zap size={17} fill="currentColor" /></span> Deeply Fit
+            <BrandLogo className="public-brand-logo" alt="" /> Deeply Fit
           </button>
           <div className="download-public-actions">
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigate('/about')}>About</button>

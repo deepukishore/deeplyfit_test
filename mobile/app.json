@@ -18,7 +18,7 @@
       "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#f6f2ff"
+        "backgroundColor": "#090817"
       },
       "package": "com.deeplyfit.app",
       "permissions": [

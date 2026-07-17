@@ -24,14 +24,10 @@
   cursor: pointer;
 }
 
-.about-public-brand > span {
+.about-public-brand .public-brand-logo {
   width: 32px;
   height: 32px;
-  display: grid;
-  place-items: center;
   border-radius: var(--radius-sm);
-  background: var(--accent-lime);
-  color: var(--text-inverse);
   box-shadow: var(--shadow-lime);
 }
 
@@ -139,14 +135,11 @@
   width: 88px;
   height: 88px;
   margin: -44px 0 0 -44px;
-  display: grid;
-  place-items: center;
-  color: var(--text-inverse);
-  background: var(--accent-lime);
   border-radius: 22px;
   box-shadow: 0 20px 60px rgba(var(--accent-primary-rgb), 0.28);
   transform: translateZ(40px) rotate(-7deg);
   animation: aboutCoreFloat 5s ease-in-out infinite;
+  overflow: hidden;
 }
 
 .about-signal {

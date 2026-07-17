@@ -7,6 +7,7 @@ import { RefreshProvider } from './context/RefreshContext';
 
 import BottomNav from './components/BottomNav';
 import AmbientScene from './components/AmbientScene';
+import BrandLogo from './components/BrandLogo';
 import OfflineBanner from './components/OfflineBanner';
 import PullToRefreshShell from './components/PullToRefreshShell';
 
@@ -93,7 +94,7 @@ const AppRoutes = () => {
   if (loading) {
     return (
       <div className="loading-screen">
-        <div style={{ fontSize: 48, marginBottom: 16 }}>⚡</div>
+        <BrandLogo className="loading-brand-logo" />
         <div className="spinner spinner-lg" />
         <p style={{ marginTop: 16 }}>Loading Deeply Fit...</p>
       </div>

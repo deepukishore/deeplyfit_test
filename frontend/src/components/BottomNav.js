@@ -11,10 +11,10 @@ import {
   LogOut,
   UserRound,
   UsersRound,
-  Zap,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getInitials } from '../utils/fitness';
+import BrandLogo from './BrandLogo';
 import '../styles/bottomNav.css';
 
 const PRIMARY_NAV_ITEMS = [
@@ -69,7 +69,7 @@ const BottomNav = () => {
   return (
     <nav className="bottom-nav" aria-label="Main navigation">
       <button className="nav-brand" type="button" onClick={() => navigate('/home')} title="Deeply Fit home">
-        <span className="nav-brand-mark"><Zap size={19} fill="currentColor" /></span>
+        <span className="nav-brand-mark"><BrandLogo alt="" /></span>
         <span className="nav-brand-copy">
           <strong>Deeply Fit</strong>
           <small>Fitness workspace</small>

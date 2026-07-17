@@ -46,14 +46,11 @@
   font-weight: 800;
 }
 
-.landing-brand > span {
+.landing-brand-logo {
   width: 34px;
   height: 34px;
-  display: grid;
-  place-items: center;
-  color: var(--text-inverse);
+  flex: 0 0 34px;
   border-radius: var(--radius-sm);
-  background: var(--accent-lime);
   box-shadow: var(--shadow-lime);
 }
 

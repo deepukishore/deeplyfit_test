@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Activity, ArrowRight, Sparkles, Zap } from 'lucide-react';
+import { Activity, ArrowRight, Sparkles } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import '../styles/auth.css';
 
@@ -63,7 +64,7 @@ const Login = () => {
       <main className="auth-content">
         <header className="auth-logo">
           <Link className="auth-logo-icon" to="/" aria-label="Deeplyfit home">
-            <Zap size={34} fill="currentColor" />
+            <BrandLogo alt="" />
           </Link>
           <h1>Deeplyfit</h1>
           <p className="auth-typewriter">Intelligently deep. Deeply fit.</p>

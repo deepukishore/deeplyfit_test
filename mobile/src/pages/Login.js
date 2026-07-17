@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
 import { colors, radius, spacing } from '../utils/theme';
@@ -41,7 +41,7 @@ const Login = ({ navigation }) => {
   return (
     <ScrollView style={s.page} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
       <View style={s.logo}>
-        <Text style={s.logoIcon}>{'\u26A1'}</Text>
+        <Image source={require('../../assets/icon.png')} style={s.logoImage} resizeMode="cover" />
         <Text style={s.logoTitle}>Deeply Fit</Text>
         <Text style={s.logoSub}>Your intelligent guide to a deeper, fitter you.</Text>
       </View>
@@ -93,7 +93,7 @@ const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
   content: { padding: spacing.xl, paddingTop: 60 },
   logo: { alignItems: 'center', marginBottom: 28 },
-  logoIcon: { fontSize: 44 },
+  logoImage: { width: 82, height: 82, borderRadius: 22 },
   logoTitle: { fontSize: 26, fontWeight: '800', color: colors.textPrimary, marginTop: 8 },
   logoSub: { fontSize: 13, color: colors.textMuted, marginTop: 4, textAlign: 'center' },
   card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.xl, borderWidth: 1, borderColor: colors.border },

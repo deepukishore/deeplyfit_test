@@ -4,15 +4,14 @@ import {
   ArrowRight,
   Bot,
   ChartNoAxesCombined,
-  HeartPulse,
   Lightbulb,
   ScanLine,
   ShieldCheck,
   Sparkles,
   Target,
   Users,
-  Zap,
 } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import '../styles/about.css';
 import '../styles/animations.css';
@@ -70,7 +69,7 @@ const About = () => {
       {!user && (
         <nav className="about-public-nav" aria-label="About page navigation">
           <button type="button" className="about-public-brand" onClick={() => navigate('/')}>
-            <span><Zap size={17} fill="currentColor" /></span> Deeply Fit
+            <BrandLogo className="public-brand-logo" alt="" /> Deeply Fit
           </button>
           <div className="about-public-actions">
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigate('/download')}>Download app</button>
@@ -99,7 +98,7 @@ const About = () => {
         <div className="about-hero-visual" aria-label="Deeply Fit product highlights">
           <div className="about-orbit about-orbit-one" />
           <div className="about-orbit about-orbit-two" />
-          <div className="about-core-mark"><HeartPulse size={38} strokeWidth={1.8} /></div>
+          <div className="about-core-mark"><BrandLogo alt="" /></div>
           <div className="about-signal about-signal-ai"><Bot size={16} /> Personal coaching</div>
           <div className="about-signal about-signal-log"><ScanLine size={16} /> Smart logging</div>
           <div className="about-signal about-signal-progress"><ChartNoAxesCombined size={16} /> Clear progress</div>

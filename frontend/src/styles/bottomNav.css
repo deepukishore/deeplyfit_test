@@ -238,13 +238,10 @@
   .nav-brand-mark {
     width: 34px;
     height: 34px;
-    display: grid;
-    place-items: center;
     flex: 0 0 34px;
-    color: var(--text-inverse);
-    background: var(--accent-lime);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-lime);
+    overflow: hidden;
   }
 
   .nav-brand-copy {

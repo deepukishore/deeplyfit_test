@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import BrandLogo from '../components/BrandLogo';
 import { api } from '../utils/api';
 import '../styles/auth.css';
 
@@ -37,7 +38,7 @@ const ForgotPassword = () => {
       <div className="auth-bg" />
       <div className="auth-content">
         <div className="auth-logo">
-          <div className="auth-logo-icon">⚡</div>
+          <div className="auth-logo-icon"><BrandLogo alt="" /></div>
           <h1>Deeply Fit</h1>
           <p>Your intelligent guide to a deeper, fitter you.</p>
         </div>

@@ -14,6 +14,7 @@ import {
   Utensils,
   Zap,
 } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 import '../styles/landing.css';
 
 const FEATURES = [
@@ -50,7 +51,7 @@ const Landing = () => {
       <header className="landing-hero">
         <nav className="landing-nav" aria-label="Public navigation">
           <Link className="landing-brand" to="/">
-            <span><Zap size={18} fill="currentColor" /></span>
+            <BrandLogo className="landing-brand-logo" alt="" />
             Deeplyfit
           </Link>
           <div className="landing-nav-links">
@@ -158,7 +159,7 @@ const Landing = () => {
 
       <footer className="landing-footer">
         <div className="landing-footer-brand">
-          <Link className="landing-brand" to="/"><span><Zap size={18} fill="currentColor" /></span>Deeplyfit</Link>
+          <Link className="landing-brand" to="/"><BrandLogo className="landing-brand-logo" alt="" />Deeplyfit</Link>
           <p>Intelligently deep. Deeply fit.</p>
         </div>
         <nav className="landing-footer-links" aria-label="Footer navigation">

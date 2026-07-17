@@ -24,14 +24,10 @@
   cursor: pointer;
 }
 
-.download-public-brand > span {
+.download-public-brand .public-brand-logo {
   width: 32px;
   height: 32px;
-  display: grid;
-  place-items: center;
   border-radius: var(--radius-sm);
-  background: var(--accent-lime);
-  color: var(--text-inverse);
   box-shadow: var(--shadow-lime);
 }
 
