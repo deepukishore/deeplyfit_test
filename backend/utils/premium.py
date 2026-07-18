@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 from fastapi import HTTPException
+from utils.time import as_utc, utc_now
 
 UPI_ID = "deepu004.dk-4@okaxis"
 PAYMENT_DETAILS = {
@@ -16,8 +17,8 @@ FREE_LIMITS = {
 def is_premium_active(user) -> bool:
     if getattr(user, "premium_status", "free") != "active":
         return False
-    expires_at = getattr(user, "premium_expires_at", None)
-    return not expires_at or expires_at > datetime.utcnow()
+    expires_at = as_utc(getattr(user, "premium_expires_at", None))
+    return not expires_at or expires_at > utc_now()
 
 
 def get_subscription_status(user) -> str:
@@ -76,4 +77,4 @@ def build_premium_expiry(plan: str) -> datetime:
     if plan_key not in PAYMENT_DETAILS:
         raise HTTPException(status_code=400, detail="Invalid premium plan")
     days = PAYMENT_DETAILS[plan_key]["duration_days"]
-    return datetime.utcnow() + timedelta(days=days)
+    return utc_now() + timedelta(days=days)

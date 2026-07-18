@@ -49,6 +49,7 @@ export default function AIAssistant() {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [coachMode, setCoachMode] = useState('live');
   const [showPremium, setShowPremium] = useState(false);
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
@@ -88,6 +89,7 @@ export default function AIAssistant() {
     try {
       const history = messages.slice(-10).map((message) => ({ role: message.role, content: message.content }));
       const response = await api.chat({ message: userMessage, history });
+      setCoachMode(response.mode === 'limited' ? 'limited' : 'live');
       incrementChatCount();
       setMessages((prev) => [...prev, { role: 'assistant', content: response.response }]);
     } catch (err) {
@@ -138,9 +140,11 @@ export default function AIAssistant() {
           <div className="assistant-icon"><Bot size={23} /></div>
           <div>
             <h1 className="assistant-title">AI Coach</h1>
-            <p className="assistant-status">
+            <p className={`assistant-status ${coachMode === 'limited' ? 'limited' : ''}`}>
               <span className="status-dot" />
-              Online · Knows your data
+              {coachMode === 'limited'
+                ? 'Limited mode · Using your logged data'
+                : 'Online · Knows your data'}
             </p>
           </div>
         </div>

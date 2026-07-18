@@ -12,7 +12,8 @@ from utils.community import serialize_post
 from utils.profile import ensure_unique_public_slug
 from utils.allergens import serialize_allergens, deserialize_allergens
 from utils.premium import PAYMENT_DETAILS, get_subscription_status, is_premium_active
-from datetime import datetime, timedelta
+from utils.time import as_utc, utc_now
+from datetime import timedelta
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -53,7 +54,7 @@ def activate_premium(
     ensure_payment_reference_is_unused(db, payment_reference, current_user.id)
 
     try:
-        now = datetime.utcnow()
+        now = utc_now()
         if not is_premium_active(current_user):
             current_user.premium_status = "pending"
         current_user.premium_pending_plan = plan
@@ -88,8 +89,8 @@ def approve_premium_payment(
         raise HTTPException(status_code=400, detail="Pending payment has an invalid plan")
 
     try:
-        now = datetime.utcnow()
-        current_expires = user.premium_expires_at if is_premium_active(user) else None
+        now = utc_now()
+        current_expires = as_utc(user.premium_expires_at) if is_premium_active(user) else None
         base_time = current_expires if current_expires and current_expires > now else now
         extension_days = PAYMENT_DETAILS[plan]["duration_days"]
         user.premium_status = "active"

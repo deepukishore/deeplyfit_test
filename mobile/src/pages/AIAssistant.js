@@ -22,6 +22,7 @@ const AIAssistant = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [coachMode, setCoachMode] = useState('live');
   const scrollRef = useRef(null);
   const initials = getInitials(user?.name, user?.email);
 
@@ -40,6 +41,7 @@ const AIAssistant = () => {
     try {
       const history = messages.slice(-10).map((m) => ({ role: m.role, content: m.content }));
       const response = await api.chat({ message: msg, history });
+      setCoachMode(response.mode === 'limited' ? 'limited' : 'live');
       setMessages((prev) => [...prev, { role: 'assistant', content: response.response }]);
     } catch (err) {
       Toast.show({ type: 'error', text1: err.message || 'Could not reach AI coach' });
@@ -55,7 +57,11 @@ const AIAssistant = () => {
         <Text style={s.headerIcon}>🤖</Text>
         <View>
           <Text style={s.headerTitle}>AI Coach</Text>
-          <Text style={s.headerStatus}>● Online · Knows your data</Text>
+          <Text style={[s.headerStatus, coachMode === 'limited' && s.headerStatusLimited]}>
+            {coachMode === 'limited'
+              ? '● Limited mode · Using your logged data'
+              : '● Online · Knows your data'}
+          </Text>
         </View>
         <TouchableOpacity
           style={s.clearBtn}
@@ -133,6 +139,7 @@ const s = StyleSheet.create({
   headerIcon: { fontSize: 24, marginRight: 10 },
   headerTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
   headerStatus: { fontSize: 11, color: colors.accentLime, marginTop: 2 },
+  headerStatusLimited: { color: colors.accentAmber },
   clearBtn: {
     marginLeft: 'auto',
     backgroundColor: colors.bgElevated,

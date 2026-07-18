@@ -15,6 +15,9 @@ const todayString = () => new Date().toISOString().split('T')[0];
 
 const normalizeApiError = (detail, status) => {
   const message = typeof detail === 'string' ? detail : `Error ${status}`;
+  if (/offset-naive and offset-aware datetimes/i.test(message)) {
+    return 'AI coach account timing could not be verified. Please try again after the backend update.';
+  }
   if (/quota|rate[- ]?limit|free_tier|resource_exhausted|generativelanguage\.googleapis\.com/i.test(message)) {
     if (/food scanner|scan/i.test(message)) {
       return 'AI food scanner quota is exhausted for now. Try again later or enter nutrition manually.';

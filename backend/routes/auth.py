@@ -6,10 +6,11 @@ from models import User, PasswordResetToken
 from schemas import UserCreate, UserLogin, Token, UserResponse, ForgotPasswordRequest, ResetPasswordRequest
 from auth.jwt import verify_password, get_password_hash, create_access_token, decode_token
 from utils.profile import ensure_unique_public_slug
+from utils.time import is_past, utc_now
 import secrets
 import smtplib
 from email.mime.text import MIMEText
-from datetime import datetime, timedelta
+from datetime import timedelta
 import os
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -116,7 +117,7 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     ).update({"used": 1})
 
     token = secrets.token_urlsafe(32)
-    expires = datetime.utcnow() + timedelta(hours=1)
+    expires = utc_now() + timedelta(hours=1)
     reset_token = PasswordResetToken(user_id=user.id, token=token, expires_at=expires)
     db.add(reset_token)
     db.commit()
@@ -176,7 +177,7 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
         PasswordResetToken.used == 0
     ).first()
 
-    if not record or record.expires_at < datetime.utcnow():
+    if not record or is_past(record.expires_at):
         raise HTTPException(status_code=400, detail="Invalid or expired reset link")
 
     user = db.query(User).filter(User.id == record.user_id).first()

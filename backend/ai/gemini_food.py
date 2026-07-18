@@ -7,7 +7,7 @@ import google.generativeai as genai
 from fastapi import HTTPException
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"]
+DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash"]
 GEMINI_MODEL = os.getenv("GEMINI_VISION_MODEL", os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODELS[0]))
 
 

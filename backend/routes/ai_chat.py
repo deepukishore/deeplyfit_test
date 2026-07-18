@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import date, timedelta
 from typing import List, Optional
@@ -13,9 +14,10 @@ from routes.auth import get_current_user
 from utils.premium import enforce_free_limit
 
 router = APIRouter(prefix="/ai", tags=["ai"])
+logger = logging.getLogger(__name__)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"]
+DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash"]
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODELS[0])
 
 
@@ -31,6 +33,8 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+    mode: str = "live"
+    notice: Optional[str] = None
 
 
 def get_gemini_model_names(configured_model: str) -> List[str]:
@@ -63,7 +67,6 @@ def is_quota_error(exc: Exception) -> bool:
 def build_quota_fallback_response(user: User, db: Session, message: str) -> str:
     metrics = get_daily_metrics(user, db)
     lower_message = message.lower()
-    quota_note = "Gemini is temporarily out of free-tier quota, so I'm using your logged Deeply Fit data for this answer."
 
     if any(word in lower_message for word in ["breakfast", "recipe", "eat", "meal", "food"]):
         protein_gap = round(metrics["protein_remaining"])
@@ -74,11 +77,11 @@ def build_quota_fallback_response(user: User, db: Session, message: str) -> str:
             suggestion = "Try oats with banana and milk, or idli with sambar plus a boiled egg or paneer on the side."
         else:
             suggestion = "Keep it light: fruit with curd, a small veggie omelette, or sprouts chaat would fit better."
-        return f"{quota_note} You have about {calorie_gap} kcal and {protein_gap}g protein remaining today. {suggestion} Log it in Diary so your targets stay accurate."
+        return f"You have about {calorie_gap} kcal and {protein_gap}g protein remaining today. {suggestion} Log it in Diary so your targets stay accurate."
 
     if any(word in lower_message for word in ["protein", "calorie", "macro", "remaining"]):
         return (
-            f"{quota_note} Today you have logged {round(metrics['calories_consumed'])} kcal, "
+            f"Today you have logged {round(metrics['calories_consumed'])} kcal, "
             f"{round(metrics['protein_consumed'])}g protein, {round(metrics['carbs_consumed'])}g carbs, "
             f"and {round(metrics['fat_consumed'])}g fat. Remaining: {round(metrics['calories_remaining'])} kcal, "
             f"{round(metrics['protein_remaining'])}g protein, {round(metrics['carbs_remaining'])}g carbs, "
@@ -87,14 +90,26 @@ def build_quota_fallback_response(user: User, db: Session, message: str) -> str:
 
     if any(word in lower_message for word in ["workout", "exercise", "train"]):
         return (
-            f"{quota_note} Based on your goal ({user.fitness_goal or 'general fitness'}), "
+            f"Based on your goal ({user.fitness_goal or 'general fitness'}), "
             "do 25-35 minutes today: 5 minutes warm-up, 3 rounds of squats, push-ups, rows, lunges, and planks, then a short walk."
         )
 
+    if any(word in lower_message for word in ["weight", "progress", "goal"]):
+        current_weight = f"{user.current_weight:g} kg" if user.current_weight else "not logged"
+        goal_weight = f"{user.goal_weight:g} kg" if user.goal_weight else "not set"
+        return (
+            f"Your current weight is {current_weight} and your goal weight is {goal_weight}. "
+            f"Today you have logged {round(metrics['calories_consumed'])} kcal and "
+            f"{len(metrics['workouts_today'])} workout{'s' if len(metrics['workouts_today']) != 1 else ''}. "
+            "Keep logging consistently so the Progress page can show a reliable trend."
+        )
+
     return (
-        f"{quota_note} I can still see today's basics: {round(metrics['calories_consumed'])} kcal eaten, "
-        f"{round(metrics['water_glasses'])} glasses of water, and {len(metrics['workouts_today'])} workouts logged. "
-        "Try again after the quota resets, or add billing/upgrade the Gemini quota for continuous AI replies."
+        "Live AI is temporarily unavailable because the Gemini project quota has been reached. "
+        "I have not replaced your question with a pretend canned answer. While live AI recovers, "
+        f"I can still calculate from your logs: {round(metrics['calories_consumed'])} kcal eaten, "
+        f"{round(metrics['water_glasses'])} glasses of water, and {len(metrics['workouts_today'])} workouts today. "
+        "Ask about today's calories, protein, meals, weight, or workout for a data-based answer."
     )
 
 
@@ -236,7 +251,7 @@ STRICT RULES:
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(
+def chat(
     request: ChatRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -273,13 +288,19 @@ Respond as the AI coach using the data above. Be specific, warm, and actionable.
         for model_name in get_gemini_model_names(GEMINI_MODEL):
             try:
                 model = genai.GenerativeModel(model_name)
-                response = model.generate_content(full_prompt)
+                response = model.generate_content(
+                    full_prompt,
+                    generation_config={
+                        "temperature": 0.6,
+                        "max_output_tokens": 500,
+                    },
+                )
                 response_text = (getattr(response, "text", "") or "").strip()
                 if not response_text:
                     raise HTTPException(status_code=502, detail="AI coach returned an empty response")
 
                 db.commit()
-                return ChatResponse(response=response_text)
+                return ChatResponse(response=response_text, mode="live")
             except HTTPException:
                 raise
             except Exception as exc:
@@ -288,15 +309,34 @@ Respond as the AI coach using the data above. Be specific, warm, and actionable.
                     break
 
         if last_error and is_quota_error(last_error):
+            logger.warning("Gemini quota exhausted for all configured AI coach models")
             db.commit()
-            return ChatResponse(response=build_quota_fallback_response(current_user, db, request.message))
+            return ChatResponse(
+                response=build_quota_fallback_response(current_user, db, request.message),
+                mode="limited",
+                notice="Live AI quota reached. Using your logged Deeply Fit data where possible.",
+            )
 
-        raise HTTPException(status_code=502, detail=f"AI coach failed: {last_error}")
+        logger.error("AI coach provider failed after model fallback: %s", last_error)
+        raise HTTPException(
+            status_code=503,
+            detail="AI coach is temporarily unavailable. Please try again shortly.",
+        )
     except HTTPException:
         db.rollback()
         raise
     except Exception as exc:
-        db.rollback()
         if is_quota_error(exc):
-            raise HTTPException(status_code=429, detail="AI coach quota is exhausted for now. Try again after the quota resets or upgrade the Gemini API plan.")
-        raise HTTPException(status_code=502, detail=f"AI coach failed: {exc}")
+            logger.warning("Gemini quota exhausted while handling AI coach request")
+            db.commit()
+            return ChatResponse(
+                response=build_quota_fallback_response(current_user, db, request.message),
+                mode="limited",
+                notice="Live AI quota reached. Using your logged Deeply Fit data where possible.",
+            )
+        db.rollback()
+        logger.exception("Unexpected AI coach failure")
+        raise HTTPException(
+            status_code=503,
+            detail="AI coach is temporarily unavailable. Please try again shortly.",
+        )

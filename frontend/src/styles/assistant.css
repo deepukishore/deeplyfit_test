@@ -436,6 +436,18 @@
   animation: ripple 1.8s ease-out infinite;
 }
 
+.assistant-status.limited {
+  color: var(--warning);
+}
+
+.assistant-status.limited .status-dot {
+  background: var(--warning);
+}
+
+.assistant-status.limited .status-dot::after {
+  border-color: var(--warning);
+}
+
 .assistant-clear-btn {
   width: 36px;
   height: 36px;
