@@ -845,6 +845,40 @@
   box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.1), var(--shadow-lime);
 }
 
+.auth-password-field {
+  position: relative;
+}
+
+.auth-password-field input {
+  padding-right: 48px;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color var(--transition-fast);
+}
+
+.auth-password-toggle:hover {
+  color: var(--accent-lime);
+}
+
+.auth-password-toggle:focus-visible {
+  border-radius: var(--radius-sm);
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
 .auth-forgot-link {
   display: block;
   margin-top: 8px;

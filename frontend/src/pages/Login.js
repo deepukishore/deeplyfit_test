@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Activity, ArrowRight, Sparkles } from 'lucide-react';
+import { Activity, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import '../styles/auth.css';
@@ -17,6 +17,7 @@ const Login = () => {
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
@@ -51,6 +52,7 @@ const Login = () => {
   const switchMode = (nextMode) => {
     setMode(nextMode);
     setPassword('');
+    setShowPassword(false);
   };
 
   return (
@@ -126,15 +128,26 @@ const Login = () => {
 
             <div className="input-group">
               <label htmlFor="auth-password">Password</label>
-              <input
-                id="auth-password"
-                type="password"
-                placeholder="Enter at least 6 characters"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                required
-              />
+              <div className="auth-password-field">
+                <input
+                  id="auth-password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter at least 6 characters"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  required
+                />
+                <button
+                  type="button"
+                  className="auth-password-toggle"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                </button>
+              </div>
               {mode === 'login' && (
                 <Link className="auth-forgot-link" to="/forgot-password">Forgot password?</Link>
               )}
