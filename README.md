@@ -184,6 +184,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_gmail@gmail.com
 SMTP_PASS=your_gmail_app_password
+PREMIUM_ADMIN_EMAIL=deeplyfitai@gmail.com
 PREMIUM_ADMIN_KEY=choose_a_private_admin_key
 ```
 
@@ -424,7 +425,7 @@ Supported allergens: `gluten`, `lactose`, `nuts`, `peanuts`, `eggs`, `soy`, `she
 
 - Pay via UPI to: **deepu004.dk-4@okaxis**
 - Open GPay / PhonePe / Paytm → send the amount → copy the transaction ID
-- Enter the transaction ID in the app → request goes to pending verification
+- Enter the transaction ID in the app → request goes to pending verification and the transaction and profile details are emailed to `PREMIUM_ADMIN_EMAIL`
 - Approve verified payments with `POST /users/premium/approve` using `PREMIUM_ADMIN_KEY`
 
 ### PRO Features

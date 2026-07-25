@@ -486,7 +486,7 @@ const AddFoodModal = ({ meal, date, onClose, onSave }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-sheet" onClick={(event) => event.stopPropagation()}>
+      <div className="modal-sheet food-log-modal" onClick={(event) => event.stopPropagation()}>
         <div className="modal-handle" />
         <h3 className="modal-title">{getMealIcon(meal)} Add to {meal.charAt(0).toUpperCase() + meal.slice(1)}</h3>
         <div className="modal-form">

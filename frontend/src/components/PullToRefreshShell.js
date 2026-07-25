@@ -10,6 +10,7 @@ const PullToRefreshShell = ({ children }) => {
   const modeRef = useRef('idle');
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const contentOffset = refreshing ? 18 : Math.min(pullDistance * 0.35, 18);
 
   const reset = () => {
     startRef.current = null;
@@ -99,8 +100,8 @@ const PullToRefreshShell = ({ children }) => {
         <span>{refreshing ? 'Refreshing...' : pullDistance >= PULL_THRESHOLD ? 'Release to refresh' : 'Pull to refresh'}</span>
       </div>
       <div
-        className="pull-refresh-content"
-        style={{ transform: `translateY(${refreshing ? 18 : Math.min(pullDistance * 0.35, 18)}px)` }}
+        className={`pull-refresh-content ${contentOffset > 0 ? 'is-pulling' : ''}`}
+        style={contentOffset > 0 ? { transform: `translateY(${contentOffset}px)` } : undefined}
       >
         {children}
       </div>

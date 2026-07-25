@@ -3,11 +3,17 @@
 .scanner-modal {
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   background: rgba(0,0,0,0.85);
   backdrop-filter: blur(12px);
   z-index: 200;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: contain;
   animation: fadeIn 0.25s ease;
 }
 
@@ -53,8 +59,11 @@
 
 .scanner-body {
   flex: 1;
+  min-height: 0;
   padding: 0 var(--space-lg);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
@@ -383,6 +392,8 @@
 @media (min-width: 900px) {
   .scanner-modal {
     inset: 0;
+    height: auto;
+    max-height: none;
     align-items: center;
     justify-content: center;
     padding: 32px;
@@ -398,7 +409,7 @@
 
   .scanner-header,
   .scanner-body {
-    width: min(100%, 760px);
+    width: min(100%, 780px);
     background: var(--bg-card);
   }
 
@@ -416,6 +427,7 @@
   .scanner-body {
     flex: none;
     max-height: calc(100vh - 160px);
+    max-height: calc(100dvh - 160px);
     border: 1px solid var(--border);
     border-top: none;
     border-radius: 0 0 var(--radius-xl) var(--radius-xl);
@@ -540,6 +552,9 @@
   .scanner-modal {
     inset: 24px;
     left: calc(var(--nav-width) + 24px);
+    width: auto;
+    height: auto;
+    max-height: none;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
@@ -549,5 +564,35 @@
     width: min(100%, 780px);
     margin: 0 auto;
     padding-top: 24px;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 720px) {
+  .scanner-modal {
+    inset: 12px;
+    left: calc(var(--nav-width) + 12px);
+  }
+
+  .scanner-header {
+    padding: 16px 20px 10px;
+  }
+
+  .scanner-title {
+    font-size: 18px;
+  }
+
+  .scanner-subtitle {
+    margin-top: 2px;
+  }
+
+  .scanner-body {
+    max-height: calc(100dvh - 112px);
+    gap: 12px;
+    padding: 12px 20px 16px;
+  }
+
+  .upload-zone {
+    min-height: 220px;
+    padding: 16px 20px;
   }
 }

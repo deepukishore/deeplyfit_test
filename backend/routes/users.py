@@ -12,6 +12,11 @@ from utils.community import serialize_post
 from utils.profile import ensure_unique_public_slug
 from utils.allergens import serialize_allergens, deserialize_allergens
 from utils.premium import PAYMENT_DETAILS, get_subscription_status, is_premium_active
+from utils.premium_email import (
+    PremiumEmailDeliveryError,
+    PremiumEmailNotConfiguredError,
+    send_premium_verification_email,
+)
 from utils.time import as_utc, utc_now
 from datetime import timedelta
 
@@ -52,6 +57,9 @@ def activate_premium(
         raise HTTPException(status_code=400, detail="Invalid premium plan")
     payment_reference = normalize_payment_reference(data.payment_reference)
     ensure_payment_reference_is_unused(db, payment_reference, current_user.id)
+    payment_method = (data.payment_method or "upi").strip().lower()
+    if payment_method != "upi":
+        raise HTTPException(status_code=400, detail="Unsupported payment method")
 
     try:
         now = utc_now()
@@ -60,12 +68,38 @@ def activate_premium(
         current_user.premium_pending_plan = plan
         current_user.premium_pending_payment_ref = payment_reference
         current_user.premium_pending_requested_at = now
+        db.flush()
+
+        send_premium_verification_email(
+            user=current_user,
+            plan=plan,
+            payment_reference=payment_reference,
+            payment_method=payment_method,
+            requested_at=now,
+        )
+
         db.commit()
         db.refresh(current_user)
         return current_user
-    except Exception as e:
+    except PremiumEmailNotConfiguredError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except PremiumEmailDeliveryError as exc:
+        db.rollback()
+        print(f"[SMTP] Premium verification notification failed: {exc}")
+        raise HTTPException(
+            status_code=502,
+            detail="Could not notify the payment administrator. Please try again.",
+        ) from exc
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Could not submit the premium verification request.",
+        ) from exc
 
 
 @router.post("/premium/approve", response_model=UserResponse)

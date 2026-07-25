@@ -206,6 +206,10 @@ html.light {
 }
 
 .pull-refresh-content {
+  min-height: 100dvh;
+}
+
+.pull-refresh-content.is-pulling {
   transition: transform var(--transition-fast);
 }
 
