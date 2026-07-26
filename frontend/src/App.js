@@ -111,7 +111,7 @@ const AppRoutes = () => {
           path="/onboarding"
           element={
             <OnboardingRoute>
-              <div className="app-container"><Onboarding /></div>
+              <Onboarding />
             </OnboardingRoute>
           }
         />

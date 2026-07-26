@@ -186,7 +186,7 @@ const Onboarding = () => {
     <div className="onboarding-page">
       <div className="onboarding-backdrop" />
 
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 420, margin: '0 auto' }}>
+      <div className="onboarding-shell">
         <div className="onboarding-header">
           <div className="onboarding-progress-copy">
             <span>Step {step + 1} of {TOTAL_STEPS}</span>
@@ -200,6 +200,7 @@ const Onboarding = () => {
           </div>
         </div>
 
+        <main className="onboarding-content">
         {/* Step 0: Basic info */}
         {step === 0 && (
           <div className="animate-slide-up">
@@ -369,6 +370,7 @@ const Onboarding = () => {
             </button>
           )}
         </div>
+        </main>
       </div>
     </div>
   );

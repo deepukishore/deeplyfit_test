@@ -152,10 +152,21 @@
 
 /* Onboarding */
 .onboarding-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: var(--space-lg);
   position: relative;
-  overflow: hidden;
+  overflow-x: clip;
+}
+
+.onboarding-shell {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 420px);
+  margin: 0 auto;
+}
+
+.onboarding-content {
+  min-width: 0;
 }
 
 .onboarding-header {
@@ -639,9 +650,12 @@
   }
 
   .onboarding-page {
+    width: 100%;
+    padding: 40px clamp(32px, 5vw, 72px);
+  }
+
+  .onboarding-shell {
     width: min(100%, 1120px);
-    margin: 0 auto;
-    padding: 40px 48px;
     display: grid;
     grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
     gap: 40px;
@@ -653,6 +667,10 @@
     top: 40px;
     padding-top: 0;
     margin-bottom: 0;
+  }
+
+  .onboarding-content {
+    padding-top: 4px;
   }
 
   .onboarding-title {
