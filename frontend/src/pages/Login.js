@@ -43,8 +43,34 @@ const Login = () => {
       toast.success(mode === 'login' ? 'Welcome back!' : "Account created! Let's set up your profile.");
       navigate(user.onboarding_complete ? '/home' : '/onboarding');
     } catch (err) {
-      toast.error(err.message || 'Something went wrong');
-    } finally {
+  const errMsg = (err.message || '').toLowerCase();
+
+  if (
+    errMsg.includes('timeout') ||
+    errMsg.includes('too long') ||
+    errMsg.includes('network') ||
+    errMsg.includes('failed to fetch') ||
+    errMsg.includes('showing available')
+  ) {
+    toast.error(
+      '⏳ Server is starting up... Please try again in 15 seconds!',
+      { duration: 6000 }
+    );
+  } else if (
+    errMsg.includes('invalid credentials') ||
+    errMsg.includes('incorrect') ||
+    errMsg.includes('wrong password')
+  ) {
+    toast.error('❌ Wrong email or password. Please try again.');
+  } else if (
+    errMsg.includes('not found') ||
+    errMsg.includes('no user')
+  ) {
+    toast.error('📧 No account found with this email. Please sign up!');
+  } else {
+    toast.error(err.message || 'Something went wrong. Please try again!');
+  }
+} finally {
       setLoading(false);
     }
   };
