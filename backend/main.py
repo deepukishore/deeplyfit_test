@@ -13,6 +13,9 @@ from ai.gemini_food import analyze_food_image
 from models import FoodLog, User
 from utils.premium import enforce_free_limit
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
 # Create all tables
 Base.metadata.create_all(bind=engine)
 
@@ -99,9 +102,11 @@ def root():
     return {"message": "FitTrack AI API is running!", "version": "1.0.0"}
 
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health(request: Request):
+    return JSONResponse({"status": "ok"})
 
 
 @app.post("/food/scan")
