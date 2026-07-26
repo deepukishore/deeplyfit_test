@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, PasswordResetToken
@@ -43,6 +44,12 @@ def first_configured_value(*values: str) -> str:
     return ""
 
 
+def find_user_by_email(db: Session, email: str):
+    """Keep email identity consistent across the website and mobile app."""
+    normalized_email = str(email).strip().casefold()
+    return db.query(User).filter(func.lower(User.email) == normalized_email).first()
+
+
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     payload = decode_token(token)
     if not payload:
@@ -59,12 +66,13 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 @router.post("/register", response_model=Token)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
     try:
-        existing = db.query(User).filter(User.email == user_data.email).first()
+        normalized_email = str(user_data.email).strip().casefold()
+        existing = find_user_by_email(db, normalized_email)
         if existing:
             raise HTTPException(status_code=400, detail="Email already registered")
         hashed = get_password_hash(user_data.password)
         user = User(
-            email=user_data.email,
+            email=normalized_email,
             hashed_password=hashed,
             name=user_data.name,
             public_profile_slug=ensure_unique_public_slug(
@@ -87,7 +95,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 @router.post("/login", response_model=Token)
 def login(user_data: UserLogin, db: Session = Depends(get_db)):
     try:
-        user = db.query(User).filter(User.email == user_data.email).first()
+        user = find_user_by_email(db, user_data.email)
         if not user or not verify_password(user_data.password, user.hashed_password):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         token = create_access_token({"sub": str(user.id)})
@@ -105,7 +113,7 @@ def get_me(current_user: User = Depends(get_current_user)):
 
 @router.post("/forgot-password")
 def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == data.email).first()
+    user = find_user_by_email(db, data.email)
     if not user:
         # Return success anyway to avoid email enumeration
         return {"message": "If that email exists, a reset link has been sent."}

@@ -6,6 +6,7 @@ import {
   removeCachedUser,
   removeToken,
   setCachedUser,
+  setStorageUser,
   setToken,
 } from '../utils/storage';
 
@@ -17,19 +18,26 @@ export const AuthProvider = ({ children }) => {
 
   const loadUser = useCallback(async () => {
     const token = await getToken();
-    if (!token) { setLoading(false); return; }
+    if (!token) {
+      await setStorageUser(null);
+      setLoading(false);
+      return;
+    }
     const cachedUser = await getCachedUser();
     if (cachedUser) {
+      await setStorageUser(cachedUser.id);
       setUser(cachedUser);
       setLoading(false);
     }
     try {
       const userData = await api.me();
+      await setStorageUser(userData.id);
       setUser(userData);
       await setCachedUser(userData);
     } catch (err) {
       if (err?.status === 401) {
         await Promise.all([removeToken(), removeCachedUser()]);
+        await setStorageUser(null);
         setUser(null);
       }
       // Other failures keep a valid cached session available during backend outages.
@@ -41,18 +49,24 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => { loadUser(); }, [loadUser]);
 
   const login = async (email, password) => {
-    const data = await api.login({ email, password });
+    const data = await api.login({ email: email.trim().toLowerCase(), password });
     await setToken(data.access_token);
     const userData = await api.me();
+    await setStorageUser(userData.id);
     setUser(userData);
     await setCachedUser(userData);
     return userData;
   };
 
   const register = async (email, password, name) => {
-    const data = await api.register({ email, password, name });
+    const data = await api.register({
+      email: email.trim().toLowerCase(),
+      password,
+      name: name?.trim() || null,
+    });
     await setToken(data.access_token);
     const userData = await api.me();
+    await setStorageUser(userData.id);
     setUser(userData);
     await setCachedUser(userData);
     return userData;
@@ -60,6 +74,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     await Promise.all([removeToken(), removeCachedUser()]);
+    await setStorageUser(null);
     setUser(null);
   };
 

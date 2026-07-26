@@ -1,16 +1,18 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../utils/api';
+import { useAuth } from './AuthContext';
 
 const NetworkContext = createContext(null);
 
 export const NetworkProvider = ({ children }) => {
+  const { user } = useAuth();
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
   const [syncing, setSyncing] = useState(false);
-  const [pendingCount, setPendingCount] = useState(api.getOfflineQueueLength());
+  const [pendingCount, setPendingCount] = useState(0);
 
   const syncOfflineChanges = useCallback(async (showSuccessToast = false) => {
-    if (syncing || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+    if (!user || syncing || (typeof navigator !== 'undefined' && !navigator.onLine)) {
       return;
     }
 
@@ -26,12 +28,12 @@ export const NetworkProvider = ({ children }) => {
     } finally {
       setSyncing(false);
     }
-  }, [syncing]);
+  }, [syncing, user]);
 
   useEffect(() => {
     const handleOnline = () => {
       setOnline(true);
-      syncOfflineChanges(true);
+      if (user) syncOfflineChanges(true);
     };
 
     const handleOffline = () => {
@@ -39,14 +41,16 @@ export const NetworkProvider = ({ children }) => {
     };
 
     const handleQueueChanged = () => {
-      setPendingCount(api.getOfflineQueueLength());
+      setPendingCount(user ? api.getOfflineQueueLength() : 0);
     };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     window.addEventListener('deeplyfit:offline-queue-changed', handleQueueChanged);
 
-    if (navigator.onLine && api.getOfflineQueueLength() > 0) {
+    const queueLength = user ? api.getOfflineQueueLength() : 0;
+    setPendingCount(queueLength);
+    if (user && navigator.onLine && queueLength > 0) {
       syncOfflineChanges(false);
     }
 
@@ -55,7 +59,7 @@ export const NetworkProvider = ({ children }) => {
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('deeplyfit:offline-queue-changed', handleQueueChanged);
     };
-  }, [syncOfflineChanges]);
+  }, [syncOfflineChanges, user]);
 
   const value = useMemo(() => ({
     online,

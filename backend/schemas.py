@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List, Dict
 from datetime import date, datetime
 
@@ -21,14 +21,30 @@ class AllergenCheckResponse(BaseModel):
 
 # Auth
 class UserCreate(BaseModel):
-    email: str
-    password: str
+    email: EmailStr
+    password: str = Field(min_length=6, max_length=128)
     name: Optional[str] = None
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value):
+        return str(value).strip().casefold()
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def normalize_name(cls, value):
+        normalized = str(value).strip() if value is not None else ""
+        return normalized or None
 
 
 class UserLogin(BaseModel):
-    email: str
+    email: EmailStr
     password: str
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value):
+        return str(value).strip().casefold()
 
 
 class Token(BaseModel):

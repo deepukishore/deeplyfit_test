@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../utils/api';
+import { setDiaryStorageUser } from '../utils/diaryStorage';
 
 const AuthContext = createContext(null);
 const THEME_STORAGE_KEY = 'deeply_fit_theme';
@@ -45,15 +46,18 @@ export const AuthProvider = ({ children }) => {
   const loadUser = useCallback(async () => {
     const token = localStorage.getItem('deeply_fit_token');
     if (!token) {
+      setDiaryStorageUser(null);
       setLoading(false);
       return;
     }
     try {
       const userData = await api.me();
+      setDiaryStorageUser(userData.id);
       setUser(userData);
       applyTheme(userData.dark_mode);
     } catch (err) {
       localStorage.removeItem('deeply_fit_token');
+      setDiaryStorageUser(null);
     } finally {
       setLoading(false);
     }
@@ -65,18 +69,24 @@ export const AuthProvider = ({ children }) => {
   }, [loadUser]);
 
   const login = async (email, password) => {
-    const data = await api.login({ email, password });
+    const data = await api.login({ email: email.trim().toLowerCase(), password });
     localStorage.setItem('deeply_fit_token', data.access_token);
     const userData = await api.me();
+    setDiaryStorageUser(userData.id);
     setUser(userData);
     applyTheme(userData.dark_mode);
     return userData;
   };
 
   const register = async (email, password, name) => {
-    const data = await api.register({ email, password, name });
+    const data = await api.register({
+      email: email.trim().toLowerCase(),
+      password,
+      name: name?.trim() || null,
+    });
     localStorage.setItem('deeply_fit_token', data.access_token);
     const userData = await api.me();
+    setDiaryStorageUser(userData.id);
     setUser(userData);
     applyTheme(userData.dark_mode);
     return userData;
@@ -84,6 +94,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('deeply_fit_token');
+    setDiaryStorageUser(null);
     setUser(null);
   };
 

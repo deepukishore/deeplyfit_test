@@ -3,7 +3,7 @@ import {
   createEmptySummary, rebuildSummaryFromLogs,
   readOfflineQueue, writeOfflineQueue, nextOfflineId,
   getCachedDiaryDate, updateCachedDiaryDate, findCachedLogDate,
-  getToken,
+  getStorageUser, getToken,
 } from './storage';
 import { getApiBaseUrl, getNetworkErrorMessage } from './apiBase';
 
@@ -192,6 +192,10 @@ const diaryApi = {
   async syncOfflineDiary() {
     const queue = await readOfflineQueue();
     if (!queue.length) return { syncedCount: 0, pendingCount: 0 };
+    const authenticatedUser = await request('GET', '/auth/me');
+    if (String(authenticatedUser.id) !== getStorageUser()) {
+      throw new Error('Offline changes belong to a different account. Sign in again before syncing.');
+    }
     const touchedDates = new Set();
     const remaining = [];
     let syncedCount = 0;

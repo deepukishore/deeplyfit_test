@@ -5,6 +5,7 @@ import {
   emitDiarySyncEvent,
   findCachedLogDate,
   getCachedDiaryDate,
+  getDiaryStorageUser,
   nextOfflineId,
   readOfflineQueue,
   rebuildSummaryFromLogs,
@@ -273,6 +274,11 @@ const diaryApi = {
     const queue = readOfflineQueue();
     if (!queue.length) {
       return { syncedCount: 0, pendingCount: 0 };
+    }
+
+    const authenticatedUser = await request('GET', '/auth/me');
+    if (String(authenticatedUser.id) !== getDiaryStorageUser()) {
+      throw new Error('Offline changes belong to a different account. Sign in again before syncing.');
     }
 
     const touchedDates = new Set();

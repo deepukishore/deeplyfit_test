@@ -3,7 +3,12 @@ import toast from 'react-hot-toast';
 import { Camera, ChevronDown, ChevronLeft, ChevronRight, Plus, ScanLine } from 'lucide-react';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
-import { createEmptySummary, getCachedDiaryDate } from '../utils/diaryStorage';
+import {
+  createEmptySummary,
+  getCachedDiaryDate,
+  getFavorites,
+  setFavorites,
+} from '../utils/diaryStorage';
 import { addDays, formatDate, formatDisplayDate, getMealIcon } from '../utils/fitness';
 import FoodScannerModal from '../components/FoodScannerModal';
 import '../styles/dashboard.css';
@@ -12,7 +17,6 @@ import '../styles/animations.css';
 
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snacks'];
 const MEAL_BUDGETS = { breakfast: 600, lunch: 700, dinner: 750, snacks: 350 };
-const FAVORITES_KEY = 'deeply_fit_favorite_foods_v1';
 
 const getFoodEmoji = (name = '') => {
   const normalized = name.toLowerCase();
@@ -68,15 +72,11 @@ const PORTION_GUIDE = [
 ];
 
 const readFavorites = () => {
-  try {
-    return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
-  } catch (err) {
-    return [];
-  }
+  return getFavorites();
 };
 
 const writeFavorites = (favorites) => {
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+  setFavorites(favorites);
 };
 
 const favoriteIdFor = (item) => `${item.food_name.toLowerCase()}::${item.meal_type}`;

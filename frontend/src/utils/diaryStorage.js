@@ -1,6 +1,9 @@
 const CACHE_KEY = 'deeply_fit_diary_cache_v1';
 const QUEUE_KEY = 'deeply_fit_diary_queue_v1';
 const TEMP_ID_KEY = 'deeply_fit_diary_temp_id_v1';
+const FAVORITES_KEY = 'deeply_fit_favorite_foods_v1';
+const ACCOUNT_STORAGE_KEYS = [CACHE_KEY, QUEUE_KEY, TEMP_ID_KEY, FAVORITES_KEY];
+let activeStorageUserId = null;
 const MICRONUTRIENT_RDA = {
   fiber: 28,
   sugar: 50,
@@ -14,6 +17,31 @@ const MICRONUTRIENT_RDA = {
 };
 
 const hasWindow = () => typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+
+const getAccountKey = (baseKey) => (
+  activeStorageUserId
+    ? `${baseKey}:user:${activeStorageUserId}`
+    : `${baseKey}:anonymous`
+);
+
+export const setDiaryStorageUser = (userId) => {
+  activeStorageUserId = userId === null || userId === undefined ? null : String(userId);
+  if (!hasWindow() || !activeStorageUserId) return;
+
+  // Existing installations used unscoped keys. Move that data once into the
+  // account that owns the current authenticated session.
+  ACCOUNT_STORAGE_KEYS.forEach((baseKey) => {
+    const legacyValue = window.localStorage.getItem(baseKey);
+    if (legacyValue === null) return;
+    const accountKey = getAccountKey(baseKey);
+    if (window.localStorage.getItem(accountKey) === null) {
+      window.localStorage.setItem(accountKey, legacyValue);
+    }
+    window.localStorage.removeItem(baseKey);
+  });
+};
+
+export const getDiaryStorageUser = () => activeStorageUserId;
 
 const safeParse = (value, fallback) => {
   if (!value) return fallback;
@@ -95,30 +123,41 @@ export const rebuildSummaryFromLogs = (date, logs, existingSummary = {}) => {
 
 export const readDiaryCache = () => {
   if (!hasWindow()) return { dates: {} };
-  return safeParse(window.localStorage.getItem(CACHE_KEY), { dates: {} });
+  return safeParse(window.localStorage.getItem(getAccountKey(CACHE_KEY)), { dates: {} });
 };
 
 export const writeDiaryCache = (cache) => {
   if (!hasWindow()) return;
-  window.localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  window.localStorage.setItem(getAccountKey(CACHE_KEY), JSON.stringify(cache));
 };
 
 export const readOfflineQueue = () => {
   if (!hasWindow()) return [];
-  return safeParse(window.localStorage.getItem(QUEUE_KEY), []);
+  return safeParse(window.localStorage.getItem(getAccountKey(QUEUE_KEY)), []);
 };
 
 export const writeOfflineQueue = (queue) => {
   if (!hasWindow()) return;
-  window.localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+  window.localStorage.setItem(getAccountKey(QUEUE_KEY), JSON.stringify(queue));
 };
 
 export const nextOfflineId = () => {
   if (!hasWindow()) return -Date.now();
-  const current = parseInt(window.localStorage.getItem(TEMP_ID_KEY) || '-1', 10);
+  const key = getAccountKey(TEMP_ID_KEY);
+  const current = parseInt(window.localStorage.getItem(key) || '-1', 10);
   const next = Number.isNaN(current) ? -1 : current - 1;
-  window.localStorage.setItem(TEMP_ID_KEY, String(next));
+  window.localStorage.setItem(key, String(next));
   return next;
+};
+
+export const getFavorites = () => {
+  if (!hasWindow()) return [];
+  return safeParse(window.localStorage.getItem(getAccountKey(FAVORITES_KEY)), []);
+};
+
+export const setFavorites = (favorites) => {
+  if (!hasWindow()) return;
+  window.localStorage.setItem(getAccountKey(FAVORITES_KEY), JSON.stringify(favorites));
 };
 
 export const getCachedDiaryDate = (date) => {
