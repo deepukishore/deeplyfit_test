@@ -6,25 +6,16 @@ from urllib.request import Request, urlopen
 
 from fastapi import HTTPException
 
+from utils.indian_foods import INDIAN_FOOD_CATALOG
+
 
 OPEN_FOOD_FACTS_URL = "https://world.openfoodfacts.org/api/v2/product/{barcode}.json"
 OPEN_FOOD_FACTS_SEARCH_URL = "https://world.openfoodfacts.org/cgi/search.pl"
 OPEN_FOOD_FACTS_FIELDS = (
-    "product_name,product_name_en,generic_name,brands,serving_size,"
-    "quantity,image_front_small_url,nutriments"
+    "product_name,product_name_en,generic_name,generic_name_en,lang,brands,"
+    "countries_tags,serving_size,quantity,image_front_small_url,nutriments"
 )
 OPEN_FOOD_FACTS_USER_AGENT = "FitTrackAI/1.0 (contact@fittrack.local)"
-LOCAL_FOOD_FALLBACKS = [
-    {"name": "Paneer", "brand": "Local estimate", "calories": 265, "protein": 18.3, "carbs": 1.2, "fat": 20.8, "fiber": 0, "sugar": 1.2, "sodium": 22, "tags": ["paneer", "cottage cheese"]},
-    {"name": "Cooked white rice", "brand": "Local estimate", "calories": 130, "protein": 2.7, "carbs": 28.2, "fat": 0.3, "fiber": 0.4, "sugar": 0.1, "sodium": 1, "tags": ["rice", "white rice", "chawal"]},
-    {"name": "Chapati / Roti", "brand": "Local estimate", "calories": 120, "protein": 3.5, "carbs": 18, "fat": 3.7, "fiber": 3, "sugar": 0.5, "sodium": 120, "tags": ["chapati", "roti", "phulka"]},
-    {"name": "Boiled egg", "brand": "Local estimate", "calories": 78, "protein": 6.3, "carbs": 0.6, "fat": 5.3, "fiber": 0, "sugar": 0.6, "sodium": 62, "tags": ["egg", "boiled egg"]},
-    {"name": "Chicken breast", "brand": "Local estimate", "calories": 165, "protein": 31, "carbs": 0, "fat": 3.6, "fiber": 0, "sugar": 0, "sodium": 74, "tags": ["chicken", "chicken breast"]},
-    {"name": "Dal", "brand": "Local estimate", "calories": 116, "protein": 9, "carbs": 20, "fat": 0.4, "fiber": 7.9, "sugar": 1.8, "sodium": 2, "tags": ["dal", "lentil", "lentils"]},
-    {"name": "Curd / Yogurt", "brand": "Local estimate", "calories": 61, "protein": 3.5, "carbs": 4.7, "fat": 3.3, "fiber": 0, "sugar": 4.7, "sodium": 46, "tags": ["curd", "yogurt", "dahi"]},
-    {"name": "Oats", "brand": "Local estimate", "calories": 389, "protein": 16.9, "carbs": 66.3, "fat": 6.9, "fiber": 10.6, "sugar": 0.9, "sodium": 2, "tags": ["oats", "oatmeal"]},
-    {"name": "Banana", "brand": "Local estimate", "calories": 89, "protein": 1.1, "carbs": 22.8, "fat": 0.3, "fiber": 2.6, "sugar": 12.2, "sodium": 1, "tags": ["banana", "kela"]},
-]
 
 
 def _to_float(value) -> Optional[float]:
@@ -77,7 +68,21 @@ def _extract_micro(nutriments: dict, keys: list[str]) -> float:
     return round(value or 0.0, 1)
 
 
-def _normalize_product(product: dict, fallback_name: str) -> dict:
+def _preferred_english_name(product: dict, fallback_name: Optional[str] = None) -> Optional[str]:
+    english_name = product.get("product_name_en") or product.get("generic_name_en")
+    if english_name:
+        return str(english_name).strip()
+
+    language = str(product.get("lang") or "").lower()
+    if language in ("", "en"):
+        original_name = product.get("product_name") or product.get("generic_name")
+        if original_name:
+            return str(original_name).strip()
+
+    return fallback_name
+
+
+def _normalize_product(product: dict, fallback_name: str, english_only: bool = False) -> dict:
     nutriments = product.get("nutriments") or {}
 
     calories, calorie_basis = _extract_calories(nutriments)
@@ -92,12 +97,10 @@ def _normalize_product(product: dict, fallback_name: str) -> dict:
     else:
         nutrition_basis = "estimated"
 
-    name = (
-        product.get("product_name")
-        or product.get("product_name_en")
-        or product.get("generic_name")
-        or fallback_name
-    )
+    if english_only:
+        name = _preferred_english_name(product)
+    else:
+        name = _preferred_english_name(product, fallback_name)
 
     return {
         "code": str(product.get("code") or ""),
@@ -123,11 +126,42 @@ def _normalize_product(product: dict, fallback_name: str) -> dict:
     }
 
 
+def _local_match_score(item: dict, query_text: str) -> int:
+    query_lower = query_text.casefold()
+    name = item["name"].casefold()
+    tags = [tag.casefold() for tag in item["tags"]]
+
+    if query_lower == name:
+        return 120
+    if query_lower in tags:
+        return 110
+    if name.startswith(query_lower):
+        return 100
+    if query_lower in name:
+        return 90
+    if any(tag.startswith(query_lower) for tag in tags):
+        return 80
+    if any(query_lower in tag for tag in tags):
+        return 70
+
+    query_tokens = [token for token in query_lower.split() if token]
+    searchable = " ".join([name, *tags])
+    if query_tokens and all(token in searchable for token in query_tokens):
+        return 60
+    return 0
+
+
 def _local_food_results(query_text: str, page: int, page_size: int) -> dict:
-    query_lower = query_text.lower()
+    ranked_matches = [
+        (_local_match_score(item, query_text), index, item)
+        for index, item in enumerate(INDIAN_FOOD_CATALOG)
+    ]
     matches = [
-        item for item in LOCAL_FOOD_FALLBACKS
-        if query_lower in item["name"].lower() or any(query_lower in tag for tag in item["tags"])
+        item
+        for score, _, item in sorted(
+            (entry for entry in ranked_matches if entry[0] > 0),
+            key=lambda entry: (-entry[0], entry[1]),
+        )
     ]
     start = (page - 1) * page_size
     selected = matches[start:start + page_size]
@@ -140,7 +174,7 @@ def _local_food_results(query_text: str, page: int, page_size: int) -> dict:
             {
                 "code": f"local-{item['name'].lower().replace(' ', '-').replace('/', '-')}",
                 "name": item["name"],
-                "brand": item["brand"],
+                "brand": "Deeply Fit Indian estimate",
                 "image_url": None,
                 "quantity_label": "100g estimate",
                 "serving_size": "100g",
@@ -221,40 +255,56 @@ def search_foods(query_text: str, page: int = 1, page_size: int = 12) -> dict:
         "page": safe_page,
         "page_size": safe_page_size,
         "fields": f"code,{OPEN_FOOD_FACTS_FIELDS}",
+        "lc": "en",
+        "cc": "in",
+        "tagtype_0": "countries",
+        "tag_contains_0": "contains",
+        "tag_0": "india",
     })
     url = OPEN_FOOD_FACTS_SEARCH_URL + "?" + query
     request = Request(url, headers={"User-Agent": OPEN_FOOD_FACTS_USER_AGENT})
 
-    local_fallback = _local_food_results(query_text, safe_page, safe_page_size)
+    local_results = _local_food_results(query_text, safe_page, safe_page_size)
+    if local_results["results"]:
+        return local_results
 
     try:
         with urlopen(request, timeout=12) as response:
             payload = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
-        if local_fallback["results"]:
-            return local_fallback
+        if local_results["results"]:
+            return local_results
         if exc.code == 503:
             raise HTTPException(status_code=503, detail="Open Food Facts search is busy right now. Try again shortly. You can still enter nutrition manually.")
         raise HTTPException(status_code=exc.code, detail="Food search failed")
     except URLError:
-        if local_fallback["results"]:
-            return local_fallback
+        if local_results["results"]:
+            return local_results
         raise HTTPException(status_code=503, detail="Open Food Facts is unavailable right now. You can still enter nutrition manually.")
 
     products = payload.get("products") or []
     results = []
     for product in products:
-        normalized = _normalize_product(product, "Open Food Facts item")
+        normalized = _normalize_product(product, "", english_only=True)
         if normalized["name"] and normalized["code"]:
             results.append(normalized)
 
-    if not results and local_fallback["results"]:
-        return local_fallback
+    combined_results = []
+    seen_keys = set()
+    for result in [*local_results["results"], *results]:
+        dedupe_key = (result["name"].casefold(), result["brand"] or "")
+        if dedupe_key in seen_keys:
+            continue
+        seen_keys.add(dedupe_key)
+        combined_results.append(result)
+
+    if not combined_results and local_results["results"]:
+        return local_results
 
     return {
         "query": query_text,
-        "total_results": int(payload.get("count") or 0),
+        "total_results": len(local_results["results"]) + int(payload.get("count") or 0),
         "page": safe_page,
         "page_size": safe_page_size,
-        "results": results,
+        "results": combined_results[:safe_page_size],
     }

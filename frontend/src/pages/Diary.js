@@ -220,13 +220,13 @@ const FoodSearchBox = ({ onSelect, compact = false }) => {
     <div className="food-search-panel">
       <div className="food-search-head">
         <div>
-          <p className="food-search-title">Search 500,000+ foods</p>
-          <p className="food-search-copy">Choose a quantity, then tap a result to log it instantly.</p>
+          <p className="food-search-title">Search Indian &amp; global foods</p>
+          <p className="food-search-copy">English results with Indian dishes first. Choose a quantity, then tap to log.</p>
         </div>
-        {!compact && <span className="badge badge-blue">No camera needed</span>}
+        {!compact && <span className="badge badge-blue">India first</span>}
       </div>
       <div className="food-search-row">
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try: yogurt, oats, chicken breast" />
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try: dosa, paneer, biryani, roti" />
         <input
           type="number"
           value={quantity}

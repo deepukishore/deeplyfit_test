@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import {
+  BadgeCheck,
+  Bot,
+  BrainCircuit,
+  CalendarDays,
+  ChartNoAxesCombined,
+  Crown,
+  X,
+} from 'lucide-react';
 import { api } from '../utils/api';
 import { deactivateLocalPro } from '../utils/premium';
 
 const UPI_ID = 'deepu004.dk-4@okaxis';
 
 const FEATURES = [
-  { icon: 'AI', title: 'Unlimited AI Food Scans', free: '3 scans/day', pro: 'Unlimited scans' },
-  { icon: 'AI', title: 'Advanced AI Coach', free: '10 messages/day', pro: 'Unlimited coach messages' },
-  { icon: 'Chart', title: 'Detailed Nutrition Analytics', free: 'Basic charts', pro: 'Long-range trends and deeper insights' },
-  { icon: 'Meal', title: 'Meal Prep Planner', free: 'Manual meal logging', pro: 'Weekly planning and shopping support' },
-  { icon: 'Badge', title: 'Exclusive PRO Badges', free: 'Basic badges', pro: 'PRO badge and profile highlight' },
+  { icon: Bot, title: 'Unlimited AI Food Scans', free: '3 scans/day', pro: 'Unlimited scans' },
+  { icon: BrainCircuit, title: 'Advanced AI Coach', free: '10 messages/day', pro: 'Unlimited coach messages' },
+  { icon: ChartNoAxesCombined, title: 'Detailed Nutrition Analytics', free: 'Basic charts', pro: 'Long-range trends and deeper insights' },
+  { icon: CalendarDays, title: 'Meal Prep Planner', free: 'Manual meal logging', pro: 'Weekly planning and shopping support' },
+  { icon: BadgeCheck, title: 'Exclusive PRO Badges', free: 'Basic badges', pro: 'PRO badge and profile highlight' },
 ];
 
 const PLANS = [
@@ -58,14 +67,26 @@ const PremiumModal = ({ onClose, onActivated }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-sheet premium-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-sheet premium-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="premium-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-handle" />
+        <button className="premium-close" type="button" aria-label="Close PRO dialog" onClick={onClose}>
+          <X size={20} aria-hidden="true" />
+        </button>
 
         {step === 'plans' && (
           <>
             <div className="premium-hero">
-              <div className="premium-badge-icon">PRO</div>
-              <h3 className="premium-title">Deeply Fit PRO</h3>
+              <div className="premium-badge-icon">
+                <Crown size={25} aria-hidden="true" />
+                <span>PRO</span>
+              </div>
+              <h3 className="premium-title" id="premium-modal-title">Deeply Fit PRO</h3>
               <p className="premium-subtitle">Unlimited AI coaching, scanning, analytics, and premium progress tools.</p>
             </div>
 
@@ -86,28 +107,35 @@ const PremiumModal = ({ onClose, onActivated }) => {
             </div>
 
             <div className="premium-features-list">
-              {FEATURES.map((f) => (
-                <div key={f.title} className="premium-feature-row">
-                  <span className="premium-feature-icon">{f.icon}</span>
-                  <div className="premium-feature-info">
-                    <p className="premium-feature-title">{f.title}</p>
-                    <p className="premium-feature-free">Free: {f.free}</p>
-                    <p className="premium-feature-pro">PRO: {f.pro}</p>
+              {FEATURES.map((f) => {
+                const FeatureIcon = f.icon;
+                return (
+                  <div key={f.title} className="premium-feature-row">
+                    <span className="premium-feature-icon">
+                      <FeatureIcon size={20} strokeWidth={2} aria-hidden="true" />
+                    </span>
+                    <div className="premium-feature-info">
+                      <p className="premium-feature-title">{f.title}</p>
+                      <p className="premium-feature-free">Free: {f.free}</p>
+                      <p className="premium-feature-pro">PRO: {f.pro}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            <button className="btn btn-primary btn-full premium-cta" onClick={() => setStep('payment')}>
-              Get PRO - {selectedPlan.price}{selectedPlan.period}
-            </button>
-            <button className="btn btn-ghost btn-full" onClick={onClose} style={{ marginTop: 8 }}>Maybe later</button>
+            <div className="premium-actions">
+              <button className="btn btn-primary btn-full premium-cta" onClick={() => setStep('payment')}>
+                Get PRO - {selectedPlan.price}{selectedPlan.period}
+              </button>
+              <button className="btn btn-ghost btn-full" onClick={onClose}>Maybe later</button>
+            </div>
           </>
         )}
 
         {step === 'payment' && (
           <>
-            <h3 className="modal-title">Complete Payment</h3>
+            <h3 className="modal-title" id="premium-modal-title">Complete Payment</h3>
             <div className="premium-payment-card">
               <div className="premium-payment-row">
                 <span>Plan</span>
