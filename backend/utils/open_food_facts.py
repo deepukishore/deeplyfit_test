@@ -1,4 +1,5 @@
 import json
+from difflib import SequenceMatcher
 from typing import Optional, Tuple
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -148,6 +149,14 @@ def _local_match_score(item: dict, query_text: str) -> int:
     searchable = " ".join([name, *tags])
     if query_tokens and all(token in searchable for token in query_tokens):
         return 60
+
+    if len(query_lower) >= 4:
+        candidates = [name, *tags]
+        if any(
+            SequenceMatcher(None, query_lower, candidate).ratio() >= 0.84
+            for candidate in candidates
+        ):
+            return 55
     return 0
 
 

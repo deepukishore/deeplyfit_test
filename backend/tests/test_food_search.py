@@ -29,6 +29,7 @@ class IndianFoodSearchTests(unittest.TestCase):
             "biryani": ["Chicken Biryani", "Vegetable Biryani"],
             "roti": ["Chapati / Roti"],
             "bread": ["Chapati / Roti", "Whole Wheat Bread", "White Bread"],
+            "omlette": ["Plain Omelette", "Masala Omelette", "Cheese Omelette"],
         }
 
         for query, expected_names in expectations.items():
@@ -37,6 +38,21 @@ class IndianFoodSearchTests(unittest.TestCase):
                 names = [result["name"] for result in results]
                 for expected_name in expected_names:
                     self.assertIn(expected_name, names)
+
+    def test_small_spelling_errors_still_find_indian_foods(self):
+        expectations = {
+            "briyani": "Chicken Biryani",
+            "paner": "Paneer",
+            "omellete": "Plain Omelette",
+        }
+
+        for query, expected_name in expectations.items():
+            with self.subTest(query=query):
+                names = [
+                    result["name"]
+                    for result in _local_food_results(query, page=1, page_size=20)["results"]
+                ]
+                self.assertIn(expected_name, names)
 
     def test_explicit_english_name_is_preferred(self):
         product = {
