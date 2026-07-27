@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { getInitials } from '../utils/fitness';
 import BrandLogo from './BrandLogo';
+import UserAvatar from './UserAvatar';
 import '../styles/bottomNav.css';
 
 const PRIMARY_NAV_ITEMS = [
@@ -85,7 +86,7 @@ const BottomNav = () => {
           {UTILITY_NAV_ITEMS.map(renderNavItem)}
         </div>
         <div className="nav-account">
-          <div className="nav-account-avatar" aria-hidden="true">{initials}</div>
+          <UserAvatar value={user?.profile_picture} initials={initials} className="nav-account-avatar" />
           <div className="nav-account-copy">
             <strong>{user?.name || 'Athlete'}</strong>
             <span title={user?.email}>{user?.email || 'Signed in'}</span>

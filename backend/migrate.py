@@ -18,6 +18,11 @@ migrations = [
         "label": "Add users.bio",
     },
     {
+        "check": "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='users' AND column_name='profile_picture'",
+        "sql": "ALTER TABLE users ADD COLUMN profile_picture LONGTEXT NULL",
+        "label": "Add users.profile_picture",
+    },
+    {
         "check": "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='users' AND column_name='public_profile_slug'",
         "sql": "ALTER TABLE users ADD COLUMN public_profile_slug VARCHAR(120) NULL UNIQUE",
         "label": "Add users.public_profile_slug",

@@ -5,6 +5,7 @@ import { ACTIVE_CHALLENGES } from '../utils/fitness';
 import { api } from '../utils/api';
 import { compressImageFile } from '../utils/image';
 import { useRefreshRegistration } from '../context/RefreshContext';
+import UserAvatar from '../components/UserAvatar';
 import '../styles/dashboard.css';
 import '../styles/animations.css';
 
@@ -229,7 +230,11 @@ const Community = () => {
                   <div key={post.id} className="feed-post animate-slide-up">
                     <div className="feed-post-header">
                       <button className="feed-avatar" style={{ background: 'rgba(79,172,254,0.14)', color: 'var(--accent-blue)', border: 'none' }} onClick={() => post.author.public_profile_slug && navigate(`/u/${post.author.public_profile_slug}`)}>
-                        {initialsFor(post.author)}
+                        <UserAvatar
+                          value={post.author.profile_picture}
+                          initials={initialsFor(post.author)}
+                          className="feed-avatar-visual"
+                        />
                       </button>
                       <div style={{ flex: 1 }}>
                         <button className="link-button" onClick={() => post.author.public_profile_slug && navigate(`/u/${post.author.public_profile_slug}`)}>{post.author.name || post.author.email}</button>

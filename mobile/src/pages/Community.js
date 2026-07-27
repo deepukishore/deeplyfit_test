@@ -7,6 +7,7 @@ import { compressImageUri } from '../utils/image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { colors, radius, spacing } from '../utils/theme';
+import UserAvatar from '../components/UserAvatar';
 
 
 const formatRelativeTime = (timestamp) => {
@@ -173,7 +174,7 @@ const Community = ({ navigation }) => {
                 <View key={post.id} style={s.postCard}>
                   <View style={s.postHeader}>
                     <TouchableOpacity style={s.postAvatar} onPress={() => post.author.public_profile_slug && navigation.navigate('PublicProfile', { slug: post.author.public_profile_slug })}>
-                      <Text style={s.postAvatarText}>{initialsFor(post.author)}</Text>
+                      <UserAvatar value={post.author.profile_picture} initials={initialsFor(post.author)} size={42} />
                     </TouchableOpacity>
                     <View style={{ flex: 1 }}>
                       <Text style={s.postAuthor}>{post.author.name || post.author.email}</Text>

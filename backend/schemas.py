@@ -1,6 +1,14 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List, Dict
 from datetime import date, datetime
+import re
+
+
+BUILT_IN_AVATAR_IDS = {f"avatar-{index}" for index in range(1, 11)}
+PROFILE_PICTURE_PATTERN = re.compile(
+    r"^data:image/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$"
+)
+MAX_PROFILE_PICTURE_LENGTH = 350_000
 
 
 # Allergens
@@ -76,10 +84,26 @@ class UserUpdate(BaseModel):
     dark_mode: Optional[int] = None
     water_goal: Optional[int] = None
     bio: Optional[str] = None
+    profile_picture: Optional[str] = None
     public_profile_slug: Optional[str] = None
     profile_visibility: Optional[str] = None
     share_achievements: Optional[int] = None
     allergens: Optional[List[str]] = None
+
+    @field_validator("profile_picture")
+    @classmethod
+    def validate_profile_picture(cls, value):
+        if value is None:
+            return None
+
+        normalized = value.strip()
+        if not normalized or normalized in BUILT_IN_AVATAR_IDS:
+            return normalized
+        if len(normalized) > MAX_PROFILE_PICTURE_LENGTH:
+            raise ValueError("Profile picture is too large")
+        if not PROFILE_PICTURE_PATTERN.fullmatch(normalized):
+            raise ValueError("Choose a built-in avatar or upload a JPEG, PNG, or WebP image")
+        return normalized
 
 
 class PremiumActivationRequest(BaseModel):
@@ -114,6 +138,7 @@ class UserResponse(BaseModel):
     dark_mode: int
     water_goal: int = 8
     bio: Optional[str] = None
+    profile_picture: Optional[str] = None
     public_profile_slug: Optional[str] = None
     profile_visibility: str = "public"
     share_achievements: int = 1
@@ -585,6 +610,7 @@ class CommunityAuthor(BaseModel):
     id: int
     name: Optional[str] = None
     email: Optional[str] = None
+    profile_picture: Optional[str] = None
     public_profile_slug: Optional[str] = None
 
 
@@ -636,6 +662,7 @@ class PublicProfileStats(BaseModel):
 class PublicProfileResponse(BaseModel):
     name: Optional[str] = None
     bio: Optional[str] = None
+    profile_picture: Optional[str] = None
     public_profile_slug: str
     fitness_goal: Optional[str] = None
     activity_level: Optional[str] = None

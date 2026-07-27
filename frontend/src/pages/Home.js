@@ -14,6 +14,7 @@ import {
   Utensils,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import UserAvatar from '../components/UserAvatar';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
 import { createEmptySummary, getCachedDiaryDate } from '../utils/diaryStorage';
@@ -344,7 +345,9 @@ const Home = () => {
           </div>
           <div className="home-hero-actions">
             <span className="home-date-pill">{displayDate}</span>
-            <button className="header-avatar" type="button" onClick={() => navigate('/profile')} aria-label="Open profile">{initials}</button>
+            <button className="header-avatar" type="button" onClick={() => navigate('/profile')} aria-label="Open profile">
+              <UserAvatar value={user?.profile_picture} initials={initials} className="header-avatar-visual" />
+            </button>
           </div>
         </div>
       </div>

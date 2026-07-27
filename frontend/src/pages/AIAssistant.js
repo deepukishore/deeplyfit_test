@@ -5,9 +5,10 @@ import { api } from '../utils/api';
 import toast from 'react-hot-toast';
 import { canChat, incrementChatCount, chatsLeft, isPro } from '../utils/premium';
 import PremiumModal from '../components/PremiumModal';
+import UserAvatar from '../components/UserAvatar';
 import '../styles/assistant.css';
 
-function Message({ msg, userInitials }) {
+function Message({ msg, userInitials, profilePicture }) {
   const isUser = msg.role === 'user';
   const now = new Date();
   const timeStr = now.toLocaleTimeString([], {
@@ -24,7 +25,7 @@ function Message({ msg, userInitials }) {
             <div className="message-text">{msg.content}</div>
             <div className="message-time">{timeStr}</div>
           </div>
-          <div className="user-avatar">{userInitials}</div>
+          <UserAvatar value={profilePicture} initials={userInitials} className="user-avatar" />
         </>
       ) : (
         <>
@@ -163,7 +164,7 @@ export default function AIAssistant() {
 
       <div className="messages-container">
         {messages.map((msg, i) => (
-          <Message key={i} msg={msg} userInitials={getInitials()} />
+          <Message key={i} msg={msg} userInitials={getInitials()} profilePicture={user?.profile_picture} />
         ))}
 
         {loading && (

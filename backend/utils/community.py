@@ -6,6 +6,7 @@ def serialize_author(user) -> CommunityAuthor:
         id=user.id,
         name=user.name,
         email=None,
+        profile_picture=user.profile_picture,
         public_profile_slug=user.public_profile_slug,
     )
 

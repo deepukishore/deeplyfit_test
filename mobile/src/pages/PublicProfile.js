@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator
 import Toast from 'react-native-toast-message';
 import { api } from '../utils/api';
 import { colors, radius, spacing } from '../utils/theme';
+import UserAvatar from '../components/UserAvatar';
 
 const PublicProfile = ({ route, navigation }) => {
   const slug = route?.params?.slug || '';
@@ -41,7 +42,12 @@ const PublicProfile = ({ route, navigation }) => {
       </View>
       <ScrollView style={s.scroll}>
         <View style={s.profileHeader}>
-          <View style={s.avatar}><Text style={s.avatarText}>{(profile.name || profile.public_profile_slug || '?').slice(0, 2).toUpperCase()}</Text></View>
+          <UserAvatar
+            value={profile.profile_picture}
+            initials={(profile.name || profile.public_profile_slug || '?').slice(0, 2).toUpperCase()}
+            size={80}
+            style={s.avatar}
+          />
           <Text style={s.profileName}>{profile.name || profile.public_profile_slug}</Text>
           <Text style={s.profileHandle}>@{profile.public_profile_slug}</Text>
           {profile.bio && <Text style={s.profileBio}>{profile.bio}</Text>}
@@ -82,8 +88,7 @@ const s = StyleSheet.create({
   backBtn: { color: colors.accentLime, fontWeight: '700', fontSize: 15 },
   scroll: { flex: 1, padding: spacing.lg },
   profileHeader: { alignItems: 'center', marginBottom: 24 },
-  avatar: { width: 80, height: 80, borderRadius: 28, backgroundColor: colors.accentPurple, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  avatarText: { color: '#fff', fontWeight: '800', fontSize: 28 },
+  avatar: { marginBottom: 12 },
   profileName: { fontSize: 22, fontWeight: '800', color: colors.textPrimary },
   profileHandle: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
   profileBio: { fontSize: 14, color: colors.textSecondary, marginTop: 8, textAlign: 'center', maxWidth: 280 },

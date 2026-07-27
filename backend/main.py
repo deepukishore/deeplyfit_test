@@ -27,7 +27,9 @@ def ensure_user_premium_columns():
 
     existing_columns = {column["name"] for column in inspector.get_columns("users")}
     datetime_type = "TIMESTAMP" if engine.dialect.name == "postgresql" else "DATETIME"
+    profile_picture_type = "LONGTEXT" if engine.dialect.name == "mysql" else "TEXT"
     column_statements = {
+        "profile_picture": f"ALTER TABLE users ADD COLUMN profile_picture {profile_picture_type} NULL",
         "premium_status": "ALTER TABLE users ADD COLUMN premium_status VARCHAR(20) DEFAULT 'free'",
         "premium_plan": "ALTER TABLE users ADD COLUMN premium_plan VARCHAR(20) NULL",
         "premium_activated_at": f"ALTER TABLE users ADD COLUMN premium_activated_at {datetime_type} NULL",

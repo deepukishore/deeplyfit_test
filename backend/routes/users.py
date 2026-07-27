@@ -256,6 +256,8 @@ def update_profile(
             current_user.water_goal = max(1, min(data.water_goal, 30))
         if data.bio is not None:
             current_user.bio = data.bio
+        if data.profile_picture is not None:
+            current_user.profile_picture = data.profile_picture or None
         if data.profile_visibility is not None:
             current_user.profile_visibility = data.profile_visibility if data.profile_visibility in {"public", "private"} else "public"
         if data.share_achievements is not None:
@@ -317,6 +319,7 @@ def get_public_profile(
     return PublicProfileResponse(
         name=user.name,
         bio=user.bio,
+        profile_picture=user.profile_picture,
         public_profile_slug=user.public_profile_slug,
         fitness_goal=user.fitness_goal,
         activity_level=user.activity_level,

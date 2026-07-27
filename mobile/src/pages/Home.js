@@ -8,6 +8,7 @@ import { createEmptySummary, getCachedDiaryDate } from '../utils/storage';
 import { getGreeting, getDailyQuote, formatDate, getWorkoutSuggestions, getInitials } from '../utils/fitness';
 import { colors, radius, spacing } from '../utils/theme';
 import WorkoutPlannerModal from '../components/WorkoutPlannerModal';
+import UserAvatar from '../components/UserAvatar';
 
 const MACRO_COLORS = ['#4facfe', '#a855f7', '#f5a623'];
 
@@ -174,7 +175,7 @@ const Home = ({ navigation }) => {
           <Text style={s.name}>{user?.name || user?.email?.split('@')[0] || 'Athlete'} 👋</Text>
         </View>
         <TouchableOpacity style={s.avatar} onPress={() => navigation.navigate('Profile')}>
-          <Text style={s.avatarText}>{initials}</Text>
+          <UserAvatar value={user?.profile_picture} initials={initials} size={40} />
         </TouchableOpacity>
       </View>
 

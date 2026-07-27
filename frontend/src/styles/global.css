@@ -127,6 +127,36 @@ html, body, #root {
   box-shadow: var(--shadow-lime);
 }
 
+.account-avatar-visual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--accent-lime), var(--accent-purple));
+  color: var(--text-inverse);
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.account-avatar-preset {
+  background: linear-gradient(135deg, var(--avatar-start), var(--avatar-end));
+  color: #fff;
+}
+
+.account-avatar-visual img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.account-avatar-emoji {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  line-height: 1;
+}
+
 html {
   color-scheme: dark;
 }

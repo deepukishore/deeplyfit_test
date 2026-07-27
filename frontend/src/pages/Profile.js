@@ -1,22 +1,27 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   ChevronRight,
+  Camera,
+  Check,
   Download as DownloadIcon,
   Info,
   LogOut,
   Moon,
   Pencil,
   Sun,
+  Trash2,
   UsersRound,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
+import { compressImageFile } from '../utils/image';
 import { getInitials } from '../utils/fitness';
 import { isPro } from '../utils/premium';
 import PremiumModal from '../components/PremiumModal';
+import UserAvatar, { BUILT_IN_AVATARS } from '../components/UserAvatar';
 import '../styles/dashboard.css';
 import '../styles/animations.css';
 
@@ -24,6 +29,7 @@ const ProfileSettingsModal = ({ user, onClose, onSave }) => {
   const [form, setForm] = useState({
     name: user.name || '',
     bio: user.bio || '',
+    profile_picture: user.profile_picture || '',
     goal_weight: user.goal_weight || '',
     activity_level: user.activity_level || '',
     fitness_goal: user.fitness_goal || '',
@@ -32,6 +38,39 @@ const ProfileSettingsModal = ({ user, onClose, onSave }) => {
     share_achievements: user.share_achievements ?? 1,
   });
   const [loading, setLoading] = useState(false);
+  const [preparingImage, setPreparingImage] = useState(false);
+  const fileInputRef = useRef(null);
+  const initials = getInitials(form.name, user.email);
+
+  const handleProfilePicture = async (file) => {
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('Choose a JPEG, PNG, or WebP image');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Choose an image smaller than 5 MB');
+      return;
+    }
+
+    setPreparingImage(true);
+    try {
+      const imageData = await compressImageFile(file, {
+        maxWidth: 320,
+        maxHeight: 320,
+        quality: 0.76,
+      });
+      if (imageData.length > 350000) {
+        throw new Error('This image is still too large after compression');
+      }
+      setForm((current) => ({ ...current, profile_picture: imageData }));
+    } catch (err) {
+      toast.error(err.message || 'Could not prepare this profile picture');
+    } finally {
+      setPreparingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleSave = async () => {
     setLoading(true);
@@ -40,6 +79,7 @@ const ProfileSettingsModal = ({ user, onClose, onSave }) => {
       const updated = await api.updateProfile({
         name: form.name,
         bio: form.bio,
+        profile_picture: form.profile_picture,
         goal_weight: Number.isNaN(parsedGoalWeight) ? undefined : parsedGoalWeight,
         activity_level: form.activity_level,
         fitness_goal: form.fitness_goal,
@@ -59,10 +99,71 @@ const ProfileSettingsModal = ({ user, onClose, onSave }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-sheet" onClick={(event) => event.stopPropagation()}>
+      <div className="modal-sheet profile-edit-modal" onClick={(event) => event.stopPropagation()}>
         <div className="modal-handle" />
         <h3 className="modal-title">Edit Profile & Privacy</h3>
         <div className="modal-form">
+          <section className="profile-picture-editor" aria-labelledby="profile-picture-title">
+            <div className="profile-picture-editor-head">
+              <UserAvatar
+                value={form.profile_picture}
+                initials={initials}
+                className="profile-picture-preview"
+                alt="Selected profile picture"
+              />
+              <div>
+                <h4 id="profile-picture-title">Profile picture</h4>
+                <p>Upload your own photo or choose an avatar.</p>
+                <div className="profile-picture-actions">
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={preparingImage}
+                  >
+                    <Camera size={15} />
+                    {preparingImage ? 'Preparing...' : 'Upload photo'}
+                  </button>
+                  {form.profile_picture && (
+                    <button
+                      className="btn btn-ghost btn-sm profile-picture-remove"
+                      type="button"
+                      onClick={() => setForm((current) => ({ ...current, profile_picture: '' }))}
+                    >
+                      <Trash2 size={14} /> Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+            <input
+              ref={fileInputRef}
+              className="profile-picture-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(event) => handleProfilePicture(event.target.files?.[0])}
+            />
+            <div className="built-in-avatar-label">Choose one of 10 built-in avatars</div>
+            <div className="built-in-avatar-grid">
+              {BUILT_IN_AVATARS.map((avatar) => {
+                const selected = form.profile_picture === avatar.id;
+                return (
+                  <button
+                    key={avatar.id}
+                    className={`built-in-avatar-option ${selected ? 'selected' : ''}`}
+                    type="button"
+                    aria-label={`Choose ${avatar.label} avatar`}
+                    aria-pressed={selected}
+                    onClick={() => setForm((current) => ({ ...current, profile_picture: avatar.id }))}
+                  >
+                    <UserAvatar value={avatar.id} className="built-in-avatar-image" />
+                    <span>{avatar.label}</span>
+                    {selected && <Check className="built-in-avatar-check" size={13} strokeWidth={3} />}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
           <div className="input-group">
             <label>Full name</label>
             <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Your name" />
@@ -190,7 +291,12 @@ const Profile = () => {
 
       <div className="profile-header animate-slide-up">
         <div className="profile-banner" aria-hidden="true" />
-        <div className={`profile-avatar-large ${proActive ? 'pro-avatar' : ''}`}>{initials}</div>
+        <UserAvatar
+          value={user.profile_picture}
+          initials={initials}
+          className={`profile-avatar-large ${proActive ? 'pro-avatar' : ''}`}
+          alt={`${user.name || 'Athlete'} profile picture`}
+        />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
           <h2 className="profile-name" style={{ margin: 0 }}>{user.name || 'Athlete'}</h2>
           {proActive && <span className="badge badge-pro">💎 PRO</span>}

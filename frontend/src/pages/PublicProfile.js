@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { api } from '../utils/api';
+import UserAvatar from '../components/UserAvatar';
 import '../styles/dashboard.css';
 import '../styles/animations.css';
 
@@ -72,7 +73,12 @@ const PublicProfile = () => {
       </div>
 
       <div className="profile-header animate-slide-up">
-        <div className="profile-avatar-large">{(profile.name || profile.public_profile_slug || '?').slice(0, 2).toUpperCase()}</div>
+        <UserAvatar
+          value={profile.profile_picture}
+          initials={(profile.name || profile.public_profile_slug || '?').slice(0, 2).toUpperCase()}
+          className="profile-avatar-large"
+          alt={`${profile.name || profile.public_profile_slug} profile picture`}
+        />
         <h2 className="profile-name">{profile.name || profile.public_profile_slug}</h2>
         <p className="profile-email">@{profile.public_profile_slug}</p>
         {profile.bio && <p style={{ maxWidth: 320, margin: '12px auto 0', color: 'var(--text-secondary)' }}>{profile.bio}</p>}

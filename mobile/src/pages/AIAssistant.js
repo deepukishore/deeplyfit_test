@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { getInitials } from '../utils/fitness';
 import { colors, spacing } from '../utils/theme';
+import UserAvatar from '../components/UserAvatar';
 
 const QUICK_SUGGESTIONS = [
   'What should I eat for lunch? 🍽️',
@@ -86,7 +87,7 @@ const AIAssistant = () => {
             <View style={[s.bubble, msg.role === 'user' ? s.bubbleUser : s.bubbleAssistant]}>
               <Text style={[s.bubbleText, msg.role === 'user' && s.bubbleTextUser]}>{msg.content}</Text>
             </View>
-            {msg.role === 'user' && <View style={s.userAvatar}><Text style={s.userAvatarText}>{initials}</Text></View>}
+            {msg.role === 'user' && <UserAvatar value={user?.profile_picture} initials={initials} size={32} style={s.userAvatar} />}
           </View>
         ))}
         {loading && (

@@ -2,18 +2,22 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, TextInput } from 'react-native';
 import Toast from 'react-native-toast-message';
 import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../context/AuthContext';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
+import { compressImageUri } from '../utils/image';
 import { getInitials } from '../utils/fitness';
 import { colors, radius, spacing } from '../utils/theme';
 import PremiumUpgradeModal from '../components/PremiumUpgradeModal';
+import UserAvatar, { BUILT_IN_AVATARS } from '../components/UserAvatar';
 import { formatPremiumExpiry } from '../utils/premium';
 
 const ProfileSettingsModal = ({ visible, user, onClose, onSave }) => {
   const [form, setForm] = useState({
     name: user.name || '',
     bio: user.bio || '',
+    profile_picture: user.profile_picture || '',
     goal_weight: String(user.goal_weight || ''),
     activity_level: user.activity_level || '',
     fitness_goal: user.fitness_goal || '',
@@ -22,6 +26,35 @@ const ProfileSettingsModal = ({ visible, user, onClose, onSave }) => {
     share_achievements: user.share_achievements ?? 1,
   });
   const [loading, setLoading] = useState(false);
+  const [preparingImage, setPreparingImage] = useState(false);
+  const initials = getInitials(form.name, user.email);
+
+  const chooseProfilePicture = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets?.[0]?.uri) return;
+
+    setPreparingImage(true);
+    try {
+      const imageData = await compressImageUri(result.assets[0].uri, {
+        maxWidth: 320,
+        maxHeight: 320,
+        quality: 0.76,
+      });
+      if (imageData.length > 350000) {
+        throw new Error('This image is still too large after compression');
+      }
+      setForm((current) => ({ ...current, profile_picture: imageData }));
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.message || 'Could not prepare this profile picture' });
+    } finally {
+      setPreparingImage(false);
+    }
+  };
 
   const handleSave = async () => {
     setLoading(true);
@@ -29,6 +62,7 @@ const ProfileSettingsModal = ({ visible, user, onClose, onSave }) => {
       const updated = await api.updateProfile({
         name: form.name,
         bio: form.bio,
+        profile_picture: form.profile_picture,
         goal_weight: parseFloat(form.goal_weight),
         activity_level: form.activity_level,
         fitness_goal: form.fitness_goal,
@@ -53,6 +87,43 @@ const ProfileSettingsModal = ({ visible, user, onClose, onSave }) => {
           <View style={s.handle} />
           <Text style={s.modalTitle}>Edit Profile & Privacy</Text>
           <ScrollView keyboardShouldPersistTaps="handled">
+            <View style={s.pictureEditor}>
+              <View style={s.pictureEditorHead}>
+                <UserAvatar value={form.profile_picture} initials={initials} size={70} />
+                <View style={s.pictureEditorCopy}>
+                  <Text style={s.pictureTitle}>Profile picture</Text>
+                  <Text style={s.pictureSub}>Upload a photo or choose an avatar.</Text>
+                  <View style={s.pictureActions}>
+                    <TouchableOpacity style={s.pictureButton} onPress={chooseProfilePicture} disabled={preparingImage}>
+                      <Text style={s.pictureButtonText}>{preparingImage ? 'Preparing...' : 'Upload photo'}</Text>
+                    </TouchableOpacity>
+                    {form.profile_picture ? (
+                      <TouchableOpacity onPress={() => setForm((current) => ({ ...current, profile_picture: '' }))}>
+                        <Text style={s.removePicture}>Remove</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                </View>
+              </View>
+              <Text style={s.avatarGridLabel}>Choose one of 10 built-in avatars</Text>
+              <View style={s.avatarGrid}>
+                {BUILT_IN_AVATARS.map((avatar) => {
+                  const selected = form.profile_picture === avatar.id;
+                  return (
+                    <TouchableOpacity
+                      key={avatar.id}
+                      style={[s.avatarOption, selected && s.avatarOptionSelected]}
+                      onPress={() => setForm((current) => ({ ...current, profile_picture: avatar.id }))}
+                    >
+                      <UserAvatar value={avatar.id} size={42} />
+                      <Text style={[s.avatarOptionLabel, selected && s.avatarOptionLabelSelected]} numberOfLines={1}>
+                        {avatar.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
             <View style={s.inputGroup}>
               <Text style={s.label}>Full name</Text>
               <TextInput
@@ -185,7 +256,7 @@ const Profile = ({ navigation }) => {
 
       <ScrollView style={s.scroll}>
         <View style={s.profileHeader}>
-          <View style={s.avatarLarge}><Text style={s.avatarText}>{initials}</Text></View>
+          <UserAvatar value={user.profile_picture} initials={initials} size={72} style={s.avatarLarge} />
           <Text style={s.profileName}>{user.name || 'Athlete'}</Text>
           <Text style={s.profileEmail}>{user.email}</Text>
           <View style={[s.proBadge, isPremiumActive ? s.proBadgeActive : s.proBadgeInactive]}>
@@ -303,8 +374,7 @@ const s = StyleSheet.create({
   headerTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   scroll: { flex: 1, padding: spacing.lg },
   profileHeader: { alignItems: 'center', marginBottom: 20 },
-  avatarLarge: { width: 72, height: 72, borderRadius: 24, backgroundColor: colors.accentPurple, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  avatarText: { color: '#fff', fontWeight: '800', fontSize: 24 },
+  avatarLarge: { marginBottom: 10 },
   profileName: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   profileEmail: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
   proBadge: { marginTop: 8, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
@@ -348,6 +418,21 @@ const s = StyleSheet.create({
   sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xl, maxHeight: '90%' },
   handle: { width: 36, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: 14 },
   modalTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 18 },
+  pictureEditor: { padding: 14, marginBottom: 16, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.bgElevated },
+  pictureEditorHead: { flexDirection: 'row', alignItems: 'center' },
+  pictureEditorCopy: { flex: 1, marginLeft: 12 },
+  pictureTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  pictureSub: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  pictureActions: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  pictureButton: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, backgroundColor: colors.accentLime },
+  pictureButtonText: { color: colors.textInverse, fontSize: 11, fontWeight: '700' },
+  removePicture: { color: colors.accentCoral, fontSize: 11, fontWeight: '700', marginLeft: 12 },
+  avatarGridLabel: { color: colors.textSecondary, fontSize: 10, fontWeight: '700', textTransform: 'uppercase', marginTop: 16, marginBottom: 8 },
+  avatarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  avatarOption: { width: '18%', minWidth: 48, paddingVertical: 6, alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.bgCard },
+  avatarOptionSelected: { borderColor: colors.accentLime, backgroundColor: 'rgba(168,85,247,0.12)' },
+  avatarOptionLabel: { maxWidth: '100%', color: colors.textMuted, fontSize: 8, fontWeight: '600', marginTop: 4 },
+  avatarOptionLabelSelected: { color: colors.accentLime },
   inputGroup: { marginBottom: 14 },
   label: { fontSize: 11, color: colors.textSecondary, marginBottom: 5, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase' },
   input: { backgroundColor: colors.bgElevated, borderRadius: 10, padding: 12, color: colors.textPrimary, fontSize: 14, borderWidth: 1, borderColor: colors.border },
