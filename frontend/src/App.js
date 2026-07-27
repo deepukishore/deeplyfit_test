@@ -94,7 +94,7 @@ const AppRoutes = () => {
   if (loading) {
     return (
       <div className="loading-screen">
-        <BrandLogo className="loading-brand-logo" />
+        <BrandLogo className="loading-brand-logo" priority />
         <div className="spinner spinner-lg" />
         <p style={{ marginTop: 16 }}>Loading Deeply Fit...</p>
       </div>
