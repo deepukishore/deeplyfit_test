@@ -9,6 +9,18 @@ import { useRefreshRegistration } from '../context/RefreshContext';
 import { colors, radius, spacing } from '../utils/theme';
 import UserAvatar from '../components/UserAvatar';
 
+const POST_TYPES = [
+  { value: 'general', label: 'General' },
+  { value: 'update', label: 'Progress' },
+  { value: 'meal', label: 'Meal' },
+  { value: 'workout', label: 'Workout' },
+  { value: 'pr', label: 'Record' },
+  { value: 'question', label: 'Question' },
+];
+
+const postTypeLabel = (value) => (
+  POST_TYPES.find((type) => type.value === value)?.label || 'General'
+);
 
 const formatRelativeTime = (timestamp) => {
   const diff = Math.max(1, Math.round((Date.now() - new Date(timestamp).getTime()) / 60000));
@@ -23,7 +35,7 @@ const initialsFor = (author) => {
 };
 
 const CreatePostModal = ({ visible, onClose, onCreated }) => {
-  const [postType, setPostType] = useState('update');
+  const [postType, setPostType] = useState('general');
   const [content, setContent] = useState('');
   const [imageData, setImageData] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -52,13 +64,13 @@ const CreatePostModal = ({ visible, onClose, onCreated }) => {
       <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
         <TouchableOpacity style={s.sheet} activeOpacity={1} onPress={() => {}}>
           <View style={s.handle} />
-          <Text style={s.modalTitle}>Share an update</Text>
+          <Text style={s.modalTitle}>Create a post</Text>
           <View style={s.inputGroup}>
             <Text style={s.label}>Post type</Text>
             <View style={s.typeRow}>
-              {[['update', 'Progress'], ['meal', 'Meal'], ['pr', 'PR']].map(([v, l]) => (
-                <TouchableOpacity key={v} style={[s.typeChip, postType === v && s.typeChipActive]} onPress={() => setPostType(v)}>
-                  <Text style={[s.typeChipText, postType === v && s.typeChipTextActive]}>{l}</Text>
+              {POST_TYPES.map((type) => (
+                <TouchableOpacity key={type.value} style={[s.typeChip, postType === type.value && s.typeChipActive]} onPress={() => setPostType(type.value)}>
+                  <Text style={[s.typeChipText, postType === type.value && s.typeChipTextActive]}>{type.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -72,7 +84,7 @@ const CreatePostModal = ({ visible, onClose, onCreated }) => {
           </TouchableOpacity>
           {imageData && <Image source={{ uri: imageData }} style={s.previewImg} />}
           <TouchableOpacity style={[s.btn, saving && s.btnDisabled]} onPress={handleCreate} disabled={saving}>
-            {saving ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>Post update</Text>}
+            {saving ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>Share post</Text>}
           </TouchableOpacity>
         </TouchableOpacity>
       </TouchableOpacity>
@@ -180,7 +192,7 @@ const Community = ({ navigation }) => {
                       <Text style={s.postAuthor}>{post.author.name || post.author.email}</Text>
                       <Text style={s.postTime}>{formatRelativeTime(post.created_at)}</Text>
                     </View>
-                    <Text style={s.postTypeBadge}>{post.post_type}</Text>
+                    <Text style={s.postTypeBadge}>{postTypeLabel(post.post_type)}</Text>
                   </View>
                   <Text style={s.postContent}>{post.content}</Text>
                   {post.image_data && <Image source={{ uri: post.image_data }} style={s.postImg} />}
@@ -292,10 +304,10 @@ const s = StyleSheet.create({
   inputGroup: { marginBottom: 14 },
   label: { fontSize: 11, color: colors.textSecondary, marginBottom: 5, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase' },
   input: { backgroundColor: colors.bgElevated, borderRadius: 10, padding: 12, color: colors.textPrimary, fontSize: 14, borderWidth: 1, borderColor: colors.border },
-  typeRow: { flexDirection: 'row', gap: 7 },
-  typeChip: { flex: 1, padding: 9, borderRadius: 8, backgroundColor: colors.bgElevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  typeChip: { width: '31%', padding: 9, borderRadius: 8, backgroundColor: colors.bgElevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   typeChipActive: { backgroundColor: 'rgba(200,241,53,0.12)', borderColor: colors.accentLime },
-  typeChipText: { color: colors.textMuted, fontWeight: '600', fontSize: 12 },
+  typeChipText: { color: colors.textMuted, fontWeight: '600', fontSize: 11 },
   typeChipTextActive: { color: colors.accentLime },
   photoBtn: { backgroundColor: colors.bgElevated, borderRadius: 10, padding: 11, alignItems: 'center', marginBottom: 10, borderWidth: 1, borderColor: colors.border },
   photoBtnText: { color: colors.textSecondary, fontWeight: '600', fontSize: 13 },

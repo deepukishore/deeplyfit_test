@@ -9,6 +9,7 @@ PROFILE_PICTURE_PATTERN = re.compile(
     r"^data:image/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$"
 )
 MAX_PROFILE_PICTURE_LENGTH = 350_000
+COMMUNITY_POST_TYPES = {"general", "update", "meal", "workout", "pr", "question"}
 
 
 # Allergens
@@ -602,8 +603,16 @@ class CommunityCommentCreate(BaseModel):
 
 class CommunityPostCreate(BaseModel):
     content: str
-    post_type: str = "update"
+    post_type: str = "general"
     image_base64: Optional[str] = None
+
+    @field_validator("post_type", mode="before")
+    @classmethod
+    def validate_post_type(cls, value):
+        normalized = str(value or "general").strip().lower()
+        if normalized not in COMMUNITY_POST_TYPES:
+            raise ValueError("Choose a valid post type")
+        return normalized
 
 
 class CommunityAuthor(BaseModel):

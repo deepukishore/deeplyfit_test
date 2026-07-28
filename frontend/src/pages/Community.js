@@ -9,6 +9,19 @@ import UserAvatar from '../components/UserAvatar';
 import '../styles/dashboard.css';
 import '../styles/animations.css';
 
+const POST_TYPES = [
+  { value: 'general', label: 'General post' },
+  { value: 'update', label: 'Progress update' },
+  { value: 'meal', label: 'Meal photo' },
+  { value: 'workout', label: 'Workout' },
+  { value: 'pr', label: 'Personal record' },
+  { value: 'question', label: 'Question' },
+];
+
+const postTypeLabel = (value) => (
+  POST_TYPES.find((type) => type.value === value)?.label || 'General post'
+);
+
 const formatRelativeTime = (timestamp) => {
   const created = new Date(timestamp).getTime();
   const diffMinutes = Math.max(1, Math.round((Date.now() - created) / 60000));
@@ -25,7 +38,7 @@ const initialsFor = (author) => {
 };
 
 const CreatePostModal = ({ onClose, onCreated }) => {
-  const [postType, setPostType] = useState('update');
+  const [postType, setPostType] = useState('general');
   const [content, setContent] = useState('');
   const [imageData, setImageData] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -67,14 +80,14 @@ const CreatePostModal = ({ onClose, onCreated }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-sheet" onClick={(event) => event.stopPropagation()}>
         <div className="modal-handle" />
-        <h3 className="modal-title">Share an update</h3>
+        <h3 className="modal-title">Create a post</h3>
         <div className="modal-form">
           <div className="input-group">
             <label>Post type</label>
             <select value={postType} onChange={(event) => setPostType(event.target.value)}>
-              <option value="update">Progress update</option>
-              <option value="meal">Meal photo</option>
-              <option value="pr">Personal record</option>
+              {POST_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
             </select>
           </div>
           <div className="input-group">
@@ -87,7 +100,7 @@ const CreatePostModal = ({ onClose, onCreated }) => {
             {imageData && <img src={imageData} alt="Post preview" className="community-photo" style={{ marginTop: 10 }} />}
           </div>
           <button className="btn btn-primary btn-full" onClick={handleCreate} disabled={saving}>
-            {saving ? <><span className="spinner" /> Posting...</> : 'Post update'}
+            {saving ? <><span className="spinner" /> Posting...</> : 'Share post'}
           </button>
         </div>
       </div>
@@ -240,7 +253,7 @@ const Community = () => {
                         <button className="link-button" onClick={() => post.author.public_profile_slug && navigate(`/u/${post.author.public_profile_slug}`)}>{post.author.name || post.author.email}</button>
                         <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatRelativeTime(post.created_at)}</p>
                       </div>
-                      <span className="badge badge-lime" style={{ fontSize: 11 }}>{post.post_type}</span>
+                      <span className="badge badge-lime" style={{ fontSize: 11 }}>{postTypeLabel(post.post_type)}</span>
                     </div>
 
                     <p className="feed-post-content">{post.content}</p>
