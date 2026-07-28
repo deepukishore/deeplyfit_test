@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '../utils/theme';
 
@@ -107,6 +107,42 @@ const About = ({ navigation }) => {
           ))}
         </View>
 
+        <View style={s.section}>
+          <Text style={s.eyebrow}>STAY CONNECTED</Text>
+          <Text style={s.sectionTitle}>Follow Deeply Fit</Text>
+          <Text style={s.body}>
+            Follow our official channels for product updates, practical fitness ideas, community highlights, and extra motivation.
+          </Text>
+          <View style={s.socialLinks}>
+            <TouchableOpacity
+              style={s.socialLink}
+              onPress={() => Linking.openURL('https://x.com/DeeplyFit')}
+              accessibilityRole="link"
+              accessibilityLabel="Follow Deeply Fit on X"
+            >
+              <View style={[s.socialMark, s.socialMarkX]}><Text style={s.socialMarkXText}>X</Text></View>
+              <View style={s.socialCopy}>
+                <Text style={s.socialHandle}>@DeeplyFit</Text>
+                <Text style={s.socialLabel}>Follow us on X</Text>
+              </View>
+              <Text style={s.socialArrow}>↗</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.socialLink}
+              onPress={() => Linking.openURL('https://www.instagram.com/deeplyfit/')}
+              accessibilityRole="link"
+              accessibilityLabel="Follow Deeply Fit on Instagram"
+            >
+              <View style={[s.socialMark, s.socialMarkInstagram]}><Text style={s.socialMarkInstagramText}>◎</Text></View>
+              <View style={s.socialCopy}>
+                <Text style={s.socialHandle}>@deeplyfit</Text>
+                <Text style={s.socialLabel}>Follow us on Instagram</Text>
+              </View>
+              <Text style={s.socialArrow}>↗</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <View style={s.closing}>
           <Text style={s.closingTitle}>Progress over perfection.</Text>
           <Text style={s.cardBody}>Small, repeatable actions matter more than flawless days.</Text>
@@ -154,6 +190,17 @@ const s = StyleSheet.create({
   role: { color: colors.accentLime, fontSize: 10, fontWeight: '900', marginBottom: 4 },
   personName: { color: colors.textPrimary, fontSize: 18, fontWeight: '900' },
   ownership: { color: colors.textPrimary, fontSize: 12, fontWeight: '700', marginTop: 2, marginBottom: 8 },
+  socialLinks: { marginTop: 16, gap: 10 },
+  socialLink: { minHeight: 72, flexDirection: 'row', alignItems: 'center', padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, backgroundColor: colors.bgCard },
+  socialMark: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  socialMarkX: { backgroundColor: '#09090b' },
+  socialMarkXText: { color: '#fff', fontSize: 18, fontWeight: '900' },
+  socialMarkInstagram: { backgroundColor: '#c13584' },
+  socialMarkInstagramText: { color: '#fff', fontSize: 25, fontWeight: '800' },
+  socialCopy: { flex: 1 },
+  socialHandle: { color: colors.textPrimary, fontSize: 15, fontWeight: '800' },
+  socialLabel: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  socialArrow: { color: colors.textMuted, fontSize: 18, fontWeight: '700' },
   closing: { paddingVertical: 30 },
   closingTitle: { color: colors.textPrimary, fontSize: 22, fontWeight: '800', marginBottom: 7 },
   primaryButton: { height: 48, marginTop: 20, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentLime },

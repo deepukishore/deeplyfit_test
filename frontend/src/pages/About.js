@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Bot,
   ChartNoAxesCombined,
+  ExternalLink,
   Lightbulb,
   ScanLine,
   ShieldCheck,
@@ -171,6 +172,43 @@ const About = () => {
               <div><h3>{title}</h3><p>{copy}</p></div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="about-social about-section" aria-labelledby="about-social-title">
+        <div className="about-section-heading compact">
+          <span>Stay connected</span>
+          <h2 id="about-social-title">Follow Deeply Fit</h2>
+        </div>
+        <div className="about-social-content">
+          <p>
+            Follow our official social channels for product updates, practical fitness ideas, community highlights,
+            and a little extra motivation for your routine.
+          </p>
+          <div className="about-social-links">
+            <a
+              className="about-social-link about-social-x"
+              href="https://x.com/DeeplyFit"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow Deeply Fit on X"
+            >
+              <span className="about-social-mark about-social-mark-x" aria-hidden="true">X</span>
+              <span><strong>@DeeplyFit</strong><small>Follow us on X</small></span>
+              <ExternalLink size={17} aria-hidden="true" />
+            </a>
+            <a
+              className="about-social-link about-social-instagram"
+              href="https://www.instagram.com/deeplyfit/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow Deeply Fit on Instagram"
+            >
+              <span className="about-social-mark about-social-mark-instagram" aria-hidden="true">◎</span>
+              <span><strong>@deeplyfit</strong><small>Follow us on Instagram</small></span>
+              <ExternalLink size={17} aria-hidden="true" />
+            </a>
+          </div>
         </div>
       </section>
 
