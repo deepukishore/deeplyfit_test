@@ -237,7 +237,11 @@ export const api = {
   lookupBarcode: (barcode) => request('GET', `/food/barcode/${barcode}`),
   searchFoods: (query, page = 1, pageSize = 12) => request('GET', `/food/search?q=${encodeURIComponent(query)}&page=${page}&page_size=${pageSize}`),
   logBarcodeFood: (data) => request('POST', '/food/barcode/log', data),
-  getMealSuggestions: (date) => request('GET', `/food/suggestions/${date}`),
+  getMealSuggestions: (date, { variant = 0, exclude = [] } = {}) => {
+    const params = [`variant=${encodeURIComponent(Math.max(Number(variant) || 0, 0))}`];
+    if (exclude.length) params.push(`exclude=${encodeURIComponent(exclude.join('|'))}`);
+    return request('GET', `/food/suggestions/${date}?${params.join('&')}`);
+  },
   copyMealsFromDay: async (data) => {
     const online = await isOnline();
     if (online) {

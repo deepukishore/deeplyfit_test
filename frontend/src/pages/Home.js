@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -244,25 +244,43 @@ const Home = () => {
   const [showHydrationModal, setShowHydrationModal] = useState(false);
   const [modal, setModal] = useState(null);
   const [showPlanner, setShowPlanner] = useState(false);
+  const [suggestionsRefreshing, setSuggestionsRefreshing] = useState(false);
+  const suggestionVariantRef = useRef(0);
 
-  const loadSuggestions = useCallback(async () => {
+  const refreshSuggestions = useCallback(async () => {
+    if (suggestionsRefreshing) return;
+    const nextVariant = suggestionVariantRef.current + 1;
+    const currentNames = (suggestionsData?.suggestions || []).map(({ name }) => name);
+    setSuggestionsRefreshing(true);
     try {
-      const data = await api.getMealSuggestions(today);
+      const data = await api.getMealSuggestions(today, {
+        variant: nextVariant,
+        exclude: currentNames,
+      });
+      suggestionVariantRef.current = nextVariant;
       setSuggestionsData(data);
     } catch (err) {
-      setSuggestionsData(null);
+      toast.error(err.message || 'Could not refresh meal suggestions');
+    } finally {
+      setSuggestionsRefreshing(false);
     }
-  }, [today]);
+  }, [suggestionsData, suggestionsRefreshing, today]);
 
-  const loadSummary = useCallback(async () => {
+  const loadSummary = useCallback(async ({ rotateSuggestions = false } = {}) => {
+    const variant = rotateSuggestions
+      ? suggestionVariantRef.current + 1
+      : suggestionVariantRef.current;
     const [summaryResult, suggestionsResult, workoutResult] = await Promise.allSettled([
       api.getDailySummary(today),
-      api.getMealSuggestions(today),
+      api.getMealSuggestions(today, { variant }),
       api.getWorkoutHistory(3),
     ]);
 
     if (summaryResult.status === 'fulfilled') setSummary(summaryResult.value);
-    if (suggestionsResult.status === 'fulfilled') setSuggestionsData(suggestionsResult.value);
+    if (suggestionsResult.status === 'fulfilled') {
+      suggestionVariantRef.current = variant;
+      setSuggestionsData(suggestionsResult.value);
+    }
     if (workoutResult.status === 'fulfilled') setRecentWorkoutHistory(workoutResult.value);
   }, [today]);
 
@@ -275,7 +293,7 @@ const Home = () => {
 
   useRefreshRegistration(async () => {
     const [, streak, water] = await Promise.all([
-      loadSummary(),
+      loadSummary({ rotateSuggestions: true }),
       api.getCalorieStreak().catch(() => null),
       api.getWaterGoal().catch(() => null),
     ]);
@@ -473,10 +491,19 @@ const Home = () => {
           <div className="meal-suggestions-card animate-slide-up">
             <div className="section-header">
               <h2 className="section-title">AI Meal Suggestions</h2>
-              <button className="btn btn-ghost btn-sm icon-text-btn" onClick={loadSuggestions}><RefreshCw size={14} /> Refresh</button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm icon-text-btn"
+                onClick={refreshSuggestions}
+                disabled={suggestionsRefreshing}
+                aria-label="Refresh meal suggestions"
+              >
+                <RefreshCw className={suggestionsRefreshing ? 'suggestions-refresh-icon is-spinning' : 'suggestions-refresh-icon'} size={14} />
+                {suggestionsRefreshing ? 'Refreshing…' : 'Refresh'}
+              </button>
             </div>
             <p className="meal-suggestions-summary">{suggestionsData.summary_text}</p>
-            <div className="meal-suggestions-grid">
+            <div className="meal-suggestions-grid" aria-live="polite" aria-busy={suggestionsRefreshing}>
               {suggestionsData.suggestions.map((suggestion) => (
                 <div key={suggestion.name} className="meal-suggestion-tile">
                   <div className="meal-suggestion-head">

@@ -77,13 +77,42 @@ def _score_food(food: dict, remaining: dict) -> float:
     return score
 
 
-def _heuristic_suggestions(user, summary: dict) -> dict:
+def _normalize_excluded_names(exclude_names: list[str] | None) -> set[str]:
+    return {
+        str(name).strip().casefold()
+        for name in (exclude_names or [])
+        if str(name).strip()
+    }
+
+
+def _heuristic_suggestions(
+    user,
+    summary: dict,
+    variant: int = 0,
+    exclude_names: list[str] | None = None,
+) -> dict:
     remaining = _build_remaining(user, summary)
-    ranked = sorted(
+    all_ranked = sorted(
         FOOD_CATALOG,
         key=lambda food: _score_food(food, remaining),
         reverse=True,
-    )[:3]
+    )
+    excluded = _normalize_excluded_names(exclude_names)
+    available = [
+        food for food in all_ranked
+        if food["name"].casefold() not in excluded
+    ]
+
+    # Rotate through the strongest matches so refreshed ideas stay relevant.
+    # Excluded meals are restored only as a safety net if the catalog shrinks.
+    if len(available) < 3:
+        available.extend(
+            food for food in all_ranked
+            if food["name"].casefold() in excluded
+        )
+    pool = available[:min(9, len(available))]
+    start = (max(variant, 0) * 2) % len(pool)
+    ranked = [pool[(start + index) % len(pool)] for index in range(3)]
 
     focus_parts = []
     if remaining["protein"] > 0:
@@ -122,11 +151,24 @@ def _heuristic_suggestions(user, summary: dict) -> dict:
     }
 
 
-def _ai_suggestions(user, summary: dict) -> dict | None:
+def _ai_suggestions(
+    user,
+    summary: dict,
+    variant: int = 0,
+    exclude_names: list[str] | None = None,
+) -> dict | None:
     if not GEMINI_API_KEY:
         return None
 
     remaining = _build_remaining(user, summary)
+    excluded = _normalize_excluded_names(exclude_names)
+    excluded_instruction = (
+        "Do not suggest any of these meals or close name variations: "
+        + ", ".join(sorted(excluded))
+        + "."
+        if excluded
+        else "Choose a varied set of three meals."
+    )
     try:
         genai.configure(api_key=GEMINI_API_KEY)
         prompt = f"""
@@ -137,6 +179,8 @@ Remaining macros for today:
 - carbs: {remaining['carbs']}
 - fat: {remaining['fat']}
 
+This is suggestion variation {max(variant, 0)}.
+{excluded_instruction}
 Use practical, common foods. Respond with ONLY valid JSON in this format:
 {{
   "summary_text": "short coaching sentence",
@@ -175,6 +219,14 @@ Return exactly 3 suggestions.
         suggestions = data.get("suggestions") or []
         if len(suggestions) != 3:
             return None
+        suggestion_names = [
+            str(item.get("name", "")).strip().casefold()
+            for item in suggestions
+        ]
+        if len(set(suggestion_names)) != 3 or any(
+            name in excluded for name in suggestion_names
+        ):
+            return None
 
         return {
             "remaining": remaining,
@@ -196,5 +248,20 @@ Return exactly 3 suggestions.
         return None
 
 
-def build_meal_suggestions(user, summary: dict) -> dict:
-    return _ai_suggestions(user, summary) or _heuristic_suggestions(user, summary)
+def build_meal_suggestions(
+    user,
+    summary: dict,
+    variant: int = 0,
+    exclude_names: list[str] | None = None,
+) -> dict:
+    return _ai_suggestions(
+        user,
+        summary,
+        variant=variant,
+        exclude_names=exclude_names,
+    ) or _heuristic_suggestions(
+        user,
+        summary,
+        variant=variant,
+        exclude_names=exclude_names,
+    )

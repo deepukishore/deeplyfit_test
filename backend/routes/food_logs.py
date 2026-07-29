@@ -328,11 +328,23 @@ def copy_food_logs_from_day(
 @router.get("/suggestions/{suggestion_date}", response_model=MealSuggestionsResponse)
 def get_meal_suggestions(
     suggestion_date: date,
+    variant: int = 0,
+    exclude: str = "",
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     summary = _get_summary_data(db, current_user, suggestion_date)
-    return build_meal_suggestions(current_user, summary)
+    exclude_names = [
+        name.strip()
+        for name in exclude[:500].split("|")
+        if name.strip()
+    ][:10]
+    return build_meal_suggestions(
+        current_user,
+        summary,
+        variant=max(variant, 0),
+        exclude_names=exclude_names,
+    )
 
 
 @router.get("/calorie-streak")

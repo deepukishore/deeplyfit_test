@@ -380,7 +380,12 @@ export const api = {
   lookupBarcode: (barcode) => request('GET', `/food/barcode/${barcode}`),
   searchFoods: (query, page = 1, pageSize = 12) => request('GET', `/food/search?q=${encodeURIComponent(query)}&page=${page}&page_size=${pageSize}`),
   logBarcodeFood: (data) => request('POST', '/food/barcode/log', data),
-  getMealSuggestions: (date) => request('GET', `/food/suggestions/${date}`),
+  getMealSuggestions: (date, { variant = 0, exclude = [] } = {}) => {
+    const params = new URLSearchParams();
+    params.set('variant', String(Math.max(Number(variant) || 0, 0)));
+    if (exclude.length) params.set('exclude', exclude.join('|'));
+    return request('GET', `/food/suggestions/${date}?${params.toString()}`);
+  },
   copyMealsFromDay: async (data) => {
     if (navigator.onLine) {
       const response = await request('POST', '/food/copy-day', data);

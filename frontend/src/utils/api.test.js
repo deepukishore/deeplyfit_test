@@ -28,4 +28,21 @@ describe('API request timeout', () => {
     await rejection;
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
+
+  test('sends a new variation and current meals when refreshing suggestions', async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ suggestions: [] }),
+    });
+
+    await api.getMealSuggestions('2026-07-29', {
+      variant: 2,
+      exclude: ['Protein shake', 'Greek yogurt bowl'],
+    });
+
+    const [url] = global.fetch.mock.calls[0];
+    expect(url).toContain('/food/suggestions/2026-07-29?');
+    expect(url).toContain('variant=2');
+    expect(url).toContain('exclude=Protein+shake%7CGreek+yogurt+bowl');
+  });
 });

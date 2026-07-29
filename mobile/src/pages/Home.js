@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Modal, TextInput } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
@@ -130,17 +130,24 @@ const Home = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [modal, setModal] = useState(null);
   const [showPlanner, setShowPlanner] = useState(false);
-  const loadSummary = useCallback(async () => {
+  const suggestionVariantRef = useRef(0);
+  const loadSummary = useCallback(async ({ rotateSuggestions = false } = {}) => {
     const cached = await getCachedDiaryDate(today);
     if (cached.summary) setSummary(cached.summary);
+    const variant = rotateSuggestions
+      ? suggestionVariantRef.current + 1
+      : suggestionVariantRef.current;
 
     const [summaryResult, suggestionsResult, workoutsResult] = await Promise.allSettled([
       api.getDailySummary(today),
-      api.getMealSuggestions(today),
+      api.getMealSuggestions(today, { variant }),
       api.getWorkoutHistory(3),
     ]);
     if (summaryResult.status === 'fulfilled') setSummary(summaryResult.value);
-    if (suggestionsResult.status === 'fulfilled') setSuggestionsData(suggestionsResult.value);
+    if (suggestionsResult.status === 'fulfilled') {
+      suggestionVariantRef.current = variant;
+      setSuggestionsData(suggestionsResult.value);
+    }
     if (workoutsResult.status === 'fulfilled') setRecentWorkoutHistory(workoutsResult.value);
   }, [today]);
 
@@ -150,9 +157,13 @@ const Home = ({ navigation }) => {
     api.getWaterGoal().then((d) => setWaterGoal(d.water_goal || 8)).catch(() => {});
   }, [loadSummary]);
 
-  useRefreshRegistration(loadSummary);
+  useRefreshRegistration(() => loadSummary({ rotateSuggestions: true }));
 
-  const onRefresh = async () => { setRefreshing(true); await loadSummary(); setRefreshing(false); };
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadSummary({ rotateSuggestions: true });
+    setRefreshing(false);
+  };
 
   const handleAddGlass = async () => {
     try {

@@ -361,6 +361,10 @@
   margin-bottom: var(--space-md);
 }
 
+.suggestions-refresh-icon.is-spinning {
+  animation: spin 0.8s linear infinite;
+}
+
 .meal-suggestions-grid {
   display: grid;
   gap: var(--space-md);
