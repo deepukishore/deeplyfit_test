@@ -372,7 +372,7 @@ const Profile = ({ navigation }) => {
 
 const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { padding: spacing.lg, paddingTop: 56, backgroundColor: colors.bgCard, borderBottomWidth: 1, borderBottomColor: colors.border },
+  header: { padding: spacing.lg, paddingTop: 56, backgroundColor: 'rgba(255,255,255,0.82)', borderBottomWidth: 1, borderBottomColor: colors.border },
   headerTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   scroll: { flex: 1, padding: spacing.lg },
   profileHeader: { alignItems: 'center', marginBottom: 20 },
@@ -388,7 +388,7 @@ const s = StyleSheet.create({
   proBtnText: { color: colors.textInverse, fontWeight: '700', fontSize: 14 },
   profileBio: { fontSize: 13, color: colors.textSecondary, marginTop: 6, textAlign: 'center', maxWidth: 280 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
-  statCard: { flex: 1, minWidth: '45%', backgroundColor: colors.bgCard, borderRadius: radius.lg, padding: spacing.md, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  statCard: { flex: 1, minWidth: '45%', backgroundColor: colors.bgCard, borderRadius: radius.lg, padding: spacing.md, alignItems: 'center', borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 2 },
   statValue: { fontSize: 18, fontWeight: '800', color: colors.textPrimary },
   statLabel: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
   settingsSection: { backgroundColor: colors.bgCard, borderRadius: radius.xl, marginBottom: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },

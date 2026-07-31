@@ -159,7 +159,7 @@ const About = ({ navigation }) => {
 
 const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.bgCard },
+  header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: 'rgba(255,255,255,0.82)' },
   backButton: { width: 38, height: 38, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
   backButtonText: { color: colors.textPrimary, fontSize: 19, fontWeight: '700' },
   headerTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: '800' },
@@ -185,7 +185,7 @@ const s = StyleSheet.create({
   capabilityCopy: { flex: 1 },
   cardTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '800', marginBottom: 5 },
   cardBody: { color: colors.textSecondary, fontSize: 13, lineHeight: 20 },
-  person: { flexDirection: 'row', padding: 18, marginTop: 12, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, backgroundColor: colors.bgCard },
+  person: { flexDirection: 'row', padding: 18, marginTop: 12, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.bgCard, shadowColor: '#48236f', shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 2 },
   avatar: { width: 56, height: 56, borderRadius: radius.sm, backgroundColor: colors.accentPurple, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   avatarText: { color: '#fff', fontSize: 18, fontWeight: '900' },
   personCopy: { flex: 1 },
@@ -193,7 +193,7 @@ const s = StyleSheet.create({
   personName: { color: colors.textPrimary, fontSize: 18, fontWeight: '900' },
   ownership: { color: colors.textPrimary, fontSize: 12, fontWeight: '700', marginTop: 2, marginBottom: 8 },
   socialLinks: { marginTop: 16, gap: 10 },
-  socialLink: { minHeight: 72, flexDirection: 'row', alignItems: 'center', padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, backgroundColor: colors.bgCard },
+  socialLink: { minHeight: 72, flexDirection: 'row', alignItems: 'center', padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.bgCard, shadowColor: '#48236f', shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 2 },
   socialMark: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   socialMarkX: { backgroundColor: '#09090b' },
   socialMarkXText: { color: '#fff', fontSize: 18, fontWeight: '900' },

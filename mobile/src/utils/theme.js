@@ -1,12 +1,12 @@
 // Theme constants replacing CSS variables. The mobile app defaults to light mode.
 export const colors = {
-  bgPrimary: '#f6f2ff',
-  bgCard: 'rgba(255,255,255,0.94)',
-  bgElevated: 'rgba(242,236,252,0.92)',
-  border: 'rgba(91,57,143,0.14)',
+  bgPrimary: '#f8f5ff',
+  bgCard: 'rgba(255,255,255,0.9)',
+  bgElevated: 'rgba(241,234,252,0.84)',
+  border: 'rgba(91,57,143,0.17)',
   textPrimary: '#1d1230',
   textSecondary: '#5f5575',
-  textMuted: '#8a819c',
+  textMuted: '#817594',
   accentLime: '#7c3aed',
   accentAmber: '#c87d0b',
   accentBlue: '#2563eb',
@@ -14,8 +14,8 @@ export const colors = {
   accentCoral: '#dc2626',
   textInverse: '#ffffff',
   surfaceHighlight: 'rgba(255,255,255,0.76)',
-  glowPurple: 'rgba(124,58,237,0.16)',
-  glowBlue: 'rgba(37,99,235,0.11)',
+  glowPurple: 'rgba(124,58,237,0.2)',
+  glowBlue: 'rgba(37,99,235,0.14)',
 };
 
 export const radius = {

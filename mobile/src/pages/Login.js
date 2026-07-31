@@ -98,7 +98,7 @@ const s = StyleSheet.create({
   logoImage: { width: 82, height: 82, borderRadius: 22 },
   logoTitle: { fontSize: 26, fontWeight: '800', color: colors.textPrimary, marginTop: 8 },
   logoSub: { fontSize: 13, color: colors.textMuted, marginTop: 4, textAlign: 'center' },
-  card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.xl, borderWidth: 1, borderColor: colors.border },
+  card: { backgroundColor: colors.bgCard, borderRadius: 26, padding: spacing.xl, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.14, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 6 },
   cardTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
   subtitle: { fontSize: 13, color: colors.textSecondary, marginBottom: 20 },
   inputGroup: { marginBottom: 14 },

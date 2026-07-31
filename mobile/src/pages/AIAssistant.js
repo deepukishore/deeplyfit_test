@@ -162,7 +162,7 @@ const s = StyleSheet.create({
   botAvatar: { fontSize: 24, marginRight: 7 },
   bubble: { maxWidth: '75%', borderRadius: 16, padding: 11 },
   bubbleUser: { backgroundColor: colors.accentPurple, borderBottomRightRadius: 4 },
-  bubbleAssistant: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderBottomLeftRadius: 4 },
+  bubbleAssistant: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderBottomLeftRadius: 4, shadowColor: '#48236f', shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 2 },
   bubbleText: { color: colors.textPrimary, fontSize: 13.5, lineHeight: 20 },
   bubbleTextUser: { color: '#fff' },
   userAvatar: { width: 28, height: 28, borderRadius: 10, backgroundColor: colors.accentPurple, alignItems: 'center', justifyContent: 'center', marginLeft: 7 },

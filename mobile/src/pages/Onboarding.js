@@ -235,7 +235,7 @@ const s = StyleSheet.create({
   radioText: { color: colors.textPrimary, fontWeight: '600', fontSize: 14 },
   radioTextSelected: { color: colors.accentLime },
   radioDesc: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
-  summaryCard: { backgroundColor: colors.bgCard, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: colors.border },
+  summaryCard: { backgroundColor: colors.bgCard, borderRadius: 18, padding: 14, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
   statRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: colors.border },
   statLabel: { color: colors.textSecondary, fontSize: 13 },
   statValue: { color: colors.textPrimary, fontWeight: '700', fontSize: 13 },

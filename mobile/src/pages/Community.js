@@ -259,7 +259,7 @@ const Community = ({ navigation }) => {
 
 const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.bgCard, borderBottomWidth: 1, borderBottomColor: colors.border },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: 'rgba(255,255,255,0.82)', borderBottomWidth: 1, borderBottomColor: colors.border },
   headerTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   addBtn: { backgroundColor: colors.accentLime, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
   addBtnText: { color: colors.textInverse, fontWeight: '700', fontSize: 12 },
@@ -269,7 +269,7 @@ const s = StyleSheet.create({
   tabText: { color: colors.textSecondary, fontWeight: '700', fontSize: 12 },
   tabTextActive: { color: colors.textInverse },
   scroll: { flex: 1, padding: spacing.md },
-  postCard: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
+  postCard: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
   postHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   postAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(79,172,254,0.14)', alignItems: 'center', justifyContent: 'center', marginRight: 9 },
   postAvatarText: { color: colors.accentBlue, fontWeight: '800', fontSize: 13 },
@@ -291,7 +291,7 @@ const s = StyleSheet.create({
   emptyTitle: { color: colors.textPrimary, fontWeight: '700', fontSize: 15, marginBottom: 3 },
   emptyText: { color: colors.textMuted, fontSize: 12 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 10 },
-  challengeCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
+  challengeCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
   challengeName: { color: colors.textPrimary, fontWeight: '700', fontSize: 14, marginBottom: 3 },
   challengeMeta: { color: colors.textMuted, fontSize: 11, marginBottom: 7 },
   progressBar: { height: 5, backgroundColor: colors.bgElevated, borderRadius: 3, overflow: 'hidden' },

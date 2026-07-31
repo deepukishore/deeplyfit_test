@@ -825,7 +825,33 @@
 }
 
 .light .auth-card {
-  background: rgba(255, 255, 255, 0.84);
+  border-color: rgba(124, 58, 237, 0.17);
+  background:
+    radial-gradient(circle at 96% 4%, rgba(79, 172, 254, 0.11), transparent 27%),
+    radial-gradient(circle at 4% 0%, rgba(168, 85, 247, 0.12), transparent 30%),
+    rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 28px 74px rgba(67, 40, 102, 0.17),
+    inset 0 1px 0 rgba(255,255,255,0.95);
+}
+
+.light .auth-logo-mark {
+  box-shadow: 0 16px 36px rgba(124,58,237,0.2), 0 0 0 7px rgba(124,58,237,0.07);
+}
+
+.light .auth-card-heading h2 {
+  color: #251638;
+}
+
+.light .auth-form input {
+  border-color: rgba(91,57,143,0.14);
+  background: rgba(255,255,255,0.78);
+  box-shadow: 0 7px 18px rgba(67,40,102,0.055), inset 0 1px 0 #fff;
+}
+
+.light .auth-submit {
+  background: linear-gradient(135deg, #a765f8, #7c3aed 56%, #5b21b6);
+  box-shadow: 0 14px 32px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.28);
 }
 
 .auth-card-heading {
