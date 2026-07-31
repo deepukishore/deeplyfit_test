@@ -36,12 +36,14 @@ const MainTabs = () => (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: { backgroundColor: colors.bgCard, borderTopColor: colors.border, height: 60, paddingBottom: 6 },
+        tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: colors.accentLime,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: 10, fontWeight: '600', letterSpacing: 0.3 },
         tabBarIcon: ({ focused }) => (
-          <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.45 }}>{TAB_ICON[route.name]}</Text>
+          <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
+            <Text style={{ fontSize: 19, opacity: focused ? 1 : 0.45 }}>{TAB_ICON[route.name]}</Text>
+          </View>
         ),
       })}
     >
@@ -93,6 +95,9 @@ const styles = StyleSheet.create({
   loading: { flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' },
   loadingLogo: { width: 76, height: 76, borderRadius: 20, marginBottom: 18 },
   loadingText: { color: colors.textSecondary, marginTop: 14, fontSize: 14 },
+  tabBar: { height: 66, paddingTop: 5, paddingBottom: 7, backgroundColor: colors.bgCard, borderTopWidth: 1, borderTopColor: colors.border, shadowColor: '#311a57', shadowOpacity: 0.13, shadowRadius: 18, shadowOffset: { width: 0, height: -7 }, elevation: 18 },
+  tabIcon: { width: 34, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 11 },
+  tabIconActive: { backgroundColor: colors.glowPurple, borderWidth: 1, borderColor: 'rgba(124,58,237,0.12)' },
 });
 
 export default AppNavigator;

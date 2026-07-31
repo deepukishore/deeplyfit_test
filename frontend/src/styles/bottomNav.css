@@ -489,3 +489,37 @@
     min-height: 50px;
   }
 }
+
+/* Premium translucent navigation surface */
+.bottom-nav {
+  background:
+    linear-gradient(110deg, rgba(var(--accent-primary-rgb), 0.08), rgba(79, 172, 254, 0.035)),
+    rgba(16, 16, 26, 0.88);
+  border-color: color-mix(in srgb, var(--accent-lime) 14%, var(--border));
+  box-shadow: 0 -12px 40px rgba(18, 10, 34, 0.2);
+  backdrop-filter: blur(30px) saturate(1.2);
+  -webkit-backdrop-filter: blur(30px) saturate(1.2);
+}
+
+.light .bottom-nav {
+  background:
+    linear-gradient(110deg, rgba(var(--accent-primary-rgb), 0.085), rgba(79, 172, 254, 0.035)),
+    rgba(255, 255, 255, 0.84);
+  box-shadow: 0 -12px 38px rgba(45, 28, 72, 0.12);
+}
+
+.nav-item.active .nav-icon-bg {
+  background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.19), rgba(79, 172, 254, 0.1));
+  box-shadow: 0 7px 20px rgba(var(--accent-primary-rgb), 0.15);
+}
+
+@media (min-width: 900px) {
+  .bottom-nav,
+  .light .bottom-nav {
+    box-shadow: 18px 0 52px rgba(32, 18, 58, 0.11);
+  }
+
+  .nav-item.active {
+    background: linear-gradient(90deg, rgba(var(--accent-primary-rgb), 0.12), rgba(79, 172, 254, 0.04), transparent);
+  }
+}

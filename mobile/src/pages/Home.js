@@ -11,6 +11,7 @@ import { estimateWorkoutCalories } from '../utils/workoutCalories';
 import { colors, radius, spacing } from '../utils/theme';
 import WorkoutPlannerModal from '../components/WorkoutPlannerModal';
 import UserAvatar from '../components/UserAvatar';
+import AppBackdrop from '../components/AppBackdrop';
 
 const MACRO_COLORS = ['#4facfe', '#a855f7', '#f5a623'];
 
@@ -403,6 +404,7 @@ const Home = ({ navigation }) => {
 
   return (
     <View style={s.page}>
+      <AppBackdrop />
       <View style={s.header}>
         <View>
           <Text style={s.greeting}>{getGreeting()}</Text>
@@ -519,15 +521,15 @@ const Home = ({ navigation }) => {
 
 const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.bgCard, borderBottomWidth: 1, borderBottomColor: colors.border },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: 'rgba(255,255,255,0.82)', borderBottomWidth: 1, borderBottomColor: colors.border },
   greeting: { fontSize: 11, color: colors.textMuted, letterSpacing: 0.4, textTransform: 'uppercase' },
   name: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   avatar: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.accentPurple, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: '#fff', fontWeight: '800', fontSize: 14 },
   scroll: { flex: 1, padding: spacing.lg },
-  quoteCard: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
+  quoteCard: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: 'rgba(124,58,237,0.16)', shadowColor: '#4b2679', shadowOpacity: 0.08, shadowRadius: 15, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
   quoteText: { color: colors.textSecondary, fontSize: 13, fontStyle: 'italic', lineHeight: 20 },
-  card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
+  card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#4b2679', shadowOpacity: 0.09, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 10 },
   bigNumber: { fontSize: 42, fontWeight: '800', color: colors.accentLime, lineHeight: 46 },
   subText: { fontSize: 12, color: colors.textMuted, marginBottom: 10 },
@@ -550,15 +552,15 @@ const s = StyleSheet.create({
   glass: { fontSize: 18, opacity: 0.3 },
   glassFilled: { opacity: 1 },
   quickActions: { flexDirection: 'row', justifyContent: 'space-between' },
-  quickBtn: { flex: 1, alignItems: 'center', backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 10, marginHorizontal: 3 },
+  quickBtn: { flex: 1, alignItems: 'center', backgroundColor: 'rgba(246,241,255,0.9)', borderRadius: radius.lg, padding: 10, marginHorizontal: 3, borderWidth: 1, borderColor: 'rgba(124,58,237,0.11)' },
   quickLabel: { color: colors.textSecondary, fontSize: 10, marginTop: 4, textAlign: 'center', fontWeight: '600' },
   workoutRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: colors.border },
   workoutName: { color: colors.textPrimary, fontWeight: '600', fontSize: 13 },
   workoutDetail: { color: colors.textMuted, fontSize: 11, marginTop: 1 },
   workoutCal: { color: colors.accentAmber, fontSize: 12, fontWeight: '600' },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xl, maxHeight: '90%' },
-  handle: { width: 36, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: 14 },
+  sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing.xl, maxHeight: '90%', borderWidth: 1, borderColor: 'rgba(124,58,237,0.17)', shadowColor: '#24113f', shadowOpacity: 0.22, shadowRadius: 24, shadowOffset: { width: 0, height: -9 }, elevation: 22 },
+  handle: { width: 42, height: 5, backgroundColor: colors.accentPurple, borderRadius: 3, alignSelf: 'center', marginBottom: 14 },
   modalTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 18 },
   modalScroll: { flexGrow: 0 },
   inputGroup: { marginBottom: 14 },

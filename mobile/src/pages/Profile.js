@@ -11,6 +11,7 @@ import { getInitials } from '../utils/fitness';
 import { colors, radius, spacing } from '../utils/theme';
 import PremiumUpgradeModal from '../components/PremiumUpgradeModal';
 import UserAvatar, { BUILT_IN_AVATARS } from '../components/UserAvatar';
+import AppBackdrop from '../components/AppBackdrop';
 import { formatPremiumExpiry } from '../utils/premium';
 
 const ProfileSettingsModal = ({ visible, user, onClose, onSave }) => {
@@ -250,6 +251,7 @@ const Profile = ({ navigation }) => {
 
   return (
     <View style={s.page}>
+      <AppBackdrop />
       <View style={s.header}>
         <Text style={s.headerTitle}>Profile</Text>
       </View>

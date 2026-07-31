@@ -6,6 +6,7 @@ import { api } from '../utils/api';
 import { getInitials } from '../utils/fitness';
 import { colors, spacing } from '../utils/theme';
 import UserAvatar from '../components/UserAvatar';
+import AppBackdrop from '../components/AppBackdrop';
 
 const QUICK_SUGGESTIONS = [
   'What should I eat for lunch? 🍽️',
@@ -54,6 +55,7 @@ const AIAssistant = () => {
 
   return (
     <KeyboardAvoidingView style={s.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <AppBackdrop />
       <View style={s.header}>
         <Text style={s.headerIcon}>🤖</Text>
         <View>

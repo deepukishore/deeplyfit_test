@@ -6,6 +6,7 @@ import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
 import { formatDate } from '../utils/fitness';
 import { colors, radius, spacing } from '../utils/theme';
+import AppBackdrop from '../components/AppBackdrop';
 
 const CHART_WIDTH = Dimensions.get('window').width - 64;
 const CHART_HEIGHT = 160;
@@ -145,6 +146,7 @@ const Progress = () => {
 
   return (
     <View style={s.page}>
+      <AppBackdrop />
       <View style={s.header}>
         <Text style={s.headerTitle}>Progress</Text>
         <TouchableOpacity style={s.addBtn} onPress={() => setShowWeightModal(true)}>

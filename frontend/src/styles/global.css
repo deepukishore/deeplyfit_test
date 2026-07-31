@@ -65,6 +65,9 @@
   --shadow-lg: 0 16px 64px rgba(0,0,0,0.6);
   --shadow-lime: 0 0 24px rgba(var(--accent-primary-rgb), 0.22);
   --shadow-amber: 0 0 24px rgba(245,166,35,0.15);
+  --surface-glass: rgba(22, 22, 31, 0.82);
+  --surface-highlight: rgba(255, 255, 255, 0.045);
+  --page-glow: rgba(168, 85, 247, 0.13);
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -90,6 +93,9 @@
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
   --shadow-md: 0 8px 32px rgba(0,0,0,0.12);
   --shadow-lg: 0 16px 64px rgba(0,0,0,0.16);
+  --surface-glass: rgba(255, 255, 255, 0.82);
+  --surface-highlight: rgba(255, 255, 255, 0.88);
+  --page-glow: rgba(124, 58, 237, 0.12);
 }
 
 html, body, #root {
@@ -182,12 +188,50 @@ html.light {
   pointer-events: none;
   overflow: hidden;
   opacity: 1;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(168, 85, 247, 0.16), transparent 34%),
+    radial-gradient(circle at 88% 28%, rgba(79, 172, 254, 0.12), transparent 28%),
+    radial-gradient(circle at 62% 92%, rgba(245, 166, 35, 0.08), transparent 30%),
+    var(--bg-primary);
+}
+
+.ambient-scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(var(--accent-primary-rgb), 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--accent-primary-rgb), 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent 74%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent 74%);
+}
+
+.ambient-scene::after {
+  content: '';
+  position: absolute;
+  width: min(56vw, 720px);
+  aspect-ratio: 1;
+  left: -22vw;
+  bottom: -34vw;
+  border: 1px solid rgba(var(--accent-primary-rgb), 0.14);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 56px rgba(var(--accent-primary-rgb), 0.025),
+    0 0 0 112px rgba(79, 172, 254, 0.018);
+  animation: ambientOrbDrift 16s ease-in-out infinite alternate;
 }
 
 .ambient-scene-canvas {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
+}
+
+@keyframes ambientOrbDrift {
+  to { transform: translate3d(5vw, -3vh, 0) scale(1.06); }
 }
 
 .auth-page,
@@ -198,10 +242,24 @@ html.light {
 
 /* Page content with bottom nav space */
 .page-content {
+  position: relative;
   padding-bottom: calc(var(--nav-height) + 16px);
   min-height: 100dvh;
   min-width: 0;
   animation: pageEnter 300ms ease both;
+}
+
+.page-content::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 88px 8px auto;
+  height: 260px;
+  border-radius: 44px;
+  background: linear-gradient(135deg, var(--page-glow), rgba(79, 172, 254, 0.055), transparent 72%);
+  filter: blur(28px);
+  opacity: 0.72;
+  pointer-events: none;
 }
 
 .pull-refresh-shell {

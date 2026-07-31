@@ -3,6 +3,7 @@ import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, ScrollView,
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
 import { colors, radius, spacing } from '../utils/theme';
+import AppBackdrop from '../components/AppBackdrop';
 
 const Login = ({ navigation }) => {
   const [mode, setMode] = useState('login');
@@ -40,6 +41,7 @@ const Login = ({ navigation }) => {
 
   return (
     <ScrollView style={s.page} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <AppBackdrop compact />
       <View style={s.logo}>
         <Image source={require('../../assets/icon.png')} style={s.logoImage} resizeMode="cover" />
         <Text style={s.logoTitle}>Deeply Fit</Text>

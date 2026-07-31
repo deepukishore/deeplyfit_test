@@ -8,6 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { colors, radius, spacing } from '../utils/theme';
 import UserAvatar from '../components/UserAvatar';
+import AppBackdrop from '../components/AppBackdrop';
 
 const POST_TYPES = [
   { value: 'general', label: 'General' },
@@ -163,6 +164,7 @@ const Community = ({ navigation }) => {
 
   return (
     <View style={s.page}>
+      <AppBackdrop />
       <View style={s.header}>
         <Text style={s.headerTitle}>Community</Text>
         <TouchableOpacity style={s.addBtn} onPress={() => setShowCreate(true)}>

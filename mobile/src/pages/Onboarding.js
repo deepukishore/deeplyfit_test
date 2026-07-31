@@ -4,6 +4,7 @@ import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { colors, radius, spacing } from '../utils/theme';
+import AppBackdrop from '../components/AppBackdrop';
 
 const TOTAL_STEPS = 4;
 
@@ -106,6 +107,7 @@ const Onboarding = () => {
 
   return (
     <ScrollView style={s.page} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <AppBackdrop compact />
       <View style={s.dots}>
         {Array.from({ length: TOTAL_STEPS }).map((_, index) => (
           <View key={index} style={[s.dot, index === step && s.dotActive, index < step && s.dotDone]} />

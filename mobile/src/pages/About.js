@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '../utils/theme';
+import AppBackdrop from '../components/AppBackdrop';
 
 const CAPABILITIES = [
   ['AI', 'Personal AI coach', 'Guidance connected to your nutrition, workouts, and progress.'],
@@ -44,6 +45,7 @@ const About = ({ navigation }) => {
 
   return (
     <SafeAreaView style={s.page} edges={['top']}>
+      <AppBackdrop />
       <View style={s.header}>
         <TouchableOpacity style={s.backButton} onPress={() => navigation.goBack()} accessibilityLabel="Go back">
           <Text style={s.backButtonText}>{'<'}</Text>

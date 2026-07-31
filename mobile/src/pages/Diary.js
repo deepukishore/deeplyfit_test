@@ -6,6 +6,7 @@ import { api } from '../utils/api';
 import { addDays, formatDate, formatDisplayDate, getMealIcon } from '../utils/fitness';
 import { createEmptySummary, getCachedDiaryDate, getFavorites, setFavorites as saveFavorites } from '../utils/storage';
 import FoodScannerModal from '../components/FoodScannerModal';
+import AppBackdrop from '../components/AppBackdrop';
 import { colors, radius, spacing } from '../utils/theme';
 
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snacks'];
@@ -207,6 +208,7 @@ const Diary = () => {
 
   return (
     <View style={s.page}>
+      <AppBackdrop />
       <View style={s.header}>
         <Text style={s.headerTitle}>Food Diary</Text>
         <Text style={s.badge}>{Math.round(totalCalories)} kcal</Text>
