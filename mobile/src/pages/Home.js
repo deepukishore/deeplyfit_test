@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Modal, TextInput } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +6,8 @@ import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
 import { createEmptySummary, getCachedDiaryDate } from '../utils/storage';
 import { getGreeting, getDailyQuote, formatDate, getWorkoutSuggestions, getInitials } from '../utils/fitness';
+import { formatFoodAmount, scaleNutrition } from '../utils/nutrition';
+import { estimateWorkoutCalories } from '../utils/workoutCalories';
 import { colors, radius, spacing } from '../utils/theme';
 import WorkoutPlannerModal from '../components/WorkoutPlannerModal';
 import UserAvatar from '../components/UserAvatar';
@@ -25,14 +27,91 @@ const LogModal = ({ title, onClose, children }) => (
 );
 
 const LogFoodModal = ({ onClose, onSave }) => {
-  const [form, setForm] = useState({ food_name: '', calories: '', protein: '', carbs: '', fat: '', meal_type: 'breakfast', quantity: '1' });
+  const [form, setForm] = useState({
+    food_name: '',
+    meal_type: 'breakfast',
+    amount: '100',
+    amount_unit: 'grams',
+  });
+  const [results, setResults] = useState([]);
+  const [selectedFood, setSelectedFood] = useState(null);
+  const [searching, setSearching] = useState(false);
+  const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const today = formatDate(new Date());
+
+  const calculation = useMemo(() => {
+    if (!selectedFood) return { nutrition: null, error: null };
+    try {
+      return {
+        nutrition: scaleNutrition(selectedFood, form.amount, form.amount_unit),
+        error: null,
+      };
+    } catch (err) {
+      return { nutrition: null, error: err.message };
+    }
+  }, [selectedFood, form.amount, form.amount_unit]);
+
+  const selectFood = (food) => {
+    setSelectedFood(food);
+    setForm((current) => ({ ...current, food_name: food.name }));
+  };
+
+  const handleFoodNameChange = (value) => {
+    setForm((current) => ({ ...current, food_name: value }));
+    setSelectedFood(null);
+    setResults([]);
+    setSearched(false);
+  };
+
+  const handleUnitChange = (unit) => {
+    setForm((current) => ({
+      ...current,
+      amount_unit: unit,
+      amount: unit === 'grams' ? '100' : '1',
+    }));
+  };
+
+  const handleCalculate = async () => {
+    const query = form.food_name.trim();
+    if (query.length < 2) {
+      Toast.show({ type: 'error', text1: 'Enter at least 2 characters of the food name' });
+      return;
+    }
+
+    setSearching(true);
+    setSearched(true);
+    try {
+      const data = await api.searchFoods(query, 1, 6);
+      const matches = (data.results || []).filter((food) => Number(food.calories) > 0);
+      setResults(matches);
+      if (matches.length) selectFood(matches[0]);
+      else setSelectedFood(null);
+    } catch (err) {
+      setResults([]);
+      setSelectedFood(null);
+      Toast.show({ type: 'error', text1: err.message || 'Could not calculate nutrition' });
+    } finally {
+      setSearching(false);
+    }
+  };
+
   const handleSave = async () => {
-    if (!form.food_name || !form.calories) { Toast.show({ type: 'error', text1: 'Food name and calories are required' }); return; }
+    if (!selectedFood || !calculation.nutrition) {
+      Toast.show({ type: 'error', text1: calculation.error || 'Calculate and select a food match first' });
+      return;
+    }
+
+    const amountLabel = formatFoodAmount(form.amount, form.amount_unit, selectedFood);
     setLoading(true);
     try {
-      await api.logFood({ ...form, date: today, calories: parseFloat(form.calories), protein: parseFloat(form.protein) || 0, carbs: parseFloat(form.carbs) || 0, fat: parseFloat(form.fat) || 0, quantity: parseFloat(form.quantity) || 1 });
+      await api.logFood({
+        date: today,
+        meal_type: form.meal_type,
+        food_name: `${selectedFood.name} (${amountLabel})`,
+        ...calculation.nutrition,
+        quantity: 1,
+      });
       Toast.show({ type: 'success', text1: 'Food logged! 🍽️' });
       onSave(); onClose();
     } catch (err) { Toast.show({ type: 'error', text1: err.message }); }
@@ -40,41 +119,167 @@ const LogFoodModal = ({ onClose, onSave }) => {
   };
   return (
     <LogModal title="🍽️ Log Food" onClose={onClose}>
-      <View style={s.inputGroup}><Text style={s.label}>Meal</Text>
-        <View style={s.mealRow}>
-          {['breakfast', 'lunch', 'dinner', 'snacks'].map((m) => (
-            <TouchableOpacity key={m} style={[s.mealChip, form.meal_type === m && s.mealChipActive]} onPress={() => setForm((f) => ({ ...f, meal_type: m }))}>
-              <Text style={[s.mealChipText, form.meal_type === m && s.mealChipTextActive]}>{m.charAt(0).toUpperCase() + m.slice(1)}</Text>
-            </TouchableOpacity>
-          ))}
+      <ScrollView style={s.modalScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <View style={s.inputGroup}><Text style={s.label}>Meal</Text>
+          <View style={s.mealRow}>
+            {['breakfast', 'lunch', 'dinner', 'snacks'].map((m) => (
+              <TouchableOpacity key={m} style={[s.mealChip, form.meal_type === m && s.mealChipActive]} onPress={() => setForm((f) => ({ ...f, meal_type: m }))}>
+                <Text style={[s.mealChipText, form.meal_type === m && s.mealChipTextActive]}>{m.charAt(0).toUpperCase() + m.slice(1)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-      </View>
-      <View style={s.inputGroup}><Text style={s.label}>Food Name</Text><TextInput style={s.input} placeholder="e.g. Chicken breast" placeholderTextColor={colors.textMuted} value={form.food_name} onChangeText={(v) => setForm((f) => ({ ...f, food_name: v }))} /></View>
-      <View style={s.row}>
-        <View style={{ flex: 1, marginRight: 8 }}><Text style={s.label}>Calories</Text><TextInput style={s.input} placeholder="0" placeholderTextColor={colors.textMuted} value={form.calories} onChangeText={(v) => setForm((f) => ({ ...f, calories: v }))} keyboardType="numeric" /></View>
-        <View style={{ flex: 1 }}><Text style={s.label}>Quantity</Text><TextInput style={s.input} placeholder="1" placeholderTextColor={colors.textMuted} value={form.quantity} onChangeText={(v) => setForm((f) => ({ ...f, quantity: v }))} keyboardType="numeric" /></View>
-      </View>
-      <View style={s.row}>
-        <View style={{ flex: 1, marginRight: 8 }}><Text style={s.label}>Protein (g)</Text><TextInput style={s.input} placeholder="0" placeholderTextColor={colors.textMuted} value={form.protein} onChangeText={(v) => setForm((f) => ({ ...f, protein: v }))} keyboardType="numeric" /></View>
-        <View style={{ flex: 1, marginRight: 8 }}><Text style={s.label}>Carbs (g)</Text><TextInput style={s.input} placeholder="0" placeholderTextColor={colors.textMuted} value={form.carbs} onChangeText={(v) => setForm((f) => ({ ...f, carbs: v }))} keyboardType="numeric" /></View>
-        <View style={{ flex: 1 }}><Text style={s.label}>Fat (g)</Text><TextInput style={s.input} placeholder="0" placeholderTextColor={colors.textMuted} value={form.fat} onChangeText={(v) => setForm((f) => ({ ...f, fat: v }))} keyboardType="numeric" /></View>
-      </View>
-      <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={handleSave} disabled={loading}>
-        {loading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>Log Food</Text>}
-      </TouchableOpacity>
+
+        <View style={s.inputGroup}>
+          <Text style={s.label}>Food Name</Text>
+          <TextInput
+            style={s.input}
+            placeholder="e.g. Chicken breast, dosa, banana"
+            placeholderTextColor={colors.textMuted}
+            value={form.food_name}
+            onChangeText={handleFoodNameChange}
+            onSubmitEditing={handleCalculate}
+            returnKeyType="search"
+          />
+          <TouchableOpacity style={s.calculateBtn} onPress={handleCalculate} disabled={searching}>
+            {searching
+              ? <ActivityIndicator color={colors.textPrimary} />
+              : <Text style={s.calculateBtnText}>Calculate nutrition</Text>}
+          </TouchableOpacity>
+        </View>
+
+        <View style={s.row}>
+          <View style={{ flex: 0.8, marginRight: 8 }}>
+            <Text style={s.label}>Amount</Text>
+            <TextInput
+              style={s.input}
+              placeholder={form.amount_unit === 'grams' ? '100' : '1'}
+              placeholderTextColor={colors.textMuted}
+              value={form.amount}
+              onChangeText={(value) => setForm((current) => ({ ...current, amount: value }))}
+              keyboardType="decimal-pad"
+            />
+          </View>
+          <View style={{ flex: 1.2 }}>
+            <Text style={s.label}>Measure</Text>
+            <View style={s.measureRow}>
+              {[
+                ['grams', 'Grams'],
+                ['portions', 'Portions'],
+              ].map(([value, label]) => (
+                <TouchableOpacity
+                  key={value}
+                  style={[s.measureChip, form.amount_unit === value && s.measureChipActive]}
+                  onPress={() => handleUnitChange(value)}
+                >
+                  <Text style={[s.measureChipText, form.amount_unit === value && s.measureChipTextActive]}>{label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {results.length > 0 && (
+          <View style={s.matchList}>
+            <Text style={s.matchHelp}>Choose the closest match</Text>
+            {results.slice(0, 4).map((result) => (
+              <TouchableOpacity
+                key={`${result.code}-${result.name}`}
+                style={[s.matchRow, selectedFood === result && s.matchRowActive]}
+                onPress={() => selectFood(result)}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={s.matchName}>{result.name}</Text>
+                  <Text style={s.matchMeta} numberOfLines={1}>
+                    {result.brand || 'Nutrition estimate'} · {result.nutrition_basis}
+                  </Text>
+                </View>
+                <Text style={s.matchCalories}>{Math.round(result.calories || 0)} kcal</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {searched && !searching && results.length === 0 && (
+          <Text style={s.nutritionMessage}>No nutrition match was found. Try a simpler food name.</Text>
+        )}
+
+        {calculation.error && <Text style={[s.nutritionMessage, s.nutritionError]}>{calculation.error}</Text>}
+
+        {calculation.nutrition && (
+          <View style={s.nutritionPreview}>
+            <View style={s.nutritionHead}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.nutritionTitle}>Estimated nutrition</Text>
+                <Text style={s.nutritionBasis}>
+                  {selectedFood.name} · {formatFoodAmount(form.amount, form.amount_unit, selectedFood)}
+                </Text>
+              </View>
+              <Text style={s.nutritionCalories}>{Math.round(calculation.nutrition.calories)} kcal</Text>
+            </View>
+            <View style={s.nutritionMacroRow}>
+              {[
+                ['Protein', calculation.nutrition.protein],
+                ['Carbs', calculation.nutrition.carbs],
+                ['Fat', calculation.nutrition.fat],
+              ].map(([label, value]) => (
+                <View key={label} style={s.nutritionMacro}>
+                  <Text style={s.nutritionMacroLabel}>{label}</Text>
+                  <Text style={s.nutritionMacroValue}>{value} g</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={s.nutritionDisclaimer}>Estimates vary by recipe and preparation.</Text>
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={[s.btn, (loading || !calculation.nutrition) && s.btnDisabled]}
+          onPress={handleSave}
+          disabled={loading || !calculation.nutrition}
+        >
+          {loading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>Log Food</Text>}
+        </TouchableOpacity>
+      </ScrollView>
     </LogModal>
   );
 };
 
-const LogWorkoutModal = ({ onClose, onSave }) => {
-  const [form, setForm] = useState({ workout_type: '', duration_minutes: '', calories_burned: '', notes: '' });
+const LogWorkoutModal = ({ user, onClose, onSave }) => {
+  const [form, setForm] = useState({ workout_type: '', duration_minutes: '', notes: '' });
   const [loading, setLoading] = useState(false);
   const today = formatDate(new Date());
+
+  const estimate = useMemo(() => {
+    if (!form.workout_type.trim() || !form.duration_minutes) return { value: null, error: null };
+    try {
+      return {
+        value: estimateWorkoutCalories({
+          workoutType: form.workout_type,
+          durationMinutes: form.duration_minutes,
+          weightKg: user?.current_weight,
+          notes: form.notes,
+        }),
+        error: null,
+      };
+    } catch (err) {
+      return { value: null, error: err.message };
+    }
+  }, [form.workout_type, form.duration_minutes, form.notes, user?.current_weight]);
+
   const handleSave = async () => {
-    if (!form.workout_type || !form.duration_minutes) { Toast.show({ type: 'error', text1: 'Workout type and duration are required' }); return; }
+    if (!estimate.value) {
+      Toast.show({ type: 'error', text1: estimate.error || 'Workout type and duration are required' });
+      return;
+    }
     setLoading(true);
     try {
-      await api.logWorkout({ ...form, date: today, duration_minutes: parseInt(form.duration_minutes), calories_burned: parseFloat(form.calories_burned) || 0 });
+      await api.logWorkout({
+        ...form,
+        date: today,
+        duration_minutes: Number(form.duration_minutes),
+        calories_burned: estimate.value.calories,
+      });
       Toast.show({ type: 'success', text1: 'Workout logged! 💪' });
       onSave(); onClose();
     } catch (err) { Toast.show({ type: 'error', text1: err.message }); }
@@ -83,12 +288,30 @@ const LogWorkoutModal = ({ onClose, onSave }) => {
   return (
     <LogModal title="💪 Log Workout" onClose={onClose}>
       <View style={s.inputGroup}><Text style={s.label}>Workout Type</Text><TextInput style={s.input} placeholder="e.g. Weight Training" placeholderTextColor={colors.textMuted} value={form.workout_type} onChangeText={(v) => setForm((f) => ({ ...f, workout_type: v }))} /></View>
-      <View style={s.row}>
-        <View style={{ flex: 1, marginRight: 8 }}><Text style={s.label}>Duration (min)</Text><TextInput style={s.input} placeholder="45" placeholderTextColor={colors.textMuted} value={form.duration_minutes} onChangeText={(v) => setForm((f) => ({ ...f, duration_minutes: v }))} keyboardType="numeric" /></View>
-        <View style={{ flex: 1 }}><Text style={s.label}>Calories Burned</Text><TextInput style={s.input} placeholder="300" placeholderTextColor={colors.textMuted} value={form.calories_burned} onChangeText={(v) => setForm((f) => ({ ...f, calories_burned: v }))} keyboardType="numeric" /></View>
-      </View>
-      <View style={s.inputGroup}><Text style={s.label}>Notes (optional)</Text><TextInput style={s.input} placeholder="How did it go?" placeholderTextColor={colors.textMuted} value={form.notes} onChangeText={(v) => setForm((f) => ({ ...f, notes: v }))} /></View>
-      <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={handleSave} disabled={loading}>
+      <View style={s.inputGroup}><Text style={s.label}>Duration (min)</Text><TextInput style={s.input} placeholder="45" placeholderTextColor={colors.textMuted} value={form.duration_minutes} onChangeText={(v) => setForm((f) => ({ ...f, duration_minutes: v }))} keyboardType="numeric" /></View>
+      <View style={s.inputGroup}><Text style={s.label}>Notes (optional)</Text><TextInput style={s.input} placeholder="e.g. Easy pace, heavy sets, very intense" placeholderTextColor={colors.textMuted} value={form.notes} onChangeText={(v) => setForm((f) => ({ ...f, notes: v }))} /></View>
+
+      {estimate.error && <Text style={[s.nutritionMessage, s.nutritionError]}>{estimate.error}</Text>}
+
+      {estimate.value && (
+        <View style={s.workoutEstimate}>
+          <View style={s.workoutEstimateHead}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.workoutEstimateTitle}>Estimated calories burned</Text>
+              <Text style={s.workoutEstimateBasis}>
+                {estimate.value.activity} · {estimate.value.intensity} intensity · {estimate.value.weightKg} kg
+              </Text>
+            </View>
+            <Text style={s.workoutEstimateCalories}>{estimate.value.calories} kcal</Text>
+          </View>
+          <Text style={s.workoutEstimateDisclaimer}>
+            Automatically estimated from workout, duration, profile weight, and note intensity.
+            {estimate.value.usedDefaultWeight ? ' Add your current weight in Profile for a more personal estimate.' : ' Actual burn may vary.'}
+          </Text>
+        </View>
+      )}
+
+      <TouchableOpacity style={[s.btn, (loading || !estimate.value) && s.btnDisabled]} onPress={handleSave} disabled={loading || !estimate.value}>
         {loading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>Log Workout</Text>}
       </TouchableOpacity>
     </LogModal>
@@ -287,7 +510,7 @@ const Home = ({ navigation }) => {
       </ScrollView>
 
       {modal === 'food' && <LogFoodModal onClose={() => setModal(null)} onSave={loadSummary} />}
-      {modal === 'workout' && <LogWorkoutModal onClose={() => setModal(null)} onSave={loadSummary} />}
+      {modal === 'workout' && <LogWorkoutModal user={user} onClose={() => setModal(null)} onSave={loadSummary} />}
       {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={loadSummary} />}
       {showPlanner && <WorkoutPlannerModal date={today} onClose={() => setShowPlanner(false)} onSuccess={loadSummary} />}
     </View>
@@ -337,14 +560,47 @@ const s = StyleSheet.create({
   sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xl, maxHeight: '90%' },
   handle: { width: 36, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: 14 },
   modalTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 18 },
+  modalScroll: { flexGrow: 0 },
   inputGroup: { marginBottom: 14 },
   label: { fontSize: 11, color: colors.textSecondary, marginBottom: 5, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase' },
   input: { backgroundColor: colors.bgElevated, borderRadius: 10, padding: 12, color: colors.textPrimary, fontSize: 14, borderWidth: 1, borderColor: colors.border },
+  calculateBtn: { minHeight: 42, marginTop: 8, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
+  calculateBtnText: { color: colors.textPrimary, fontSize: 13, fontWeight: '700' },
   mealRow: { flexDirection: 'row', gap: 6 },
   mealChip: { flex: 1, padding: 8, borderRadius: 8, backgroundColor: colors.bgElevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   mealChipActive: { backgroundColor: 'rgba(200,241,53,0.12)', borderColor: colors.accentLime },
   mealChipText: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
   mealChipTextActive: { color: colors.accentLime },
+  measureRow: { minHeight: 44, flexDirection: 'row', padding: 3, borderRadius: 10, backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
+  measureChip: { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 7 },
+  measureChipActive: { backgroundColor: 'rgba(168,85,247,0.16)' },
+  measureChipText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  measureChipTextActive: { color: colors.accentLime },
+  matchList: { marginTop: 4, marginBottom: 14 },
+  matchHelp: { color: colors.textSecondary, fontSize: 11, fontWeight: '700', marginBottom: 7 },
+  matchRow: { minHeight: 55, flexDirection: 'row', alignItems: 'center', padding: 10, marginBottom: 7, borderRadius: 10, backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
+  matchRowActive: { borderColor: colors.accentLime, backgroundColor: 'rgba(168,85,247,0.09)' },
+  matchName: { color: colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  matchMeta: { color: colors.textMuted, fontSize: 10, marginTop: 2 },
+  matchCalories: { color: colors.accentAmber, fontSize: 11, fontWeight: '800', marginLeft: 8 },
+  nutritionMessage: { padding: 11, marginBottom: 12, borderRadius: 10, color: colors.textSecondary, backgroundColor: colors.bgElevated, fontSize: 11, lineHeight: 16 },
+  nutritionError: { color: colors.accentCoral, borderWidth: 1, borderColor: 'rgba(255,107,107,0.22)' },
+  nutritionPreview: { padding: 14, marginBottom: 12, borderRadius: 14, backgroundColor: 'rgba(168,85,247,0.08)', borderWidth: 1, borderColor: 'rgba(168,85,247,0.24)' },
+  nutritionHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  nutritionTitle: { color: colors.textPrimary, fontSize: 14, fontWeight: '800' },
+  nutritionBasis: { color: colors.textMuted, fontSize: 10, marginTop: 2 },
+  nutritionCalories: { color: colors.accentLime, fontSize: 18, fontWeight: '800', marginLeft: 8 },
+  nutritionMacroRow: { flexDirection: 'row', gap: 7 },
+  nutritionMacro: { flex: 1, padding: 9, alignItems: 'center', borderRadius: 9, backgroundColor: colors.bgCard },
+  nutritionMacroLabel: { color: colors.textMuted, fontSize: 9 },
+  nutritionMacroValue: { color: colors.textPrimary, fontSize: 12, fontWeight: '800', marginTop: 2 },
+  nutritionDisclaimer: { color: colors.textMuted, fontSize: 9, lineHeight: 13, marginTop: 9 },
+  workoutEstimate: { padding: 14, marginBottom: 12, borderRadius: 14, backgroundColor: 'rgba(245,166,35,0.08)', borderWidth: 1, borderColor: 'rgba(245,166,35,0.28)' },
+  workoutEstimateHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 9 },
+  workoutEstimateTitle: { color: colors.textPrimary, fontSize: 14, fontWeight: '800' },
+  workoutEstimateBasis: { color: colors.textMuted, fontSize: 10, lineHeight: 14, marginTop: 2 },
+  workoutEstimateCalories: { color: colors.accentAmber, fontSize: 18, fontWeight: '800', marginLeft: 8 },
+  workoutEstimateDisclaimer: { color: colors.textMuted, fontSize: 9, lineHeight: 13 },
   btn: { backgroundColor: colors.accentLime, borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 8 },
   btnSecondary: { backgroundColor: colors.bgElevated, borderRadius: 12, padding: 11, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   btnDisabled: { opacity: 0.5 },

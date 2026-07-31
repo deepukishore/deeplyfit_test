@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -21,6 +21,8 @@ import { createEmptySummary, getCachedDiaryDate } from '../utils/diaryStorage';
 import {
   getGreeting, getDailyQuote, formatDate, getWorkoutSuggestions, getInitials
 } from '../utils/fitness';
+import { formatFoodAmount, scaleNutrition } from '../utils/nutrition';
+import { estimateWorkoutCalories } from '../utils/workoutCalories';
 import WorkoutPlannerModal from '../components/WorkoutPlannerModal';
 import '../styles/dashboard.css';
 import '../styles/animations.css';
@@ -93,15 +95,91 @@ const HydrationGoalModal = ({ user, currentGoal, onClose, onSave }) => {
 };
 
 const LogFoodModal = ({ onClose, onSave }) => {
-  const [form, setForm] = useState({ food_name: '', calories: '', protein: '', carbs: '', fat: '', meal_type: 'breakfast', quantity: 1 });
+  const [form, setForm] = useState({
+    food_name: '',
+    meal_type: 'breakfast',
+    amount: '100',
+    amount_unit: 'grams',
+  });
+  const [results, setResults] = useState([]);
+  const [selectedFood, setSelectedFood] = useState(null);
+  const [searching, setSearching] = useState(false);
+  const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const today = formatDate(new Date());
 
+  const calculation = useMemo(() => {
+    if (!selectedFood) return { nutrition: null, error: null };
+    try {
+      return {
+        nutrition: scaleNutrition(selectedFood, form.amount, form.amount_unit),
+        error: null,
+      };
+    } catch (err) {
+      return { nutrition: null, error: err.message };
+    }
+  }, [selectedFood, form.amount, form.amount_unit]);
+
+  const selectFood = (food) => {
+    setSelectedFood(food);
+    setForm((current) => ({ ...current, food_name: food.name }));
+  };
+
+  const handleFoodNameChange = (value) => {
+    setForm((current) => ({ ...current, food_name: value }));
+    setSelectedFood(null);
+    setResults([]);
+    setSearched(false);
+  };
+
+  const handleUnitChange = (unit) => {
+    setForm((current) => ({
+      ...current,
+      amount_unit: unit,
+      amount: unit === 'grams' ? '100' : '1',
+    }));
+  };
+
+  const handleCalculate = async () => {
+    const query = form.food_name.trim();
+    if (query.length < 2) {
+      toast.error('Enter at least 2 characters of the food name');
+      return;
+    }
+
+    setSearching(true);
+    setSearched(true);
+    try {
+      const data = await api.searchFoods(query, 1, 6);
+      const matches = (data.results || []).filter((food) => Number(food.calories) > 0);
+      setResults(matches);
+      if (matches.length) selectFood(matches[0]);
+      else setSelectedFood(null);
+    } catch (err) {
+      setResults([]);
+      setSelectedFood(null);
+      toast.error(err.message || 'Could not calculate nutrition');
+    } finally {
+      setSearching(false);
+    }
+  };
+
   const handleSave = async () => {
-    if (!form.food_name || !form.calories) { toast.error('Food name and calories are required'); return; }
+    if (!selectedFood || !calculation.nutrition) {
+      toast.error(calculation.error || 'Calculate and select a food match first');
+      return;
+    }
+
+    const amountLabel = formatFoodAmount(form.amount, form.amount_unit, selectedFood);
     setLoading(true);
     try {
-      await api.logFood({ ...form, date: today, calories: parseFloat(form.calories), protein: parseFloat(form.protein) || 0, carbs: parseFloat(form.carbs) || 0, fat: parseFloat(form.fat) || 0, quantity: parseFloat(form.quantity) || 1 });
+      await api.logFood({
+        date: today,
+        meal_type: form.meal_type,
+        food_name: `${selectedFood.name} (${amountLabel})`,
+        ...calculation.nutrition,
+        quantity: 1,
+      });
       toast.success('Food logged! 🍽️');
       onSave();
       onClose();
@@ -123,24 +201,101 @@ const LogFoodModal = ({ onClose, onSave }) => {
           </div>
           <div className="input-group">
             <label>Food Name</label>
-            <input placeholder="e.g. Chicken breast" value={form.food_name} onChange={e => setForm(f => ({ ...f, food_name: e.target.value }))} />
+            <div className="auto-nutrition-search">
+              <input
+                placeholder="e.g. Chicken breast, dosa, banana"
+                value={form.food_name}
+                onChange={(event) => handleFoodNameChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') handleCalculate();
+                }}
+                autoFocus
+              />
+              <button className="btn btn-secondary" type="button" onClick={handleCalculate} disabled={searching}>
+                {searching ? 'Calculating...' : 'Calculate'}
+              </button>
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="amount-entry-grid">
             <div className="input-group">
-              <label>Calories</label>
-              <input type="number" placeholder="0" value={form.calories} onChange={e => setForm(f => ({ ...f, calories: e.target.value }))} />
+              <label>Amount</label>
+              <input
+                type="number"
+                min="0.1"
+                step={form.amount_unit === 'grams' ? '1' : '0.5'}
+                value={form.amount}
+                onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))}
+              />
             </div>
             <div className="input-group">
-              <label>Quantity</label>
-              <input type="number" placeholder="1" step="0.5" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))} />
+              <label>Measure</label>
+              <div className="measure-toggle" role="group" aria-label="Food amount unit">
+                {[
+                  ['grams', 'Grams'],
+                  ['portions', 'Portions'],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={form.amount_unit === value ? 'active' : ''}
+                    onClick={() => handleUnitChange(value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-            <div className="input-group"><label>Protein (g)</label><input type="number" placeholder="0" value={form.protein} onChange={e => setForm(f => ({ ...f, protein: e.target.value }))} /></div>
-            <div className="input-group"><label>Carbs (g)</label><input type="number" placeholder="0" value={form.carbs} onChange={e => setForm(f => ({ ...f, carbs: e.target.value }))} /></div>
-            <div className="input-group"><label>Fat (g)</label><input type="number" placeholder="0" value={form.fat} onChange={e => setForm(f => ({ ...f, fat: e.target.value }))} /></div>
-          </div>
-          <button className="btn btn-primary btn-full" onClick={handleSave} disabled={loading}>
+
+          {results.length > 0 && (
+            <div className="food-search-results compact-results">
+              <p className="food-match-help">Choose the closest match:</p>
+              {results.slice(0, 4).map((result) => (
+                <button
+                  key={`${result.code}-${result.name}`}
+                  type="button"
+                  className={`food-search-result ${selectedFood === result ? 'selected' : ''}`}
+                  onClick={() => selectFood(result)}
+                >
+                  <span>
+                    <span className="food-search-result-name">{result.name}</span>
+                    <span className="food-search-result-meta">
+                      {result.brand || 'Nutrition estimate'} · {result.nutrition_basis}
+                    </span>
+                  </span>
+                  <span className="badge badge-amber">{Math.round(result.calories || 0)} kcal</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {searched && !searching && results.length === 0 && (
+            <p className="nutrition-message">No nutrition match was found. Try a simpler food name.</p>
+          )}
+
+          {calculation.error && <p className="nutrition-message error">{calculation.error}</p>}
+
+          {calculation.nutrition && (
+            <div className="nutrition-preview">
+              <div className="nutrition-preview-head">
+                <div>
+                  <p className="nutrition-preview-title">Estimated nutrition</p>
+                  <p className="nutrition-preview-basis">
+                    {selectedFood.name} · {formatFoodAmount(form.amount, form.amount_unit, selectedFood)}
+                  </p>
+                </div>
+                <strong>{Math.round(calculation.nutrition.calories)} kcal</strong>
+              </div>
+              <div className="nutrition-macro-grid">
+                <div><span>Protein</span><strong>{calculation.nutrition.protein} g</strong></div>
+                <div><span>Carbs</span><strong>{calculation.nutrition.carbs} g</strong></div>
+                <div><span>Fat</span><strong>{calculation.nutrition.fat} g</strong></div>
+              </div>
+              <p className="nutrition-disclaimer">Estimated from the selected database match; recipes and preparation can change the values.</p>
+            </div>
+          )}
+
+          <button className="btn btn-primary btn-full" onClick={handleSave} disabled={loading || !calculation.nutrition}>
             {loading ? <><span className="spinner" /> Saving...</> : 'Log Food'}
           </button>
         </div>
@@ -149,16 +304,41 @@ const LogFoodModal = ({ onClose, onSave }) => {
   );
 };
 
-const LogWorkoutModal = ({ onClose, onSave }) => {
-  const [form, setForm] = useState({ workout_type: '', duration_minutes: '', calories_burned: '', notes: '' });
+const LogWorkoutModal = ({ user, onClose, onSave }) => {
+  const [form, setForm] = useState({ workout_type: '', duration_minutes: '', notes: '' });
   const [loading, setLoading] = useState(false);
   const today = formatDate(new Date());
 
+  const estimate = useMemo(() => {
+    if (!form.workout_type.trim() || !form.duration_minutes) return { value: null, error: null };
+    try {
+      return {
+        value: estimateWorkoutCalories({
+          workoutType: form.workout_type,
+          durationMinutes: form.duration_minutes,
+          weightKg: user?.current_weight,
+          notes: form.notes,
+        }),
+        error: null,
+      };
+    } catch (err) {
+      return { value: null, error: err.message };
+    }
+  }, [form.workout_type, form.duration_minutes, form.notes, user?.current_weight]);
+
   const handleSave = async () => {
-    if (!form.workout_type || !form.duration_minutes) { toast.error('Workout type and duration are required'); return; }
+    if (!estimate.value) {
+      toast.error(estimate.error || 'Workout type and duration are required');
+      return;
+    }
     setLoading(true);
     try {
-      await api.logWorkout({ ...form, date: today, duration_minutes: parseInt(form.duration_minutes), calories_burned: parseFloat(form.calories_burned) || 0 });
+      await api.logWorkout({
+        ...form,
+        date: today,
+        duration_minutes: Number(form.duration_minutes),
+        calories_burned: estimate.value.calories,
+      });
       toast.success('Workout logged! 💪');
       onSave();
       onClose();
@@ -174,17 +354,61 @@ const LogWorkoutModal = ({ onClose, onSave }) => {
         <div className="modal-form">
           <div className="input-group">
             <label>Workout Type</label>
-            <input placeholder="e.g. Weight Training" value={form.workout_type} onChange={e => setForm(f => ({ ...f, workout_type: e.target.value }))} />
+            <input
+              list="workout-type-options"
+              placeholder="e.g. Weight Training"
+              value={form.workout_type}
+              onChange={e => setForm(f => ({ ...f, workout_type: e.target.value }))}
+              autoFocus
+            />
+            <datalist id="workout-type-options">
+              {['Walking', 'Running', 'Cycling', 'Weight Training', 'HIIT', 'Yoga', 'Swimming', 'Football', 'Badminton'].map((type) => (
+                <option key={type} value={type} />
+              ))}
+            </datalist>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div className="input-group"><label>Duration (min)</label><input type="number" placeholder="45" value={form.duration_minutes} onChange={e => setForm(f => ({ ...f, duration_minutes: e.target.value }))} /></div>
-            <div className="input-group"><label>Calories Burned</label><input type="number" placeholder="300" value={form.calories_burned} onChange={e => setForm(f => ({ ...f, calories_burned: e.target.value }))} /></div>
+          <div className="input-group">
+            <label>Duration (min)</label>
+            <input
+              type="number"
+              min="1"
+              max="600"
+              step="1"
+              placeholder="45"
+              value={form.duration_minutes}
+              onChange={e => setForm(f => ({ ...f, duration_minutes: e.target.value }))}
+            />
           </div>
           <div className="input-group">
             <label>Notes (optional)</label>
-            <input placeholder="How did it go?" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
+            <input
+              placeholder="e.g. Easy pace, heavy sets, very intense"
+              value={form.notes}
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+            />
           </div>
-          <button className="btn btn-primary btn-full" onClick={handleSave} disabled={loading}>
+
+          {estimate.error && <p className="nutrition-message error">{estimate.error}</p>}
+
+          {estimate.value && (
+            <div className="workout-calorie-preview" aria-live="polite">
+              <div className="workout-calorie-preview-head">
+                <div>
+                  <p className="workout-calorie-title">Estimated calories burned</p>
+                  <p className="workout-calorie-basis">
+                    {estimate.value.activity} · {estimate.value.intensity} intensity · {estimate.value.weightKg} kg
+                  </p>
+                </div>
+                <strong>{estimate.value.calories} kcal</strong>
+              </div>
+              <p className="workout-calorie-disclaimer">
+                Automatically estimated from duration, workout type, profile weight, and intensity clues in your note.
+                {estimate.value.usedDefaultWeight ? ' Add your current weight in Profile for a more personal estimate.' : ' Actual burn may vary.'}
+              </p>
+            </div>
+          )}
+
+          <button className="btn btn-primary btn-full" onClick={handleSave} disabled={loading || !estimate.value}>
             {loading ? <><span className="spinner" /> Saving...</> : 'Log Workout'}
           </button>
         </div>
@@ -595,7 +819,7 @@ const Home = () => {
 
       {/* Modals */}
       {modal === 'food' && <LogFoodModal onClose={() => setModal(null)} onSave={loadSummary} />}
-      {modal === 'workout' && <LogWorkoutModal onClose={() => setModal(null)} onSave={loadSummary} />}
+      {modal === 'workout' && <LogWorkoutModal user={user} onClose={() => setModal(null)} onSave={loadSummary} />}
       {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={loadSummary} />}
       {showPlanner && <WorkoutPlannerModal date={today} onClose={() => setShowPlanner(false)} onSuccess={loadSummary} />}
       {showHydrationModal && <HydrationGoalModal user={user} currentGoal={waterGoal} onClose={() => setShowHydrationModal(false)} onSave={setWaterGoal} />}

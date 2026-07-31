@@ -802,6 +802,7 @@
 }
 
 .food-search-result:hover,
+.food-search-result.selected,
 .copy-day-row:hover,
 .copy-day-row.active {
   border-color: var(--border-active);
@@ -819,6 +820,191 @@
 .copy-day-row-meta {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+.auto-nutrition-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.amount-entry-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.measure-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 44px;
+  padding: 3px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.measure-toggle button {
+  border: 0;
+  border-radius: calc(var(--radius-md) - 3px);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.measure-toggle button.active {
+  background: rgba(168, 85, 247, 0.14);
+  color: #a855f7;
+}
+
+.compact-results {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.food-match-help {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.food-search-result > span:first-child,
+.food-search-result-name,
+.food-search-result-meta {
+  display: block;
+  min-width: 0;
+  text-align: left;
+}
+
+.nutrition-preview {
+  padding: 16px;
+  background: rgba(168, 85, 247, 0.07);
+  border: 1px solid rgba(168, 85, 247, 0.24);
+  border-radius: var(--radius-lg);
+}
+
+.nutrition-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.nutrition-preview-head > strong {
+  color: #a855f7;
+  font-family: var(--font-display);
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+.nutrition-preview-title {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.nutrition-preview-basis,
+.nutrition-disclaimer {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.nutrition-macro-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.nutrition-macro-grid > div {
+  padding: 10px 8px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.nutrition-macro-grid span,
+.nutrition-macro-grid strong {
+  display: block;
+}
+
+.nutrition-macro-grid span {
+  color: var(--text-muted);
+  font-size: 10px;
+  margin-bottom: 3px;
+}
+
+.nutrition-macro-grid strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.nutrition-message {
+  padding: 11px 12px;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.nutrition-message.error {
+  color: var(--accent-coral);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+}
+
+.workout-calorie-preview {
+  padding: 16px;
+  background: rgba(245, 166, 35, 0.08);
+  border: 1px solid rgba(245, 166, 35, 0.28);
+  border-radius: var(--radius-lg);
+}
+
+.workout-calorie-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.workout-calorie-preview-head > strong {
+  color: var(--accent-amber);
+  font-family: var(--font-display);
+  font-size: 22px;
+  white-space: nowrap;
+}
+
+.workout-calorie-title {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.workout-calorie-basis,
+.workout-calorie-disclaimer {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+@media (max-width: 420px) {
+  .auto-nutrition-search {
+    grid-template-columns: 1fr;
+  }
+
+  .amount-entry-grid {
+    grid-template-columns: 0.8fr 1.2fr;
+  }
+
+  .workout-calorie-preview-head {
+    align-items: flex-start;
+  }
 }
 
 /* Progress page */
