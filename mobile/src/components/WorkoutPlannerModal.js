@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { api } from '../utils/api';
+import { estimateWorkoutCalories } from '../utils/workoutCalories';
 import { colors, radius, spacing } from '../utils/theme';
 
 const repDefault = (range) => {
@@ -15,7 +16,7 @@ const hydrateExercises = (day) =>
     sets: Array.from({ length: ex.target_sets }).map(() => ({ reps: repDefault(ex.rep_range), weight: '' })),
   }));
 
-const WorkoutPlannerModal = ({ visible, date, onClose, onSuccess }) => {
+const WorkoutPlannerModal = ({ visible = true, user, date, onClose, onSuccess }) => {
   const [library, setLibrary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -23,7 +24,6 @@ const WorkoutPlannerModal = ({ visible, date, onClose, onSuccess }) => {
   const [dayName, setDayName] = useState('');
   const [workoutName, setWorkoutName] = useState('');
   const [duration, setDuration] = useState('60');
-  const [calories, setCalories] = useState('250');
   const [notes, setNotes] = useState('');
   const [exercises, setExercises] = useState([]);
 
@@ -50,15 +50,39 @@ const WorkoutPlannerModal = ({ visible, date, onClose, onSuccess }) => {
     setExercises(hydrateExercises(selectedDay));
   }, [selectedPlan, selectedDay]);
 
+  const calorieEstimate = useMemo(() => {
+    if (!workoutName.trim() || !duration) return { value: null, error: null };
+    try {
+      return {
+        value: estimateWorkoutCalories({
+          workoutType: [
+            workoutName,
+            selectedDay?.name,
+            ...exercises.map((exercise) => exercise.name),
+          ].filter(Boolean).join(' '),
+          durationMinutes: duration,
+          weightKg: user?.current_weight,
+          notes,
+        }),
+        error: null,
+      };
+    } catch (err) {
+      return { value: null, error: err.message };
+    }
+  }, [workoutName, selectedDay?.name, exercises, duration, user?.current_weight, notes]);
+
   const updateSet = (ei, si, key, value) => {
     setExercises((cur) => cur.map((ex, i) => i !== ei ? ex : { ...ex, sets: ex.sets.map((set, j) => j !== si ? set : { ...set, [key]: value }) }));
   };
 
   const handleSubmit = async () => {
-    if (!workoutName.trim()) { Toast.show({ type: 'error', text1: 'Choose a plan and workout day first' }); return; }
+    if (!workoutName.trim() || !calorieEstimate.value) {
+      Toast.show({ type: 'error', text1: calorieEstimate.error || 'Choose a plan, workout day, and valid duration first' });
+      return;
+    }
     setSaving(true);
     try {
-      await api.logDetailedWorkout({ date, workout_type: workoutName.trim(), duration_minutes: parseInt(duration, 10) || 0, calories_burned: parseFloat(calories) || 0, notes, exercises: exercises.map((ex) => ({ name: ex.name, sets: ex.sets.map((s) => ({ reps: parseInt(s.reps, 10) || 0, weight: parseFloat(s.weight) || 0 })) })) });
+      await api.logDetailedWorkout({ date, workout_type: workoutName.trim(), duration_minutes: Number(duration), calories_burned: calorieEstimate.value.calories, notes, exercises: exercises.map((ex) => ({ name: ex.name, sets: ex.sets.map((s) => ({ reps: parseInt(s.reps, 10) || 0, weight: parseFloat(s.weight) || 0 })) })) });
       Toast.show({ type: 'success', text1: 'Workout session saved' });
       if (onSuccess) onSuccess();
       onClose();
@@ -105,11 +129,29 @@ const WorkoutPlannerModal = ({ visible, date, onClose, onSuccess }) => {
                 </View>
               </View>
               <View style={s.inputGroup}><Text style={s.label}>Workout Name</Text><TextInput style={s.input} value={workoutName} onChangeText={setWorkoutName} /></View>
-              <View style={s.row}>
-                <View style={{ flex: 1, marginRight: 8 }}><Text style={s.label}>Duration (min)</Text><TextInput style={s.input} value={duration} onChangeText={setDuration} keyboardType="numeric" /></View>
-                <View style={{ flex: 1 }}><Text style={s.label}>Calories Burned</Text><TextInput style={s.input} value={calories} onChangeText={setCalories} keyboardType="numeric" /></View>
-              </View>
-              <View style={s.inputGroup}><Text style={s.label}>Notes</Text><TextInput style={s.input} value={notes} onChangeText={setNotes} placeholder="Optional session notes" placeholderTextColor={colors.textMuted} /></View>
+              <View style={s.inputGroup}><Text style={s.label}>Duration (min)</Text><TextInput style={s.input} value={duration} onChangeText={setDuration} keyboardType="numeric" /></View>
+              <View style={s.inputGroup}><Text style={s.label}>Notes</Text><TextInput style={s.input} value={notes} onChangeText={setNotes} placeholder="Optional: easy pace, heavy sets, very intense" placeholderTextColor={colors.textMuted} /></View>
+
+              {calorieEstimate.error && <Text style={s.estimateError}>{calorieEstimate.error}</Text>}
+
+              {calorieEstimate.value && (
+                <View style={s.caloriePreview}>
+                  <View style={s.caloriePreviewHead}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.caloriePreviewTitle}>Estimated calories burned</Text>
+                      <Text style={s.caloriePreviewBasis}>
+                        {calorieEstimate.value.activity} · {calorieEstimate.value.intensity} intensity · {duration} min · {calorieEstimate.value.weightKg} kg
+                      </Text>
+                    </View>
+                    <Text style={s.caloriePreviewValue}>{calorieEstimate.value.calories} kcal</Text>
+                  </View>
+                  <Text style={s.caloriePreviewDisclaimer}>
+                    Calculated from the selected workout, exercises, duration, profile weight, and note intensity.
+                    {calorieEstimate.value.usedDefaultWeight ? ' Add your current weight in Profile for a more personal estimate.' : ' Actual burn may vary.'}
+                  </Text>
+                </View>
+              )}
+
               {exercises.map((ex, ei) => (
                 <View key={ex.name} style={s.exerciseCard}>
                   <View style={s.exerciseHead}>
@@ -130,7 +172,7 @@ const WorkoutPlannerModal = ({ visible, date, onClose, onSuccess }) => {
               ))}
               <View style={s.footerBtns}>
                 <TouchableOpacity style={[s.btnSec, { flex: 1, marginRight: 8 }]} onPress={onClose}><Text style={s.btnSecText}>Cancel</Text></TouchableOpacity>
-                <TouchableOpacity style={[s.btn, { flex: 2 }, saving && s.btnDisabled]} onPress={handleSubmit} disabled={saving}>
+                <TouchableOpacity style={[s.btn, { flex: 2 }, (saving || !calorieEstimate.value) && s.btnDisabled]} onPress={handleSubmit} disabled={saving || !calorieEstimate.value}>
                   {saving ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>Save Workout</Text>}
                 </TouchableOpacity>
               </View>
@@ -162,6 +204,13 @@ const s = StyleSheet.create({
   inputGroup: { marginBottom: 16 },
   label: { fontSize: 13, color: colors.textSecondary, marginBottom: 6, fontWeight: '600' },
   input: { backgroundColor: colors.bgElevated, borderRadius: 12, padding: 14, color: colors.textPrimary, fontSize: 15, borderWidth: 1, borderColor: colors.border },
+  estimateError: { padding: 11, marginBottom: 12, borderRadius: 10, color: colors.accentCoral, backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: 'rgba(255,107,107,0.22)', fontSize: 11, lineHeight: 16 },
+  caloriePreview: { padding: 14, marginBottom: 16, borderRadius: 14, backgroundColor: 'rgba(245,166,35,0.08)', borderWidth: 1, borderColor: 'rgba(245,166,35,0.28)' },
+  caloriePreviewHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 9 },
+  caloriePreviewTitle: { color: colors.textPrimary, fontSize: 14, fontWeight: '800' },
+  caloriePreviewBasis: { color: colors.textMuted, fontSize: 10, lineHeight: 14, marginTop: 2 },
+  caloriePreviewValue: { color: colors.accentAmber, fontSize: 18, fontWeight: '800', marginLeft: 8 },
+  caloriePreviewDisclaimer: { color: colors.textMuted, fontSize: 9, lineHeight: 13 },
   exerciseCard: { backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: spacing.md, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
   exerciseHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   exerciseName: { color: colors.textPrimary, fontWeight: '700', fontSize: 15 },

@@ -6,7 +6,7 @@ const ACTIVITY_PROFILES = [
   { name: 'Cycling', met: 7.5, keywords: ['cycling', 'cycle', 'biking', 'bike', 'spinning'] },
   { name: 'Swimming', met: 6, keywords: ['swimming', 'swim', 'aqua'] },
   { name: 'Rowing', met: 7, keywords: ['rowing', 'rower'] },
-  { name: 'Strength training', met: 5, keywords: ['weight training', 'weight lifting', 'weightlifting', 'strength', 'resistance', 'gym'] },
+  { name: 'Strength training', met: 5, keywords: ['weight training', 'weight lifting', 'weightlifting', 'strength', 'resistance', 'gym', 'push day', 'pull day', 'leg day', 'bench press', 'squat', 'deadlift'] },
   { name: 'Football', met: 8, keywords: ['football', 'soccer'] },
   { name: 'Basketball', met: 8, keywords: ['basketball'] },
   { name: 'Tennis / badminton', met: 7, keywords: ['tennis', 'badminton', 'squash'] },

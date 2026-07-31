@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../utils/api';
+import { estimateWorkoutCalories } from '../utils/workoutCalories';
 
 const repDefault = (range) => {
   const match = String(range || '').match(/\d+/);
@@ -19,7 +20,7 @@ const hydrateExercises = (day) => (
   }))
 );
 
-const WorkoutPlannerModal = ({ date, onClose, onSuccess }) => {
+const WorkoutPlannerModal = ({ user, date, onClose, onSuccess }) => {
   const [library, setLibrary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -27,7 +28,6 @@ const WorkoutPlannerModal = ({ date, onClose, onSuccess }) => {
   const [dayName, setDayName] = useState('');
   const [workoutName, setWorkoutName] = useState('');
   const [duration, setDuration] = useState('60');
-  const [calories, setCalories] = useState('250');
   const [notes, setNotes] = useState('');
   const [exercises, setExercises] = useState([]);
 
@@ -67,6 +67,27 @@ const WorkoutPlannerModal = ({ date, onClose, onSuccess }) => {
     setExercises(hydrateExercises(selectedDay));
   }, [selectedPlan, selectedDay]);
 
+  const calorieEstimate = useMemo(() => {
+    if (!workoutName.trim() || !duration) return { value: null, error: null };
+    try {
+      return {
+        value: estimateWorkoutCalories({
+          workoutType: [
+            workoutName,
+            selectedDay?.name,
+            ...exercises.map((exercise) => exercise.name),
+          ].filter(Boolean).join(' '),
+          durationMinutes: duration,
+          weightKg: user?.current_weight,
+          notes,
+        }),
+        error: null,
+      };
+    } catch (err) {
+      return { value: null, error: err.message };
+    }
+  }, [workoutName, selectedDay?.name, exercises, duration, user?.current_weight, notes]);
+
   const updateSet = (exerciseIndex, setIndex, key, value) => {
     setExercises((current) => current.map((exercise, i) => {
       if (i !== exerciseIndex) return exercise;
@@ -80,8 +101,8 @@ const WorkoutPlannerModal = ({ date, onClose, onSuccess }) => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedPlan || !selectedDay || !workoutName.trim()) {
-      toast.error('Choose a plan and workout day first');
+    if (!selectedPlan || !selectedDay || !workoutName.trim() || !calorieEstimate.value) {
+      toast.error(calorieEstimate.error || 'Choose a plan, workout day, and valid duration first');
       return;
     }
 
@@ -90,8 +111,8 @@ const WorkoutPlannerModal = ({ date, onClose, onSuccess }) => {
       await api.logDetailedWorkout({
         date,
         workout_type: workoutName.trim(),
-        duration_minutes: parseInt(duration, 10) || 0,
-        calories_burned: parseFloat(calories) || 0,
+        duration_minutes: Number(duration),
+        calories_burned: calorieEstimate.value.calories,
         notes,
         exercises: exercises.map((exercise) => ({
           name: exercise.name,
@@ -157,20 +178,32 @@ const WorkoutPlannerModal = ({ date, onClose, onSuccess }) => {
               </div>
               <div className="input-group">
                 <label>Duration (min)</label>
-                <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
+                <input type="number" min="1" max="600" step="1" value={duration} onChange={(e) => setDuration(e.target.value)} />
               </div>
             </div>
 
-            <div className="planner-grid">
-              <div className="input-group">
-                <label>Calories Burned</label>
-                <input type="number" value={calories} onChange={(e) => setCalories(e.target.value)} />
-              </div>
-              <div className="input-group">
-                <label>Notes</label>
-                <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional session notes" />
-              </div>
+            <div className="input-group">
+              <label>Notes</label>
+              <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional: easy pace, heavy sets, very intense" />
             </div>
+
+            {calorieEstimate.error && <p className="nutrition-message error">{calorieEstimate.error}</p>}
+
+            {calorieEstimate.value && (
+              <div className="planner-calorie-preview" aria-live="polite">
+                <div>
+                  <p>Estimated calories burned</p>
+                  <span>
+                    {calorieEstimate.value.activity} · {calorieEstimate.value.intensity} intensity · {duration} min · {calorieEstimate.value.weightKg} kg
+                  </span>
+                </div>
+                <strong>{calorieEstimate.value.calories} kcal</strong>
+                <small>
+                  Calculated automatically from the selected workout, exercises, duration, profile weight, and note intensity.
+                  {calorieEstimate.value.usedDefaultWeight ? ' Add your current weight in Profile for a more personal estimate.' : ' Actual burn may vary.'}
+                </small>
+              </div>
+            )}
 
             <div className="planner-exercises">
               {exercises.map((exercise, exerciseIndex) => (
@@ -207,7 +240,7 @@ const WorkoutPlannerModal = ({ date, onClose, onSuccess }) => {
 
             <div className="scan-footer" style={{ padding: 0 }}>
               <button className="btn btn-secondary btn-full" onClick={onClose}>Cancel</button>
-              <button className="btn btn-primary btn-full" onClick={handleSubmit} disabled={saving}>
+              <button className="btn btn-primary btn-full" onClick={handleSubmit} disabled={saving || !calorieEstimate.value}>
                 {saving ? <><span className="spinner" /> Saving...</> : 'Save Workout'}
               </button>
             </div>

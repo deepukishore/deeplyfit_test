@@ -1588,6 +1588,46 @@
   gap: var(--space-md);
 }
 
+.planner-calorie-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 16px;
+  background: rgba(245, 166, 35, 0.08);
+  border: 1px solid rgba(245, 166, 35, 0.28);
+  border-radius: var(--radius-lg);
+}
+
+.planner-calorie-preview p {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.planner-calorie-preview span,
+.planner-calorie-preview small {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.planner-calorie-preview span {
+  display: block;
+  margin-top: 2px;
+}
+
+.planner-calorie-preview strong {
+  color: var(--accent-amber);
+  font-family: var(--font-display);
+  font-size: 22px;
+  white-space: nowrap;
+}
+
+.planner-calorie-preview small {
+  grid-column: 1 / -1;
+}
+
 .planner-exercises {
   display: flex;
   flex-direction: column;

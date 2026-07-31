@@ -512,7 +512,7 @@ const Home = ({ navigation }) => {
       {modal === 'food' && <LogFoodModal onClose={() => setModal(null)} onSave={loadSummary} />}
       {modal === 'workout' && <LogWorkoutModal user={user} onClose={() => setModal(null)} onSave={loadSummary} />}
       {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={loadSummary} />}
-      {showPlanner && <WorkoutPlannerModal date={today} onClose={() => setShowPlanner(false)} onSuccess={loadSummary} />}
+      {showPlanner && <WorkoutPlannerModal visible={showPlanner} user={user} date={today} onClose={() => setShowPlanner(false)} onSuccess={loadSummary} />}
     </View>
   );
 };

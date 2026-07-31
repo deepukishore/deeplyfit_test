@@ -821,7 +821,7 @@ const Home = () => {
       {modal === 'food' && <LogFoodModal onClose={() => setModal(null)} onSave={loadSummary} />}
       {modal === 'workout' && <LogWorkoutModal user={user} onClose={() => setModal(null)} onSave={loadSummary} />}
       {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={loadSummary} />}
-      {showPlanner && <WorkoutPlannerModal date={today} onClose={() => setShowPlanner(false)} onSuccess={loadSummary} />}
+      {showPlanner && <WorkoutPlannerModal user={user} date={today} onClose={() => setShowPlanner(false)} onSuccess={loadSummary} />}
       {showHydrationModal && <HydrationGoalModal user={user} currentGoal={waterGoal} onClose={() => setShowHydrationModal(false)} onSave={setWaterGoal} />}
     </div>
   );

@@ -31,6 +31,17 @@ describe('workout calorie estimation', () => {
     expect(running.calories).toBeGreaterThan(walking.calories);
   });
 
+  test('recognizes prebuilt strength-plan workout days', () => {
+    expect(estimateWorkoutCalories({
+      workoutType: 'Push / Pull / Legs - Push Day Barbell Bench Press',
+      durationMinutes: 60,
+      weightKg: 70,
+    })).toMatchObject({
+      activity: 'Strength training',
+      calories: 368,
+    });
+  });
+
   test('uses note wording to adjust intensity', () => {
     const easy = estimateWorkoutCalories({
       workoutType: 'Cycling',
