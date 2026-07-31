@@ -48,7 +48,7 @@ class PremiumVerificationEmailTests(unittest.TestCase):
         body = message.get_content()
         self.assertEqual(message["To"], "deeplyfitai@gmail.com")
         self.assertIn("123456789012", body)
-        self.assertIn("Expected amount: INR 99", body)
+        self.assertIn("Expected amount: INR 199", body)
         self.assertIn("Alex Johnson", body)
         self.assertIn("alex@example.com", body)
         self.assertIn("POST /users/premium/approve", body)
@@ -77,7 +77,7 @@ class PremiumVerificationEmailTests(unittest.TestCase):
 
         sent_message = smtp_client.send_message.call_args.args[0]
         self.assertEqual(sent_message["To"], "deeplyfitai@gmail.com")
-        self.assertIn("Expected amount: INR 999", sent_message.get_content())
+        self.assertIn("Expected amount: INR 1799", sent_message.get_content())
         smtp_client.starttls.assert_called_once()
         smtp_client.login.assert_called_once_with("sender@example.com", "app-password")
 

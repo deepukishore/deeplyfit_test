@@ -305,7 +305,7 @@ const Profile = () => {
         {user.bio && <p style={{ maxWidth: 320, margin: '12px auto 0', color: 'var(--text-secondary)' }}>{user.bio}</p>}
         {!proActive && (
           <button className="btn premium-btn" onClick={() => setShowPremium(true)} style={{ marginTop: 16 }}>
-            Get PRO - Rs 99/month
+            Get PRO - ₹199/month
           </button>
         )}
         {!proActive && user.premium_status === 'pending' && (

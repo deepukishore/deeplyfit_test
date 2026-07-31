@@ -4,8 +4,10 @@ from utils.time import as_utc, utc_now
 
 UPI_ID = "deepu004.dk-4@okaxis"
 PAYMENT_DETAILS = {
-    "monthly": {"price": 99, "duration_days": 30, "label": "Monthly"},
-    "annual": {"price": 999, "duration_days": 365, "label": "Annual"},
+    "monthly": {"price": 199, "duration_days": 30, "label": "1 Month"},
+    "quarterly": {"price": 499, "duration_days": 90, "label": "3 Months"},
+    "half_year": {"price": 999, "duration_days": 180, "label": "6 Months"},
+    "annual": {"price": 1799, "duration_days": 365, "label": "1 Year"},
 }
 
 FREE_LIMITS = {

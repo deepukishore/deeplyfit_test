@@ -417,10 +417,12 @@ Supported allergens: `gluten`, `lactose`, `nuts`, `peanuts`, `eggs`, `soy`, `she
 
 ### Pricing
 
-| Plan    | Price   | Billed                    |
-| ------- | ------- | ------------------------- |
-| Monthly | ₹99    | Every month               |
-| Annual  | ₹1,000 | Once a year (saves ₹188) |
+| Plan     | Price  | Billed        |
+| -------- | ------ | ------------- |
+| 1 Month  | ₹199   | Every month   |
+| 3 Months | ₹499   | Every 3 months |
+| 6 Months | ₹999   | Every 6 months |
+| 1 Year   | ₹1,799 | Once a year   |
 
 ### Payment
 

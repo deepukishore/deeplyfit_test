@@ -4,11 +4,22 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from routes import ai_chat
-from utils.premium import build_premium_expiry, is_premium_active
+from utils.premium import PAYMENT_DETAILS, build_premium_expiry, is_premium_active
 from utils.time import as_utc, is_past, utc_now
 
 
 class PremiumTimeTests(unittest.TestCase):
+    def test_premium_catalog_matches_current_inr_plans(self):
+        self.assertEqual(
+            PAYMENT_DETAILS,
+            {
+                "monthly": {"price": 199, "duration_days": 30, "label": "1 Month"},
+                "quarterly": {"price": 499, "duration_days": 90, "label": "3 Months"},
+                "half_year": {"price": 999, "duration_days": 180, "label": "6 Months"},
+                "annual": {"price": 1799, "duration_days": 365, "label": "1 Year"},
+            },
+        )
+
     def test_active_premium_accepts_timezone_aware_expiry(self):
         user = SimpleNamespace(
             premium_status="active",

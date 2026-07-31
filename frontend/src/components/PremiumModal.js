@@ -23,8 +23,10 @@ const FEATURES = [
 ];
 
 const PLANS = [
-  { id: 'monthly', label: 'Monthly', price: 'Rs 99', amount: 99, period: '/month', total: 'Rs 99/month', saving: null },
-  { id: 'annual', label: 'Annual', price: 'Rs 999', amount: 999, period: '/year', total: 'Rs 83/month billed annually', saving: 'Best value' },
+  { id: 'monthly', label: '1 Month', price: '₹199', period: '', total: '₹199 billed monthly', saving: null },
+  { id: 'quarterly', label: '3 Months', price: '₹499', period: '', total: 'About ₹166/month', saving: 'Save ₹98' },
+  { id: 'half_year', label: '6 Months', price: '₹999', period: '', total: 'About ₹167/month', saving: 'Popular' },
+  { id: 'annual', label: '1 Year', price: '₹1,799', period: '', total: 'About ₹150/month', saving: 'Best value' },
 ];
 
 const PremiumModal = ({ onClose, onActivated }) => {

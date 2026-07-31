@@ -155,9 +155,9 @@ const s = StyleSheet.create({
   closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.bgElevated, alignItems: 'center', justifyContent: 'center' },
   closeText: { color: colors.textPrimary, fontWeight: '700', fontSize: 16 },
   body: { flex: 1, padding: spacing.lg },
-  priceGrid: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  priceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 16 },
   planCard: {
-    flex: 1,
+    width: '47%',
     backgroundColor: colors.bgCard,
     borderRadius: radius.xl,
     padding: spacing.lg,
