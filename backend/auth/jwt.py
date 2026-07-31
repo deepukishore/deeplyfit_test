@@ -5,7 +5,23 @@ from passlib.context import CryptContext
 from utils.time import utc_now
 import os
 
-SECRET_KEY = os.getenv("SECRET_KEY", "fittrack-super-secret-key-2026-change-in-production")
+LOCAL_DEVELOPMENT_SECRET = "fittrack-local-development-only"
+
+
+def get_secret_key() -> str:
+    configured_secret = (os.getenv("SECRET_KEY", "") or "").strip()
+    if configured_secret:
+        return configured_secret
+
+    environment = (os.getenv("ENVIRONMENT", "") or "").strip().lower()
+    is_production = bool(os.getenv("RENDER")) or environment in {"production", "prod"}
+    if is_production:
+        raise RuntimeError("SECRET_KEY must be configured in production")
+
+    return LOCAL_DEVELOPMENT_SECRET
+
+
+SECRET_KEY = get_secret_key()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 

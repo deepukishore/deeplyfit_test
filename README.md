@@ -184,6 +184,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_gmail@gmail.com
 SMTP_PASS=your_gmail_app_password
+FRONTEND_URL=https://deeplyfit.vercel.app
 PREMIUM_ADMIN_EMAIL=deeplyfitai@gmail.com
 PREMIUM_ADMIN_KEY=choose_a_private_admin_key
 ```

@@ -44,6 +44,40 @@ def first_configured_value(*values: str) -> str:
     return ""
 
 
+def get_smtp_settings() -> tuple[str, int, str, str, str]:
+    smtp_host = (os.getenv("SMTP_HOST", "smtp.gmail.com") or "").strip()
+    try:
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail="SMTP_PORT must be a valid number") from exc
+    smtp_user = first_configured_value(
+        os.getenv("SMTP_USER", ""),
+        os.getenv("MAIL_USERNAME", ""),
+    )
+    smtp_pass = first_configured_value(
+        os.getenv("SMTP_PASS", ""),
+        os.getenv("MAIL_PASSWORD", ""),
+    )
+    smtp_sender = first_configured_value(
+        os.getenv("SMTP_SENDER", ""),
+        os.getenv("MAIL_DEFAULT_SENDER", ""),
+        smtp_user,
+    )
+    return smtp_host, smtp_port, smtp_user, smtp_pass, smtp_sender
+
+
+def get_frontend_url() -> str:
+    configured_url = (os.getenv("FRONTEND_URL", "") or "").strip().rstrip("/")
+    if configured_url:
+        return configured_url
+
+    environment = (os.getenv("ENVIRONMENT", "") or "").strip().lower()
+    if os.getenv("RENDER") or environment in {"production", "prod"}:
+        raise HTTPException(status_code=500, detail="FRONTEND_URL must be configured in production")
+
+    return "http://localhost:3000"
+
+
 def find_user_by_email(db: Session, email: str):
     """Keep email identity consistent across the website and mobile app."""
     normalized_email = str(email).strip().casefold()
@@ -118,6 +152,8 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
         # Return success anyway to avoid email enumeration
         return {"message": "If that email exists, a reset link has been sent."}
 
+    frontend_url = get_frontend_url()
+
     # Invalidate old tokens
     db.query(PasswordResetToken).filter(
         PasswordResetToken.user_id == user.id,
@@ -130,14 +166,9 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     db.add(reset_token)
     db.commit()
 
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
     reset_url = f"{frontend_url}/reset-password?token={token}"
 
-    smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    smtp_port = int(os.getenv("SMTP_PORT", "587"))
-    smtp_user = first_configured_value(os.getenv("SMTP_USER", ""), os.getenv("MAIL_USERNAME", "deepu004.dk@gmail.com"))
-    smtp_pass = first_configured_value(os.getenv("SMTP_PASS", ""), os.getenv("MAIL_PASSWORD", "sjhd dofp hzof qpou"))
-    smtp_sender = first_configured_value(os.getenv("SMTP_SENDER", ""), os.getenv("MAIL_DEFAULT_SENDER", "deepu004.dk@gmail.com"), smtp_user)
+    smtp_host, smtp_port, smtp_user, smtp_pass, smtp_sender = get_smtp_settings()
 
     if is_smtp_configured(smtp_user, smtp_pass):
         try:
