@@ -1,0 +1,97 @@
+/* Pointer-driven depth and decorative motion. */
+.is-surface-tilting.is-surface-tilting {
+  position: relative;
+  z-index: 2;
+  transform:
+    perspective(1100px)
+    rotateX(var(--surface-rotate-x, 0deg))
+    rotateY(var(--surface-rotate-y, 0deg))
+    translate3d(0, -7px, 20px) !important;
+  transform-origin: var(--surface-origin-x, 50%) var(--surface-origin-y, 50%);
+  transform-style: preserve-3d;
+  box-shadow:
+    0 24px 54px rgba(45, 25, 76, 0.18),
+    0 8px 22px rgba(var(--accent-primary-rgb), 0.1),
+    inset 0 1px 0 var(--surface-highlight) !important;
+  filter: saturate(1.05) brightness(1.015);
+  transition: transform 80ms linear, box-shadow 160ms ease, filter 160ms ease !important;
+  will-change: transform;
+}
+
+.planner-hero::after,
+.home-hero::after {
+  animation: orbitRings 9s ease-in-out infinite alternate;
+}
+
+.planner-calorie-preview strong,
+.calorie-ring-copy strong,
+.water-fill-text strong {
+  animation: numberFloat 3.6s ease-in-out infinite;
+}
+
+.modal-sheet {
+  transform-origin: center bottom;
+  animation: modalDepthEnter 420ms cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+.quick-action-icon {
+  animation: iconHoverFloat 4.2s ease-in-out infinite;
+}
+
+.quick-action-btn:nth-child(2) .quick-action-icon { animation-delay: -0.9s; }
+.quick-action-btn:nth-child(3) .quick-action-icon { animation-delay: -1.8s; }
+.quick-action-btn:nth-child(4) .quick-action-icon { animation-delay: -2.7s; }
+
+.btn-primary {
+  background-size: 180% 180%;
+  animation: gradientFlow 6s ease infinite;
+}
+
+@keyframes modalDepthEnter {
+  from { opacity: 0; transform: perspective(900px) translateY(42px) rotateX(-7deg) scale(0.96); }
+  to { opacity: 1; transform: perspective(900px) translateY(0) rotateX(0) scale(1); }
+}
+
+@keyframes orbitRings {
+  from { transform: translate3d(-5px, 5px, 0) rotate(-5deg) scale(0.98); }
+  to { transform: translate3d(8px, -7px, 0) rotate(7deg) scale(1.06); }
+}
+
+@keyframes numberFloat {
+  0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 0 transparent); }
+  50% { transform: translateY(-3px); filter: drop-shadow(0 6px 10px rgba(var(--accent-primary-rgb), 0.16)); }
+}
+
+@keyframes iconHoverFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -4px, 8px) rotate(2deg); }
+}
+
+@keyframes gradientFlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@media (max-width: 899px), (hover: none) {
+  .is-surface-tilting.is-surface-tilting {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-surface-tilting.is-surface-tilting {
+    transform: none !important;
+    filter: none;
+  }
+
+  .modal-sheet,
+  .planner-hero::after,
+  .home-hero::after,
+  .planner-calorie-preview strong,
+  .calorie-ring-copy strong,
+  .water-fill-text strong,
+  .quick-action-icon,
+  .btn-primary {
+    animation: none !important;
+  }
+}

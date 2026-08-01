@@ -7,12 +7,14 @@ import { RefreshProvider } from './context/RefreshContext';
 
 import BottomNav from './components/BottomNav';
 import AmbientScene from './components/AmbientScene';
+import SurfaceMotion from './components/SurfaceMotion';
 import BrandLogo from './components/BrandLogo';
 import OfflineBanner from './components/OfflineBanner';
 import PullToRefreshShell from './components/PullToRefreshShell';
 
 import './styles/global.css';
 import './styles/animations.css';
+import './styles/effects.css';
 
 const Login = lazy(() => import('./pages/Login'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
@@ -183,6 +185,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <AmbientScene />
+      <SurfaceMotion />
       <AuthProvider>
         <NetworkProvider>
           <AppRoutes />

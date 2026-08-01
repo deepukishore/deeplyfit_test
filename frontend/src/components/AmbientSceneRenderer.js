@@ -56,6 +56,41 @@ export const startAmbientScene = (canvas) => {
   node.position.set(-2.5, 1.3, -1.2);
   group.add(node);
 
+  const haloMaterial = new THREE.MeshBasicMaterial({
+    color: 0xa855f7,
+    transparent: true,
+    opacity: 0.12,
+    wireframe: true,
+  });
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(1.08, 0.035, 4, 48), haloMaterial);
+  halo.position.set(-2.5, 1.3, -1.15);
+  halo.rotation.set(0.7, 0.2, 0.4);
+  group.add(halo);
+
+  const blueHaloMaterial = new THREE.MeshBasicMaterial({ color: 0x4facfe, transparent: true, opacity: 0.09 });
+  const blueHalo = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.018, 4, 40), blueHaloMaterial);
+  blueHalo.position.set(2.35, -1.5, -0.8);
+  blueHalo.rotation.set(1.1, -0.4, 0.2);
+  group.add(blueHalo);
+
+  const energyOrbGeometry = new THREE.IcosahedronGeometry(0.07, 1);
+  const energyOrbMaterial = new THREE.MeshBasicMaterial({ color: 0xf5a623, transparent: true, opacity: 0.24 });
+  const energyOrbs = new THREE.Group();
+  [
+    [-1.1, -1.8, 0.2],
+    [0.2, 2.1, -0.4],
+    [1.6, 0.8, 0.15],
+    [2.7, -0.6, -0.7],
+    [-2.1, -0.4, -0.2],
+  ].forEach(([x, y, z], index) => {
+    const orb = new THREE.Mesh(energyOrbGeometry, energyOrbMaterial);
+    orb.position.set(x, y, z);
+    orb.userData.baseY = y;
+    orb.scale.setScalar(0.75 + (index * 0.12));
+    energyOrbs.add(orb);
+  });
+  group.add(energyOrbs);
+
   const particleCount = 48;
   const particlePositions = new Float32Array(particleCount * 3);
   for (let index = 0; index < particleCount; index += 1) {
@@ -86,6 +121,9 @@ export const startAmbientScene = (canvas) => {
     trailTwo.material.opacity = lightMode ? 0.1 : 0.14;
     trailThree.material.opacity = lightMode ? 0.08 : 0.1;
     nodeMaterial.opacity = lightMode ? 0.09 : 0.13;
+    haloMaterial.opacity = lightMode ? 0.1 : 0.14;
+    blueHaloMaterial.opacity = lightMode ? 0.07 : 0.1;
+    energyOrbMaterial.opacity = lightMode ? 0.18 : 0.26;
     particleMaterial.opacity = lightMode ? 0.14 : 0.22;
     if (reduceMotion) render();
   };
@@ -117,6 +155,16 @@ export const startAmbientScene = (canvas) => {
     group.rotation.x = (Math.sin(elapsed * 0.22) * 0.045) + pointerCurrent.y;
     node.rotation.x = elapsed * 0.08;
     node.rotation.y = elapsed * 0.11;
+    halo.rotation.x = 0.7 + (elapsed * 0.04);
+    halo.rotation.z = 0.4 + (elapsed * -0.06);
+    blueHalo.rotation.y = -0.4 + (elapsed * 0.07);
+    blueHalo.rotation.z = 0.2 + (elapsed * 0.035);
+    energyOrbs.rotation.z = elapsed * 0.035;
+    energyOrbs.children.forEach((orb, index) => {
+      orb.position.y = orb.userData.baseY + (Math.sin((elapsed * 0.7) + index) * 0.07);
+      orb.rotation.x = elapsed * (0.15 + (index * 0.02));
+      orb.rotation.y = elapsed * (0.12 + (index * 0.018));
+    });
     particles.rotation.y = elapsed * -0.012;
     render();
   };

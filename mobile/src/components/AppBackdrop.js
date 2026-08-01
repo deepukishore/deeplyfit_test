@@ -1,23 +1,73 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 
-const AppBackdrop = ({ compact = false }) => (
-  <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-    <View style={s.auroraBand} />
-    <View style={[s.orb, s.orbPurple, compact && s.orbCompact]} />
-    <View style={[s.orb, s.orbBlue]} />
-    <View style={[s.orb, s.orbAmber]} />
-    <View style={s.ringLarge} />
-    <View style={s.ringMedium} />
-    <View style={s.ringSmall} />
-    <View style={s.topHalo} />
-    <View style={s.sparkField}>
-      {Array.from({ length: 20 }).map((_, index) => (
-        <View key={index} style={[s.spark, { opacity: 0.16 + ((index % 4) * 0.07) }]} />
-      ))}
+const AppBackdrop = ({ compact = false }) => {
+  const progress = useRef(new Animated.Value(0)).current;
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    let active = true;
+    let loop = null;
+
+    AccessibilityInfo.isReduceMotionEnabled().then((reduceMotion) => {
+      if (!active || reduceMotion || !isFocused) return;
+      progress.setValue(0);
+      loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(progress, {
+            toValue: 1,
+            duration: 6500,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+            isInteraction: false,
+          }),
+          Animated.timing(progress, {
+            toValue: 0,
+            duration: 6500,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+            isInteraction: false,
+          }),
+        ])
+      );
+      loop.start();
+    });
+
+    return () => {
+      active = false;
+      if (loop) loop.stop();
+      progress.stopAnimation();
+    };
+  }, [isFocused, progress]);
+
+  const driftX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, 20] });
+  const driftY = progress.interpolate({ inputRange: [0, 1], outputRange: [0, -16] });
+  const reverseX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, -14] });
+  const reverseY = progress.interpolate({ inputRange: [0, 1], outputRange: [0, 18] });
+  const scaleUp = progress.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
+  const scaleDown = progress.interpolate({ inputRange: [0, 1], outputRange: [1.04, 0.96] });
+  const orbit = progress.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '14deg'] });
+  const sparkle = progress.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.6, 1, 0.72] });
+
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Animated.View style={[s.auroraBand, { transform: [{ translateX: driftX }, { translateY: reverseY }, { rotate: '-17deg' }] }]} />
+      <Animated.View style={[s.orb, s.orbPurple, compact && s.orbCompact, { transform: [{ translateX: driftX }, { translateY: driftY }, { scale: scaleUp }] }]} />
+      <Animated.View style={[s.orb, s.orbBlue, { transform: [{ translateX: reverseX }, { translateY: reverseY }, { scale: scaleDown }] }]} />
+      <Animated.View style={[s.orb, s.orbAmber, { transform: [{ translateX: driftX }, { translateY: reverseY }] }]} />
+      <Animated.View style={[s.ringLarge, { transform: [{ rotate: orbit }, { scale: scaleUp }] }]} />
+      <Animated.View style={[s.ringMedium, { transform: [{ rotate: orbit }, { scale: scaleDown }] }]} />
+      <View style={s.ringSmall} />
+      <View style={s.topHalo} />
+      <Animated.View style={[s.sparkField, { opacity: sparkle, transform: [{ translateY: driftY }] }]}>
+        {Array.from({ length: 20 }).map((_, index) => (
+          <View key={index} style={[s.spark, { opacity: 0.16 + ((index % 4) * 0.07) }]} />
+        ))}
+      </Animated.View>
     </View>
-  </View>
-);
+  );
+};
 
 const s = StyleSheet.create({
   orb: { position: 'absolute', borderRadius: 999 },
