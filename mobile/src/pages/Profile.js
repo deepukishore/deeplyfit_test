@@ -12,7 +12,7 @@ import { colors, radius, spacing } from '../utils/theme';
 import PremiumUpgradeModal from '../components/PremiumUpgradeModal';
 import UserAvatar, { BUILT_IN_AVATARS } from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
-import { formatPremiumExpiry } from '../utils/premium';
+import { formatPremiumExpiry, getProExpiry, isPro } from '../utils/premium';
 
 const ProfileSettingsModal = ({ visible, user, onClose, onSave }) => {
   const [form, setForm] = useState({
@@ -233,7 +233,8 @@ const Profile = ({ navigation }) => {
   if (!user) return null;
 
   const initials = getInitials(user.name, user.email);
-  const isPremiumActive = user.premium_status === 'active' && (!user.premium_expires_at || new Date(user.premium_expires_at) > new Date());
+  const isPremiumActive = isPro(user);
+  const premiumExpiry = getProExpiry(user);
 
   const handleLogout = async () => {
     await logout();
@@ -266,7 +267,7 @@ const Profile = ({ navigation }) => {
           </View>
           <Text style={s.proSubText}>
             {isPremiumActive
-              ? `Expires on ${formatPremiumExpiry(user.premium_expires_at) || '—'}`
+              ? `Expires on ${formatPremiumExpiry(premiumExpiry) || '—'}`
               : 'Unlock unlimited scans, AI coaching, advanced analytics, and premium reports.'}
           </Text>
           {user.bio ? <Text style={s.profileBio}>{user.bio}</Text> : null}

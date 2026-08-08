@@ -1,7 +1,3 @@
-import { Linking } from 'react-native';
-
-export const UPI_ID = 'deepu004.dk-4@okaxis';
-
 export const PREMIUM_PLANS = {
   monthly: {
     key: 'monthly',
@@ -48,26 +44,20 @@ export const PRO_FEATURES = [
   'Exclusive PRO badges',
 ];
 
-export const buildUpiPaymentUrl = ({ plan, name = 'Deeply Fit PRO' }) => {
-  const selectedPlan = PREMIUM_PLANS[plan] || PREMIUM_PLANS.monthly;
-  const params = [
-    `pa=${encodeURIComponent(UPI_ID)}`,
-    `pn=${encodeURIComponent(name)}`,
-    `am=${encodeURIComponent(String(selectedPlan.price))}`,
-    'cu=INR',
-    `tn=${encodeURIComponent(`Deeply Fit PRO ${selectedPlan.title}`)}`,
-  ].join('&');
-  return `upi://pay?${params}`;
+export const isPro = (user = null) => {
+  if (!user) return false;
+
+  if (user.premium_status === 'active') {
+    if (!user.premium_expires_at) return true;
+    return new Date(user.premium_expires_at) > new Date();
+  }
+
+  if (!user.is_pro) return false;
+  if (!user.pro_expires_at) return true;
+  return new Date(user.pro_expires_at) > new Date();
 };
 
-export const openUpiPayment = async (plan) => {
-  const url = buildUpiPaymentUrl({ plan });
-  const canOpen = await Linking.canOpenURL(url);
-  if (!canOpen) {
-    throw new Error('No UPI app found on this device');
-  }
-  return Linking.openURL(url);
-};
+export const getProExpiry = (user = null) => user?.premium_expires_at || user?.pro_expires_at || null;
 
 export const formatPremiumExpiry = (value) => {
   if (!value) return null;

@@ -4,6 +4,7 @@ import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
+import { isPro } from '../utils/premium';
 import { api } from '../utils/api';
 import { compressImageUri } from '../utils/image';
 import { colors, radius, spacing } from '../utils/theme';
@@ -97,7 +98,7 @@ const FoodScannerModal = ({ visible, onClose, onSuccess, defaultMeal = 'breakfas
           <View>
             <Text style={s.title}>Smart Food Scanner</Text>
             <Text style={s.subtitle}>AI photos or barcode lookup</Text>
-            <Text style={s.limitText}>{user?.premium_status === 'active' ? 'PRO • Unlimited AI scans' : 'FREE • 3 AI scans/day'}</Text>
+            <Text style={s.limitText}>{isPro(user) ? 'PRO • Unlimited AI scans' : 'FREE • 3 AI scans/day'}</Text>
           </View>
           <TouchableOpacity style={s.closeBtn} onPress={onClose}><Text style={s.closeBtnText}>✕</Text></TouchableOpacity>
         </View>

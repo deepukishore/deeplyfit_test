@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, TextInput, RefreshControl, Dimensions } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
+import { isPro } from '../utils/premium';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
 import { formatDate } from '../utils/fitness';
@@ -156,7 +157,7 @@ const Progress = () => {
 
       <View style={s.proBanner}>
         <Text style={s.proBannerText}>
-          {user?.premium_status === 'active'
+          {isPro(user)
             ? 'PRO • 90-day analytics, heatmaps, and deep trends'
             : 'FREE • Basic charts only — upgrade for full analytics'}
         </Text>

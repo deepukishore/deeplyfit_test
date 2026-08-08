@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
+import { isPro } from '../utils/premium';
 import { api } from '../utils/api';
 import { getInitials } from '../utils/fitness';
 import { colors, spacing } from '../utils/theme';
@@ -76,7 +77,7 @@ const AIAssistant = () => {
 
       <View style={s.planBanner}>
         <Text style={s.planBannerText}>
-          {user?.premium_status === 'active'
+          {isPro(user)
             ? 'PRO • Unlimited messages + 30-day memory'
             : 'FREE • 10 AI coach messages/day'}
         </Text>
