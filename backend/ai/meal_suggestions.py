@@ -6,7 +6,11 @@ import google.generativeai as genai
 
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash"]
+DEFAULT_GEMINI_MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-2.5-flash",
+]
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODELS[0])
 
 
@@ -39,7 +43,8 @@ def _is_model_unavailable_error(exc: Exception) -> bool:
     return (
         "not found" in message
         or "not supported" in message
-        or ("model" in message and "generatecontent" in message and "404" in message)
+        or "no longer available" in message
+        or ("model" in message and "404" in message)
     )
 
 

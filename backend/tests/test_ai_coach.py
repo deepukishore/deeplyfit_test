@@ -59,9 +59,50 @@ class AICoachFallbackTests(unittest.TestCase):
     def test_model_fallbacks_only_use_supported_stable_models(self):
         models = ai_chat.get_gemini_model_names("custom-model")
         self.assertEqual(models[0], "custom-model")
-        self.assertIn("gemini-2.5-flash-lite", models)
+        self.assertIn("gemini-3.5-flash-lite", models)
+        self.assertIn("gemini-3.6-flash", models)
         self.assertIn("gemini-2.5-flash", models)
+        self.assertNotIn("gemini-2.5-flash-lite", models)
         self.assertNotIn("gemini-2.0-flash", models)
+
+    def test_retired_model_message_is_treated_as_unavailable(self):
+        error = RuntimeError(
+            "404 This model models/gemini-2.5-flash-lite is no longer available to new users."
+        )
+        self.assertTrue(ai_chat.is_model_unavailable_error(error))
+
+    def test_retired_configured_model_falls_through_to_working_model(self):
+        user = SimpleNamespace(id=7)
+        db = MagicMock()
+        request = ai_chat.ChatRequest(message="Hi coach", history=[])
+
+        retired_model = MagicMock()
+        retired_model.generate_content.side_effect = RuntimeError(
+            "404 This model models/gemini-2.5-flash-lite is no longer available to new users."
+        )
+        working_model = MagicMock()
+        working_model.generate_content.return_value = SimpleNamespace(
+            text="Hello! How can I help with your fitness today?"
+        )
+
+        with (
+            patch.object(ai_chat, "GEMINI_API_KEY", "test-key"),
+            patch.object(ai_chat, "GEMINI_MODEL", "gemini-2.5-flash-lite"),
+            patch.object(ai_chat, "enforce_free_limit"),
+            patch.object(ai_chat, "get_user_context", return_value="user context"),
+            patch.object(ai_chat.genai, "configure"),
+            patch.object(
+                ai_chat.genai,
+                "GenerativeModel",
+                side_effect=[retired_model, working_model],
+            ),
+        ):
+            response = ai_chat.chat(request, current_user=user, db=db)
+
+        self.assertEqual(response.mode, "live")
+        self.assertIn("How can I help", response.response)
+        db.commit.assert_called_once()
+        db.rollback.assert_not_called()
 
     def test_quota_error_returns_limited_mode_instead_of_http_error(self):
         user = SimpleNamespace(id=7)
@@ -75,7 +116,7 @@ class AICoachFallbackTests(unittest.TestCase):
             patch.object(ai_chat, "GEMINI_API_KEY", "test-key"),
             patch.object(ai_chat, "enforce_free_limit"),
             patch.object(ai_chat, "get_user_context", return_value="user context"),
-            patch.object(ai_chat, "build_quota_fallback_response", return_value="Data-based answer"),
+            patch.object(ai_chat, "build_limited_response", return_value="Data-based answer"),
             patch.object(ai_chat.genai, "configure"),
             patch.object(ai_chat.genai, "GenerativeModel", return_value=model),
         ):
@@ -84,6 +125,30 @@ class AICoachFallbackTests(unittest.TestCase):
         self.assertEqual(response.mode, "limited")
         self.assertEqual(response.response, "Data-based answer")
         self.assertIn("quota", response.notice.lower())
+        db.commit.assert_called_once()
+        db.rollback.assert_not_called()
+
+    def test_provider_error_returns_limited_mode_instead_of_http_error(self):
+        user = SimpleNamespace(id=7)
+        db = MagicMock()
+        request = ai_chat.ChatRequest(message="Hi coach", history=[])
+
+        model = MagicMock()
+        model.generate_content.side_effect = RuntimeError("503 provider unavailable")
+
+        with (
+            patch.object(ai_chat, "GEMINI_API_KEY", "test-key"),
+            patch.object(ai_chat, "enforce_free_limit"),
+            patch.object(ai_chat, "get_user_context", return_value="user context"),
+            patch.object(ai_chat, "build_limited_response", return_value="Data-based answer"),
+            patch.object(ai_chat.genai, "configure"),
+            patch.object(ai_chat.genai, "GenerativeModel", return_value=model),
+        ):
+            response = ai_chat.chat(request, current_user=user, db=db)
+
+        self.assertEqual(response.mode, "limited")
+        self.assertEqual(response.response, "Data-based answer")
+        self.assertIn("temporarily unavailable", response.notice.lower())
         db.commit.assert_called_once()
         db.rollback.assert_not_called()
 

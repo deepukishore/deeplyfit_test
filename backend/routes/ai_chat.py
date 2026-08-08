@@ -17,7 +17,11 @@ router = APIRouter(prefix="/ai", tags=["ai"])
 logger = logging.getLogger(__name__)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash"]
+DEFAULT_GEMINI_MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-2.5-flash",
+]
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODELS[0])
 
 
@@ -50,7 +54,8 @@ def is_model_unavailable_error(exc: Exception) -> bool:
     return (
         "not found" in message
         or "not supported" in message
-        or ("model" in message and "generatecontent" in message and "404" in message)
+        or "no longer available" in message
+        or ("model" in message and "404" in message)
     )
 
 
@@ -64,7 +69,31 @@ def is_quota_error(exc: Exception) -> bool:
     )
 
 
-def build_quota_fallback_response(user: User, db: Session, message: str) -> str:
+def extract_response_text(response) -> str:
+    """Read generated text without relying only on the SDK's fragile shortcut."""
+    try:
+        response_text = (response.text or "").strip()
+        if response_text:
+            return response_text
+    except (AttributeError, ValueError):
+        pass
+
+    text_parts = []
+    for candidate in getattr(response, "candidates", []) or []:
+        content = getattr(candidate, "content", None)
+        for part in getattr(content, "parts", []) or []:
+            part_text = getattr(part, "text", None)
+            if part_text:
+                text_parts.append(part_text)
+    return "".join(text_parts).strip()
+
+
+def build_limited_response(
+    user: User,
+    db: Session,
+    message: str,
+    provider_message: str = "Live AI is temporarily unavailable.",
+) -> str:
     metrics = get_daily_metrics(user, db)
     lower_message = message.lower()
 
@@ -105,8 +134,7 @@ def build_quota_fallback_response(user: User, db: Session, message: str) -> str:
         )
 
     return (
-        "Live AI is temporarily unavailable because the Gemini project quota has been reached. "
-        "I have not replaced your question with a pretend canned answer. While live AI recovers, "
+        f"{provider_message} While it recovers, "
         f"I can still calculate from your logs: {round(metrics['calories_consumed'])} kcal eaten, "
         f"{round(metrics['water_glasses'])} glasses of water, and {len(metrics['workouts_today'])} workouts today. "
         "Ask about today's calories, protein, meals, weight, or workout for a data-based answer."
@@ -263,9 +291,16 @@ def chat(
         enforce_free_limit(current_user, "ai_message")
 
         if not GEMINI_API_KEY:
-            raise HTTPException(
-                status_code=503,
-                detail="AI coach is not configured. Set GEMINI_API_KEY on the backend.",
+            db.commit()
+            return ChatResponse(
+                response=build_limited_response(
+                    current_user,
+                    db,
+                    request.message,
+                    "Live AI is not configured right now.",
+                ),
+                mode="limited",
+                notice="Live AI is not configured. Using your logged Deeply Fit data instead.",
             )
 
         history_text = "=== CONVERSATION HISTORY ===\n"
@@ -291,13 +326,12 @@ Respond as the AI coach using the data above. Be specific, warm, and actionable.
                 response = model.generate_content(
                     full_prompt,
                     generation_config={
-                        "temperature": 0.6,
-                        "max_output_tokens": 500,
+                        "max_output_tokens": 1000,
                     },
                 )
-                response_text = (getattr(response, "text", "") or "").strip()
+                response_text = extract_response_text(response)
                 if not response_text:
-                    raise HTTPException(status_code=502, detail="AI coach returned an empty response")
+                    raise RuntimeError(f"{model_name} returned an empty response")
 
                 db.commit()
                 return ChatResponse(response=response_text, mode="live")
@@ -305,22 +339,33 @@ Respond as the AI coach using the data above. Be specific, warm, and actionable.
                 raise
             except Exception as exc:
                 last_error = exc
-                if not (is_model_unavailable_error(exc) or is_quota_error(exc)):
+                if not (
+                    is_model_unavailable_error(exc)
+                    or is_quota_error(exc)
+                    or "empty response" in str(exc).lower()
+                ):
                     break
 
         if last_error and is_quota_error(last_error):
             logger.warning("Gemini quota exhausted for all configured AI coach models")
             db.commit()
             return ChatResponse(
-                response=build_quota_fallback_response(current_user, db, request.message),
+                response=build_limited_response(
+                    current_user,
+                    db,
+                    request.message,
+                    "Live AI quota has been reached.",
+                ),
                 mode="limited",
                 notice="Live AI quota reached. Using your logged Deeply Fit data where possible.",
             )
 
         logger.error("AI coach provider failed after model fallback: %s", last_error)
-        raise HTTPException(
-            status_code=503,
-            detail="AI coach is temporarily unavailable. Please try again shortly.",
+        db.commit()
+        return ChatResponse(
+            response=build_limited_response(current_user, db, request.message),
+            mode="limited",
+            notice="Live AI is temporarily unavailable. Using your logged Deeply Fit data instead.",
         )
     except HTTPException:
         db.rollback()
@@ -330,7 +375,12 @@ Respond as the AI coach using the data above. Be specific, warm, and actionable.
             logger.warning("Gemini quota exhausted while handling AI coach request")
             db.commit()
             return ChatResponse(
-                response=build_quota_fallback_response(current_user, db, request.message),
+                response=build_limited_response(
+                    current_user,
+                    db,
+                    request.message,
+                    "Live AI quota has been reached.",
+                ),
                 mode="limited",
                 notice="Live AI quota reached. Using your logged Deeply Fit data where possible.",
             )
