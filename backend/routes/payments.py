@@ -16,7 +16,46 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_PLAN_MONTHLY = os.getenv("RAZORPAY_PLAN_MONTHLY", "")
+RAZORPAY_PLAN_QUARTERLY = os.getenv("RAZORPAY_PLAN_QUARTERLY", "")
+RAZORPAY_PLAN_HALF_YEAR = os.getenv("RAZORPAY_PLAN_HALF_YEAR", "")
 RAZORPAY_PLAN_YEARLY = os.getenv("RAZORPAY_PLAN_YEARLY", "")
+RAZORPAY_PLAN_ANNUAL = os.getenv("RAZORPAY_PLAN_ANNUAL", RAZORPAY_PLAN_YEARLY)
+
+SUBSCRIPTION_PLANS = {
+    "monthly": {
+        "plan_id": RAZORPAY_PLAN_MONTHLY,
+        "amount": 19900,
+        "total_count": 12,
+        "duration_days": 30,
+        "premium_plan": "monthly",
+    },
+    "quarterly": {
+        "plan_id": RAZORPAY_PLAN_QUARTERLY,
+        "amount": 49900,
+        "total_count": 1,
+        "duration_days": 90,
+        "premium_plan": "quarterly",
+    },
+    "half_year": {
+        "plan_id": RAZORPAY_PLAN_HALF_YEAR,
+        "amount": 99900,
+        "total_count": 1,
+        "duration_days": 180,
+        "premium_plan": "half_year",
+    },
+    "annual": {
+        "plan_id": RAZORPAY_PLAN_ANNUAL,
+        "amount": 179900,
+        "total_count": 1,
+        "duration_days": 365,
+        "premium_plan": "annual",
+    },
+}
+
+
+def normalize_plan_type(value: str) -> str:
+    plan_type = (value or "").strip().lower()
+    return "annual" if plan_type == "yearly" else plan_type
 
 class CreateSubscriptionRequest(BaseModel):
     plan_type: str
@@ -34,37 +73,36 @@ def create_subscription(
     current_user: User = Depends(get_current_user)
 ):
     try:
+        plan_type = normalize_plan_type(data.plan_type)
+        plan = SUBSCRIPTION_PLANS.get(plan_type)
+        if not plan:
+            raise HTTPException(status_code=400, detail="Invalid subscription plan")
+
         client = razorpay.Client(
             auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)
         )
-        plan_id = (
-            RAZORPAY_PLAN_MONTHLY
-            if data.plan_type == "monthly"
-            else RAZORPAY_PLAN_YEARLY
-        )
-
-        if not plan_id:
+        if not plan["plan_id"]:
             raise HTTPException(
                 status_code=400,
                 detail="Plan not configured"
             )
 
         subscription = client.subscription.create({
-            "plan_id": plan_id,
+            "plan_id": plan["plan_id"],
             "customer_notify": 1,
-            "total_count": 12 if data.plan_type == "monthly" else 1,
+            "total_count": plan["total_count"],
             "notes": {
                 "user_id": str(current_user.id),
                 "user_email": current_user.email,
-                "plan_type": data.plan_type
+                "plan_type": plan_type
             }
         })
 
         return {
             "subscription_id": subscription["id"],
             "razorpay_key": RAZORPAY_KEY_ID,
-            "plan_type": data.plan_type,
-            "amount": 29900 if data.plan_type == "monthly" else 249900,
+            "plan_type": plan_type,
+            "amount": plan["amount"],
         }
 
     except HTTPException:
@@ -87,7 +125,7 @@ def verify_payment(
             hashlib.sha256
         ).hexdigest()
 
-        if expected_signature != data.razorpay_signature:
+        if not hmac.compare_digest(expected_signature, data.razorpay_signature):
             raise HTTPException(
                 status_code=400,
                 detail="Invalid payment signature"
@@ -99,22 +137,26 @@ def verify_payment(
         subscription = client.subscription.fetch(
             data.razorpay_subscription_id
         )
-        plan_type = subscription.get(
+        plan_type = normalize_plan_type(subscription.get(
             "notes", {}
-        ).get("plan_type", "monthly")
+        ).get("plan_type", "monthly"))
+        plan = SUBSCRIPTION_PLANS.get(plan_type)
+        if not plan:
+            raise HTTPException(status_code=400, detail="Invalid subscription plan")
+
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(days=plan["duration_days"])
 
         current_user.is_pro = 1
         current_user.subscription_id = data.razorpay_subscription_id
-        current_user.pro_started_at = datetime.now(timezone.utc)
+        current_user.pro_started_at = now
+        current_user.pro_expires_at = expires_at
 
-        if plan_type == "yearly":
-            current_user.pro_expires_at = (
-                datetime.now(timezone.utc) + timedelta(days=365)
-            )
-        else:
-            current_user.pro_expires_at = (
-                datetime.now(timezone.utc) + timedelta(days=30)
-            )
+        # Synchronize the established feature gates with the Razorpay state.
+        current_user.premium_status = "active"
+        current_user.premium_plan = plan["premium_plan"]
+        current_user.premium_activated_at = now
+        current_user.premium_expires_at = expires_at
 
         db.commit()
         db.refresh(current_user)
@@ -170,8 +212,8 @@ def subscription_status(
     current_user: User = Depends(get_current_user)
 ):
     is_active = False
-    if current_user.is_pro and current_user.pro_expires_at:
-        is_active = (
+    if current_user.is_pro:
+        is_active = not current_user.pro_expires_at or (
             current_user.pro_expires_at > datetime.now(timezone.utc)
         )
 
@@ -206,7 +248,7 @@ async def razorpay_webhook(
             hashlib.sha256
         ).hexdigest()
 
-        if signature != expected:
+        if not hmac.compare_digest(signature, expected):
             raise HTTPException(
                 status_code=400,
                 detail="Invalid webhook signature"
@@ -221,9 +263,19 @@ async def razorpay_webhook(
                 User.subscription_id == sub_id
             ).first()
             if user:
-                user.pro_expires_at = (
-                    datetime.now(timezone.utc) + timedelta(days=30)
+                subscription = payload["payload"]["subscription"]["entity"]
+                plan_type = normalize_plan_type(
+                    subscription.get("notes", {}).get("plan_type", "monthly")
                 )
+                plan = SUBSCRIPTION_PLANS.get(plan_type, SUBSCRIPTION_PLANS["monthly"])
+                expires_at = datetime.now(timezone.utc) + timedelta(
+                    days=plan["duration_days"]
+                )
+                user.is_pro = 1
+                user.pro_expires_at = expires_at
+                user.premium_status = "active"
+                user.premium_plan = plan["premium_plan"]
+                user.premium_expires_at = expires_at
                 db.commit()
 
         return {"status": "ok"}

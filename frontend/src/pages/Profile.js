@@ -20,7 +20,6 @@ import { api } from '../utils/api';
 import { compressImageFile } from '../utils/image';
 import { getInitials } from '../utils/fitness';
 import { isPro } from '../utils/premium';
-import PremiumModal from '../components/PremiumModal';
 import UserAvatar, { BUILT_IN_AVATARS } from '../components/UserAvatar';
 import '../styles/dashboard.css';
 import '../styles/animations.css';
@@ -234,7 +233,6 @@ const Profile = () => {
   const navigate = useNavigate();
   const [showEditModal, setShowEditModal] = useState(false);
   const [achievements, setAchievements] = useState([]);
-  const [showPremium, setShowPremium] = useState(false);
   const [proActive, setProActive] = useState(isPro(user));
 
   const loadAchievements = useCallback(async () => {
@@ -262,11 +260,6 @@ const Profile = () => {
   const initials = getInitials(user.name, user.email);
   const publicLink = `${window.location.origin}/u/${user.public_profile_slug || ''}`;
   const isDark = user.dark_mode === 1 || user.dark_mode === '1' || user.dark_mode === true;
-
-  const handleProActivated = (updatedUser) => {
-    setProActive(isPro(updatedUser));
-    if (updatedUser) updateUser(updatedUser);
-  };
 
   const handleLogout = () => {
     logout();
@@ -304,7 +297,7 @@ const Profile = () => {
         <p className="profile-email">{user.email}</p>
         {user.bio && <p style={{ maxWidth: 320, margin: '12px auto 0', color: 'var(--text-secondary)' }}>{user.bio}</p>}
         {!proActive && (
-          <button className="btn premium-btn" onClick={() => setShowPremium(true)} style={{ marginTop: 16 }}>
+          <button className="btn premium-btn" onClick={() => navigate('/upgrade')} style={{ marginTop: 16 }}>
             Get PRO - ₹199/month
           </button>
         )}
@@ -435,7 +428,6 @@ const Profile = () => {
       </div>
 
       {showEditModal && <ProfileSettingsModal user={user} onClose={() => setShowEditModal(false)} onSave={updateUser} />}
-      {showPremium && <PremiumModal onClose={() => setShowPremium(false)} onActivated={handleProActivated} />}
     </div>
   );
 };

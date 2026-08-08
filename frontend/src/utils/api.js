@@ -371,6 +371,12 @@ export const api = {
   getPremiumStatus: () => request('GET', '/users/premium/status'),
   activatePremium: (data) => request('POST', '/users/premium/activate', data),
 
+  // Razorpay subscriptions
+  createSubscription: (data) => request('POST', '/payments/create-subscription', data),
+  verifyPayment: (data) => request('POST', '/payments/verify-payment', data),
+  cancelSubscription: () => request('POST', '/payments/cancel-subscription'),
+  subscriptionStatus: () => request('GET', '/payments/subscription-status'),
+
   // Food
   logFood: diaryApi.logFood,
   getFoodLogs: diaryApi.getFoodLogs,

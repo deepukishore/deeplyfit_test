@@ -152,6 +152,10 @@ class UserResponse(BaseModel):
     premium_pending_plan: Optional[str] = None
     premium_pending_payment_ref: Optional[str] = None
     premium_pending_requested_at: Optional[datetime] = None
+    is_pro: int = 0
+    subscription_id: Optional[str] = None
+    pro_started_at: Optional[datetime] = None
+    pro_expires_at: Optional[datetime] = None
     free_ai_scans_used: int = 0
     free_ai_scans_reset_on: Optional[date] = None
     free_ai_messages_used: int = 0
@@ -161,6 +165,7 @@ class UserResponse(BaseModel):
         "onboarding_complete",
         "dark_mode",
         "share_achievements",
+        "is_pro",
         "free_ai_scans_used",
         "free_ai_messages_used",
         mode="before",

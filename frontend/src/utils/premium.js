@@ -3,9 +3,16 @@
 const TODAY = () => new Date().toISOString().split('T')[0];
 
 export const isPro = (user = null) => {
-  if (!user || user.premium_status !== 'active') return false;
-  if (!user.premium_expires_at) return true;
-  return new Date(user.premium_expires_at) > new Date();
+  if (!user) return false;
+
+  if (user.premium_status === 'active') {
+    if (!user.premium_expires_at) return true;
+    return new Date(user.premium_expires_at) > new Date();
+  }
+
+  if (!user.is_pro) return false;
+  if (!user.pro_expires_at) return true;
+  return new Date(user.pro_expires_at) > new Date();
 };
 
 // --- scan counter ---

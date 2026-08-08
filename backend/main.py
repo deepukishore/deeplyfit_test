@@ -6,7 +6,7 @@ import os
 
 from database import engine, Base, get_db
 import models
-from routes import auth, users, food_logs, workouts, water_logs, weight_logs, meal_templates, achievements, ai_chat, meal_plans, community
+from routes import auth, users, food_logs, workouts, water_logs, weight_logs, meal_templates, achievements, ai_chat, meal_plans, community, payments
 from routes.auth import get_current_user
 from schemas import FoodScanRequest, FoodLogCreate
 from ai.gemini_food import analyze_food_image
@@ -38,6 +38,10 @@ def ensure_user_premium_columns():
         "premium_pending_plan": "ALTER TABLE users ADD COLUMN premium_pending_plan VARCHAR(20) NULL",
         "premium_pending_payment_ref": "ALTER TABLE users ADD COLUMN premium_pending_payment_ref VARCHAR(120) NULL",
         "premium_pending_requested_at": f"ALTER TABLE users ADD COLUMN premium_pending_requested_at {datetime_type} NULL",
+        "is_pro": "ALTER TABLE users ADD COLUMN is_pro INTEGER DEFAULT 0",
+        "subscription_id": "ALTER TABLE users ADD COLUMN subscription_id VARCHAR(255) NULL",
+        "pro_started_at": f"ALTER TABLE users ADD COLUMN pro_started_at {datetime_type} NULL",
+        "pro_expires_at": f"ALTER TABLE users ADD COLUMN pro_expires_at {datetime_type} NULL",
         "free_ai_scans_used": "ALTER TABLE users ADD COLUMN free_ai_scans_used INTEGER DEFAULT 0",
         "free_ai_scans_reset_on": "ALTER TABLE users ADD COLUMN free_ai_scans_reset_on DATE NULL",
         "free_ai_messages_used": "ALTER TABLE users ADD COLUMN free_ai_messages_used INTEGER DEFAULT 0",
@@ -58,6 +62,7 @@ def ensure_user_default_values():
         connection.execute(text("UPDATE users SET share_achievements = 1 WHERE share_achievements IS NULL"))
         connection.execute(text("UPDATE users SET profile_visibility = 'public' WHERE profile_visibility IS NULL"))
         connection.execute(text("UPDATE users SET premium_status = 'free' WHERE premium_status IS NULL"))
+        connection.execute(text("UPDATE users SET is_pro = 0 WHERE is_pro IS NULL"))
         connection.execute(text("UPDATE users SET free_ai_scans_used = 0 WHERE free_ai_scans_used IS NULL"))
         connection.execute(text("UPDATE users SET free_ai_messages_used = 0 WHERE free_ai_messages_used IS NULL"))
 
@@ -97,6 +102,7 @@ app.include_router(achievements.router)
 app.include_router(ai_chat.router)
 app.include_router(meal_plans.router)
 app.include_router(community.router)
+app.include_router(payments.router)
 
 
 @app.get("/")

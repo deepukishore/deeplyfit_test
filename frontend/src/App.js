@@ -11,6 +11,7 @@ import SurfaceMotion from './components/SurfaceMotion';
 import BrandLogo from './components/BrandLogo';
 import OfflineBanner from './components/OfflineBanner';
 import PullToRefreshShell from './components/PullToRefreshShell';
+import Upgrade from './pages/Upgrade';
 
 import './styles/global.css';
 import './styles/animations.css';
@@ -162,6 +163,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <AppLayout><Profile /></AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/upgrade"
+          element={
+            <ProtectedRoute>
+              <AppLayout><Upgrade /></AppLayout>
             </ProtectedRoute>
           }
         />
