@@ -522,4 +522,16 @@
     max-width: 880px;
     margin: 0 auto;
   }
+
+  .chat-input-container {
+    padding: 10px 32px 16px;
+    background: transparent;
+    border-top: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .input-hint {
+    margin-top: 7px;
+  }
 }
