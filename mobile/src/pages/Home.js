@@ -352,6 +352,7 @@ const Home = ({ navigation }) => {
   const [calorieStreak, setCalorieStreak] = useState(null);
   const [waterGoal, setWaterGoal] = useState(8);
   const [refreshing, setRefreshing] = useState(false);
+  const [suggestionsRefreshing, setSuggestionsRefreshing] = useState(false);
   const [modal, setModal] = useState(null);
   const [showPlanner, setShowPlanner] = useState(false);
   const suggestionVariantRef = useRef(0);
@@ -375,19 +376,47 @@ const Home = ({ navigation }) => {
     if (workoutsResult.status === 'fulfilled') setRecentWorkoutHistory(workoutsResult.value);
   }, [today]);
 
-  useEffect(() => {
-    loadSummary();
-    api.getCalorieStreak().then(setCalorieStreak).catch(() => {});
-    api.getWaterGoal().then((d) => setWaterGoal(d.water_goal || 8)).catch(() => {});
+  const refreshHomeData = useCallback(async ({ rotateSuggestions = false } = {}) => {
+    const [, streak, water] = await Promise.all([
+      loadSummary({ rotateSuggestions }),
+      api.getCalorieStreak().catch(() => null),
+      api.getWaterGoal().catch(() => null),
+    ]);
+    if (streak) setCalorieStreak(streak);
+    if (water) setWaterGoal(water.water_goal || 8);
   }, [loadSummary]);
 
-  useRefreshRegistration(() => loadSummary({ rotateSuggestions: true }));
+  useEffect(() => {
+    refreshHomeData();
+  }, [refreshHomeData]);
+
+  const refreshWithRotation = useCallback(() => refreshHomeData({ rotateSuggestions: true }), [refreshHomeData]);
+  useRefreshRegistration(refreshWithRotation);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadSummary({ rotateSuggestions: true });
+    await refreshHomeData({ rotateSuggestions: true });
     setRefreshing(false);
   };
+
+  const refreshSuggestions = useCallback(async () => {
+    if (suggestionsRefreshing) return;
+    const nextVariant = suggestionVariantRef.current + 1;
+    const currentNames = (suggestionsData?.suggestions || []).map(({ name }) => name);
+    setSuggestionsRefreshing(true);
+    try {
+      const data = await api.getMealSuggestions(today, {
+        variant: nextVariant,
+        exclude: currentNames,
+      });
+      suggestionVariantRef.current = nextVariant;
+      setSuggestionsData(data);
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.message || 'Could not refresh meal suggestions' });
+    } finally {
+      setSuggestionsRefreshing(false);
+    }
+  }, [suggestionsData, suggestionsRefreshing, today]);
 
   const handleAddGlass = async () => {
     try {
@@ -401,6 +430,12 @@ const Home = ({ navigation }) => {
   const progress = Math.min(((summary?.calories_consumed || 0) / (summary?.calories_target || 2000)) * 100, 100);
   const suggestions = getWorkoutSuggestions(user?.fitness_goal);
   const initials = getInitials(user?.name, user?.email);
+  const streakDays = Math.min(calorieStreak?.current_streak || 0, 7);
+  const macroRows = [
+    { name: 'Protein', value: summary?.protein || 0, target: user?.protein_target || 140, color: MACRO_COLORS[0] },
+    { name: 'Carbs', value: summary?.carbs || 0, target: user?.carbs_target || 200, color: MACRO_COLORS[1] },
+    { name: 'Fat', value: summary?.fat || 0, target: user?.fat_target || 65, color: MACRO_COLORS[2] },
+  ];
 
   return (
     <View style={s.page}>
@@ -433,29 +468,52 @@ const Home = ({ navigation }) => {
 
         {calorieStreak && (
           <View style={s.card}>
-            <Text style={s.sectionTitle}>🎯 Calorie Streak</Text>
-            <View style={s.row}>
-              <View style={[s.streakBox, { marginRight: 8 }]}>
-                <Text style={[s.streakNum, { color: colors.accentLime }]}>{calorieStreak.current_streak}</Text>
-                <Text style={s.streakLabel}>Current 🔥</Text>
+            <View style={s.streakHead}>
+              <View style={s.streakIcon}><Text style={s.streakIconText}>F</Text></View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.streakTitle}>{calorieStreak.current_streak}-Day Streak</Text>
+                <Text style={s.streakSubtitle}>Best run: {calorieStreak.best_streak} days</Text>
               </View>
-              <View style={s.streakBox}>
-                <Text style={[s.streakNum, { color: colors.accentAmber }]}>{calorieStreak.best_streak}</Text>
-                <Text style={s.streakLabel}>Best 🏆</Text>
-              </View>
+              <Text style={s.streakCount}>{streakDays}/7</Text>
             </View>
+            <View style={s.streakProgress}><View style={[s.streakProgressFill, { width: `${(streakDays / 7) * 100}%` }]} /></View>
+            <View style={s.streakWeek}>
+              {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((day, index) => (
+                <View key={day} style={s.streakDay}>
+                  <View style={[s.streakDayCircle, index < streakDays && s.streakDayComplete]}>
+                    <Text style={[s.streakDayCheck, index < streakDays && s.streakDayCheckComplete]}>{index < streakDays ? '\u2713' : ''}</Text>
+                  </View>
+                  <Text style={s.streakDayLabel}>{day}</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={s.streakNudge}>
+              {streakDays === 7 ? 'Week Warrior unlocked.' : `Keep going. ${7 - streakDays} more ${7 - streakDays === 1 ? 'day' : 'days'} to unlock Week Warrior.`}
+            </Text>
           </View>
         )}
 
         <View style={s.card}>
-          <Text style={s.sectionTitle}>Macros Today</Text>
-          {[{ name: 'Protein', val: summary?.protein, color: MACRO_COLORS[0] }, { name: 'Carbs', val: summary?.carbs, color: MACRO_COLORS[1] }, { name: 'Fat', val: summary?.fat, color: MACRO_COLORS[2] }].map((m) => (
-            <View key={m.name} style={s.macroRow}>
-              <View style={[s.macroDot, { backgroundColor: m.color }]} />
-              <Text style={s.macroLabel}>{m.name}</Text>
-              <Text style={[s.macroValue, { color: m.color }]}>{Math.round(m.val || 0)}g</Text>
-            </View>
-          ))}
+          <View style={s.rowBetweenCompact}>
+            <Text style={s.sectionTitle}>Macro balance</Text>
+            <Text style={s.sectionKicker}>Today</Text>
+          </View>
+          {macroRows.map((macro) => {
+            const macroProgress = Math.min((macro.value / macro.target) * 100, 100);
+            return (
+              <View key={macro.name} style={s.macroBlock}>
+                <View style={s.macroCopy}>
+                  <View style={s.macroNameWrap}>
+                    <View style={[s.macroDot, { backgroundColor: macro.color }]} />
+                    <Text style={s.macroLabel}>{macro.name}</Text>
+                  </View>
+                  <Text style={s.macroValue}>{Math.round(macro.value)}g <Text style={s.macroTarget}>/ {Math.round(macro.target)}g</Text></Text>
+                </View>
+                <View style={s.macroTrack}><View style={[s.macroFill, { width: `${macroProgress}%`, backgroundColor: macro.color }]} /></View>
+              </View>
+            );
+          })}
+          {!macroRows.some((macro) => macro.value > 0) && <Text style={s.macroEmpty}>Log food to start building your macro picture.</Text>}
         </View>
 
         <View style={s.card}>
@@ -476,6 +534,35 @@ const Home = ({ navigation }) => {
             <Text style={s.btnSecText}>+ Add Glass</Text>
           </TouchableOpacity>
         </View>
+
+        {suggestionsData && (
+          <View style={s.card}>
+            <View style={s.suggestionHeader}>
+              <Text style={s.sectionTitle}>AI Meal Suggestions</Text>
+              <TouchableOpacity style={s.refreshBtn} onPress={refreshSuggestions} disabled={suggestionsRefreshing}>
+                {suggestionsRefreshing
+                  ? <ActivityIndicator size="small" color={colors.accentLime} />
+                  : <Text style={s.refreshBtnText}>Refresh</Text>}
+              </TouchableOpacity>
+            </View>
+            <Text style={s.suggestionSummary}>{suggestionsData.summary_text}</Text>
+            {(suggestionsData.suggestions || []).map((suggestion) => (
+              <View key={suggestion.name} style={s.suggestionTile}>
+                <View style={s.suggestionTop}>
+                  <Text style={s.suggestionName}>{suggestion.name}</Text>
+                  <Text style={s.suggestionCalories}>{Math.round(suggestion.calories)} kcal</Text>
+                </View>
+                <Text style={s.suggestionPortion}>{suggestion.portion_hint}</Text>
+                <Text style={s.suggestionReason}>{suggestion.reason}</Text>
+                <View style={s.suggestionMacros}>
+                  <Text style={s.suggestionMacro}>P {Math.round(suggestion.protein)}g</Text>
+                  <Text style={s.suggestionMacro}>C {Math.round(suggestion.carbs)}g</Text>
+                  <Text style={s.suggestionMacro}>F {Math.round(suggestion.fat)}g</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
         <View style={s.card}>
           <Text style={s.sectionTitle}>Quick Actions</Text>
@@ -511,10 +598,10 @@ const Home = ({ navigation }) => {
         <View style={{ height: 20 }} />
       </ScrollView>
 
-      {modal === 'food' && <LogFoodModal onClose={() => setModal(null)} onSave={loadSummary} />}
-      {modal === 'workout' && <LogWorkoutModal user={user} onClose={() => setModal(null)} onSave={loadSummary} />}
-      {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={loadSummary} />}
-      {showPlanner && <WorkoutPlannerModal visible={showPlanner} user={user} date={today} onClose={() => setShowPlanner(false)} onSuccess={loadSummary} />}
+      {modal === 'food' && <LogFoodModal onClose={() => setModal(null)} onSave={refreshHomeData} />}
+      {modal === 'workout' && <LogWorkoutModal user={user} onClose={() => setModal(null)} onSave={refreshHomeData} />}
+      {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={refreshHomeData} />}
+      {showPlanner && <WorkoutPlannerModal visible={showPlanner} user={user} date={today} onClose={() => setShowPlanner(false)} onSuccess={refreshHomeData} />}
     </View>
   );
 };
@@ -541,13 +628,34 @@ const s = createThemedStyles(() => ({
   progressLabel: { fontSize: 11, color: colors.textMuted, marginTop: 4 },
   row: { flexDirection: 'row' },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  streakBox: { flex: 1, backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 12, alignItems: 'center' },
-  streakNum: { fontSize: 30, fontWeight: '800', lineHeight: 34 },
-  streakLabel: { fontSize: 11, color: colors.textMuted, marginTop: 3 },
-  macroRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 5 },
+  rowBetweenCompact: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sectionKicker: { color: colors.textMuted, fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
+  streakHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  streakIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(245,166,35,0.13)', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  streakIconText: { color: colors.accentAmber, fontSize: 17, fontWeight: '900' },
+  streakTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  streakSubtitle: { color: colors.textMuted, fontSize: 10, marginTop: 2 },
+  streakCount: { color: colors.accentLime, fontSize: 13, fontWeight: '800' },
+  streakProgress: { height: 6, backgroundColor: colors.bgElevated, borderRadius: 4, overflow: 'hidden' },
+  streakProgressFill: { height: '100%', borderRadius: 4, backgroundColor: colors.accentPurple },
+  streakWeek: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
+  streakDay: { alignItems: 'center' },
+  streakDayCircle: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  streakDayComplete: { backgroundColor: colors.accentPurple, borderColor: colors.accentPurple },
+  streakDayCheck: { color: colors.textMuted, fontSize: 11, fontWeight: '900' },
+  streakDayCheckComplete: { color: colors.textInverse },
+  streakDayLabel: { color: colors.textMuted, fontSize: 9, marginTop: 4 },
+  streakNudge: { color: colors.textSecondary, fontSize: 10, lineHeight: 15, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border },
+  macroBlock: { marginBottom: 12 },
+  macroCopy: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
+  macroNameWrap: { flexDirection: 'row', alignItems: 'center' },
   macroDot: { width: 8, height: 8, borderRadius: 4, marginRight: 10 },
-  macroLabel: { flex: 1, color: colors.textSecondary, fontSize: 13 },
-  macroValue: { fontWeight: '700', fontSize: 13 },
+  macroLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: '600' },
+  macroValue: { color: colors.textPrimary, fontWeight: '800', fontSize: 12 },
+  macroTarget: { color: colors.textMuted, fontWeight: '500' },
+  macroTrack: { height: 8, borderRadius: 4, overflow: 'hidden', backgroundColor: colors.bgElevated },
+  macroFill: { height: '100%', borderRadius: 4 },
+  macroEmpty: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
   glassRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 10 },
   glass: { fontSize: 18, opacity: 0.3 },
   glassFilled: { opacity: 1 },
@@ -558,6 +666,18 @@ const s = createThemedStyles(() => ({
   workoutName: { color: colors.textPrimary, fontWeight: '600', fontSize: 13 },
   workoutDetail: { color: colors.textMuted, fontSize: 11, marginTop: 1 },
   workoutCal: { color: colors.accentAmber, fontSize: 12, fontWeight: '600' },
+  suggestionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  refreshBtn: { minWidth: 62, height: 30, borderRadius: 9, paddingHorizontal: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border, marginBottom: 10 },
+  refreshBtnText: { color: colors.textPrimary, fontSize: 10, fontWeight: '700' },
+  suggestionSummary: { color: colors.textSecondary, fontSize: 11, lineHeight: 17, marginBottom: 12 },
+  suggestionTile: { backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 13, borderWidth: 1, borderColor: colors.border, marginBottom: 9 },
+  suggestionTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  suggestionName: { flex: 1, color: colors.textPrimary, fontSize: 13, lineHeight: 18, fontWeight: '800', marginRight: 8 },
+  suggestionCalories: { color: colors.accentLime, fontSize: 10, fontWeight: '800', backgroundColor: 'rgba(124,58,237,0.09)', borderRadius: 12, overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 4 },
+  suggestionPortion: { color: colors.textSecondary, fontSize: 10, lineHeight: 15, marginTop: 7 },
+  suggestionReason: { color: colors.textMuted, fontSize: 10, lineHeight: 15, marginTop: 5 },
+  suggestionMacros: { flexDirection: 'row', marginTop: 9, gap: 14 },
+  suggestionMacro: { color: colors.textMuted, fontSize: 10, fontWeight: '700' },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing.xl, maxHeight: '90%', borderWidth: 1, borderColor: 'rgba(124,58,237,0.17)', shadowColor: '#24113f', shadowOpacity: 0.22, shadowRadius: 24, shadowOffset: { width: 0, height: -9 }, elevation: 22 },
   handle: { width: 42, height: 5, backgroundColor: colors.accentPurple, borderRadius: 3, alignSelf: 'center', marginBottom: 14 },

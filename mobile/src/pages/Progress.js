@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, TextInput, RefreshControl, Dimensions } from 'react-native';
+import Svg, { Circle, Line as SvgLine, Path, Polyline } from 'react-native-svg';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
 import { isPro } from '../utils/premium';
@@ -31,6 +32,75 @@ const MiniChart = ({ values, barColor, fillColor, height = CHART_HEIGHT }) => {
         );
       })}
     </View>
+  );
+};
+
+const gaugePoint = (fraction, radius = 90) => {
+  const radians = (180 + (Math.min(Math.max(fraction, 0), 1) * 180)) * (Math.PI / 180);
+  return {
+    x: 120 + (radius * Math.cos(radians)),
+    y: 110 + (radius * Math.sin(radians)),
+  };
+};
+
+const gaugeArc = (start, end) => {
+  const startPoint = gaugePoint(start);
+  const endPoint = gaugePoint(end);
+  return `M ${startPoint.x} ${startPoint.y} A 90 90 0 0 1 ${endPoint.x} ${endPoint.y}`;
+};
+
+const BmiGauge = ({ value, category }) => {
+  const numericValue = Number(value);
+  const fraction = Number.isFinite(numericValue) ? Math.min(Math.max((numericValue - 15) / 20, 0), 1) : 0.5;
+  const needle = gaugePoint(fraction, 64);
+
+  return (
+    <View style={s.bmiGauge}>
+      <Svg width="240" height="132" viewBox="0 0 240 132">
+        <Path d={gaugeArc(0, 0.175)} fill="none" stroke={colors.accentBlue} strokeWidth="20" strokeLinecap="butt" />
+        <Path d={gaugeArc(0.175, 0.5)} fill="none" stroke={colors.accentPurple} strokeWidth="20" strokeLinecap="butt" />
+        <Path d={gaugeArc(0.5, 0.75)} fill="none" stroke={colors.accentAmber} strokeWidth="20" strokeLinecap="butt" />
+        <Path d={gaugeArc(0.75, 1)} fill="none" stroke={colors.accentCoral} strokeWidth="20" strokeLinecap="butt" />
+        <SvgLine x1="120" y1="110" x2={needle.x} y2={needle.y} stroke={colors.textPrimary} strokeWidth="4" strokeLinecap="round" />
+        <Circle cx="120" cy="110" r="8" fill={colors.textPrimary} />
+      </Svg>
+      <View style={s.bmiGaugeCopy}>
+        <Text style={s.bmiValue}>{Number.isFinite(numericValue) ? numericValue.toFixed(1) : '-'}</Text>
+        <Text style={s.bmiCategory}>{category || 'Add your body stats'}</Text>
+      </View>
+      <View style={s.bmiLabels}>
+        <Text style={s.bmiLabel}>Under</Text>
+        <Text style={s.bmiLabel}>Normal</Text>
+        <Text style={s.bmiLabel}>Over</Text>
+        <Text style={s.bmiLabel}>Obese</Text>
+      </View>
+    </View>
+  );
+};
+
+const TrendLineChart = ({ values, color, height = CHART_HEIGHT }) => {
+  const numericValues = values.map(Number).filter(Number.isFinite);
+  if (numericValues.length < 2) return null;
+  const padding = 15;
+  const min = Math.min(...numericValues);
+  const max = Math.max(...numericValues);
+  const range = max - min || 1;
+  const isFlat = max === min;
+  const usableWidth = CHART_WIDTH - (padding * 2);
+  const usableHeight = height - (padding * 2);
+  const points = numericValues.map((value, index) => ({
+    x: padding + ((index / (numericValues.length - 1)) * usableWidth),
+    y: padding + ((isFlat ? 0.5 : (max - value) / range) * usableHeight),
+  }));
+
+  return (
+    <Svg width={CHART_WIDTH} height={height} viewBox={`0 0 ${CHART_WIDTH} ${height}`}>
+      {[0.25, 0.5, 0.75].map((fraction) => (
+        <SvgLine key={fraction} x1={padding} x2={CHART_WIDTH - padding} y1={height * fraction} y2={height * fraction} stroke={colors.border} strokeWidth="1" strokeDasharray="4 5" />
+      ))}
+      <Polyline points={points.map((point) => `${point.x},${point.y}`).join(' ')} fill="none" stroke={color} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+      {points.map((point, index) => <Circle key={`${point.x}-${index}`} cx={point.x} cy={point.y} r="4" fill={color} />)}
+    </Svg>
   );
 };
 
@@ -92,26 +162,29 @@ const Progress = () => {
   const [weightLogs, setWeightLogs] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
   const [bmiHistory, setBmiHistory] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [achievements, setAchievements] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showWeightModal, setShowWeightModal] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
-      const [weights, weekly, bmi] = await Promise.all([
+      const [weights, weekly, bmi, achievementData] = await Promise.all([
         api.getWeightLogs(30),
         api.getWeeklySummary(),
-        api.getBMIHistory(30).catch(() => null),
+        user?.height ? api.getBMIHistory(30).catch(() => null) : Promise.resolve(null),
+        api.getAchievements().catch(() => []),
       ]);
       setWeightLogs(weights);
       setWeeklyData(weekly);
       setBmiHistory(bmi);
+      setAchievements(achievementData);
     } catch {
       Toast.show({ type: 'error', text1: 'Failed to load progress data' });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.height]);
 
   useEffect(() => {
     loadData();
@@ -132,6 +205,14 @@ const Progress = () => {
 
   const weightValues = weightLogs.map((log) => log.weight);
   const calorieValues = weeklyData.map((day) => day.calories || 0);
+  const currentWeek = weeklyData.slice(-7);
+  const previousWeek = weeklyData.length >= 14 ? weeklyData.slice(-14, -7) : [];
+  const averageCalories = (rows) => rows.length
+    ? Math.round(rows.reduce((sum, row) => sum + Number(row.calories || 0), 0) / rows.length)
+    : null;
+  const currentAverage = averageCalories(currentWeek);
+  const previousAverage = averageCalories(previousWeek);
+  const averageChange = currentAverage !== null && previousAverage !== null ? currentAverage - previousAverage : null;
 
   const stats = [
     { icon: '🔥', label: 'Day Streak', value: streak, color: colors.accentAmber },
@@ -178,45 +259,100 @@ const Progress = () => {
               ))}
             </View>
 
-            {weightValues.length >= 2 && (
-              <View style={s.chartCard}>
-                <Text style={s.chartTitle}>Weight Trend</Text>
-                <MiniChart values={weightValues} barColor={colors.accentBlue} fillColor="rgba(79,172,254,0.28)" />
-                <View style={s.chartLabels}>
-                  <Text style={s.chartLabel}>{weightLogs[0]?.date?.slice(5)}</Text>
-                  <Text style={s.chartLabel}>{weightLogs[weightLogs.length - 1]?.date?.slice(5)}</Text>
+            <View style={s.chartCard}>
+              <View style={s.rowBetween}>
+                <Text style={s.chartTitle}>BMI Tracker</Text>
+                {!!bmiHistory?.bmi_category && <Text style={s.badge}>{bmiHistory.bmi_category}</Text>}
+              </View>
+              <BmiGauge value={bmiHistory?.latest_bmi} category={bmiHistory?.bmi_category} />
+              <Text style={s.bmiHealthyCopy}>
+                {bmiHistory
+                  ? `Healthy weight range: ${bmiHistory.healthy_weight_min} - ${bmiHistory.healthy_weight_max} kg`
+                  : 'Add your height in Profile and log your weight to calculate BMI.'}
+              </Text>
+            </View>
+
+            <View style={s.chartCard}>
+              <Text style={s.chartTitle}>Weight Trend</Text>
+              {weightValues.length < 2 ? (
+                <View style={s.emptyState}>
+                  <Text style={s.emptyIcon}>⚖️</Text>
+                  <Text style={s.emptyTitle}>Not enough data yet</Text>
+                  <Text style={s.emptyText}>Log your weight daily to see your trend.</Text>
+                </View>
+              ) : (
+                <>
+                  <TrendLineChart values={weightValues} color={colors.accentBlue} />
+                  <View style={s.chartLabels}>
+                    <Text style={s.chartLabel}>{weightLogs[0]?.date?.slice(5)}</Text>
+                    <Text style={s.chartLabel}>{weightLogs[weightLogs.length - 1]?.date?.slice(5)}</Text>
+                  </View>
+                </>
+              )}
+            </View>
+
+            <View style={s.chartCard}>
+              <Text style={s.chartTitle}>Weekly Calories vs Goal</Text>
+              {calorieValues.length === 0 ? (
+                <View style={s.emptyState}>
+                  <Text style={s.emptyIcon}>📊</Text>
+                  <Text style={s.emptyTitle}>No data yet</Text>
+                  <Text style={s.emptyText}>Start logging meals to see your weekly trend.</Text>
+                </View>
+              ) : (
+                <>
+                  <MiniChart values={calorieValues} barColor={colors.accentLime} fillColor="rgba(168,85,247,0.28)" />
+                  <View style={s.chartLabels}>
+                    <Text style={s.chartLabel}>{weeklyData[0]?.date}</Text>
+                    <Text style={s.chartLabel}>{weeklyData[weeklyData.length - 1]?.date}</Text>
+                  </View>
+                </>
+              )}
+            </View>
+
+            <View style={s.comparisonCard}>
+              <View style={s.comparisonHeader}>
+                <View>
+                  <Text style={s.sectionKicker}>Comparison</Text>
+                  <Text style={s.chartTitle}>Daily calorie average</Text>
+                </View>
+                {averageChange !== null && (
+                  <Text style={[s.comparisonChange, { color: averageChange <= 0 ? colors.accentLime : colors.accentCoral }]}>
+                    {averageChange > 0 ? '+' : ''}{averageChange} kcal
+                  </Text>
+                )}
+              </View>
+              <View style={s.comparisonGrid}>
+                <View style={[s.comparisonTile, { marginRight: 7 }]}>
+                  <Text style={s.comparisonLabel}>This week</Text>
+                  <Text style={s.comparisonValue}>{currentAverage !== null ? currentAverage.toLocaleString() : '-'}</Text>
+                  <Text style={s.comparisonMeta}>kcal per day</Text>
+                </View>
+                <View style={s.comparisonTile}>
+                  <Text style={s.comparisonLabel}>Last week</Text>
+                  <Text style={s.comparisonValue}>{previousAverage !== null ? previousAverage.toLocaleString() : '-'}</Text>
+                  <Text style={s.comparisonMeta}>{previousAverage !== null ? 'kcal per day' : 'Keep logging'}</Text>
                 </View>
               </View>
-            )}
+            </View>
 
-            {calorieValues.length >= 2 && (
-              <View style={s.chartCard}>
-                <Text style={s.chartTitle}>Weekly Calories vs Goal</Text>
-                <MiniChart values={calorieValues} barColor={colors.accentLime} fillColor="rgba(168,85,247,0.28)" />
-                <View style={s.chartLabels}>
-                  <Text style={s.chartLabel}>{weeklyData[0]?.date?.slice(5)}</Text>
-                  <Text style={s.chartLabel}>{weeklyData[weeklyData.length - 1]?.date?.slice(5)}</Text>
-                </View>
-              </View>
-            )}
-
-            {bmiHistory && (
-              <View style={s.card}>
-                <View style={s.rowBetween}>
-                  <Text style={s.chartTitle}>BMI Tracker</Text>
-                  <Text style={s.badge}>{bmiHistory.bmi_category}</Text>
-                </View>
-                <View style={s.rowBetween}>
+            {achievements.length > 0 && (
+              <View style={s.achievementWall}>
+                <View style={s.achievementHeader}>
                   <View>
-                    <Text style={s.statLabel}>Current BMI</Text>
-                    <Text style={[s.statValue, { color: colors.accentLime }]}>{bmiHistory.latest_bmi?.toFixed(1)}</Text>
+                    <Text style={s.sectionKicker}>Milestones</Text>
+                    <Text style={s.chartTitle}>Achievement wall</Text>
                   </View>
-                  <View>
-                    <Text style={s.statLabel}>Healthy range</Text>
-                    <Text style={s.statValue}>
-                      {bmiHistory.healthy_weight_min} - {bmiHistory.healthy_weight_max} kg
-                    </Text>
-                  </View>
+                  <Text style={s.badge}>{achievements.filter((item) => item.unlocked).length} unlocked</Text>
+                </View>
+                <View style={s.achievementGrid}>
+                  {achievements.slice(0, 8).map((achievement) => (
+                    <View key={achievement.key} style={[s.achievementCard, achievement.unlocked && s.achievementUnlocked]}>
+                      <Text style={s.achievementIcon}>{achievement.unlocked ? achievement.icon : '🔒'}</Text>
+                      <Text style={s.achievementName}>{achievement.name}</Text>
+                      <Text style={s.achievementProgress}>{achievement.unlocked ? 'Unlocked' : `${achievement.progress?.current || 0}/${achievement.progress?.target || 0}`}</Text>
+                    </View>
+                  ))}
                 </View>
               </View>
             )}
@@ -311,6 +447,34 @@ const s = createThemedStyles(() => ({
   bar: { width: '100%', borderWidth: 1, borderBottomWidth: 0, borderTopLeftRadius: 8, borderTopRightRadius: 8, opacity: 0.95 },
   chartLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
   chartLabel: { fontSize: 11, color: colors.textMuted },
+  bmiGauge: { alignItems: 'center', marginTop: 4 },
+  bmiGaugeCopy: { position: 'absolute', top: 66, left: 0, right: 0, alignItems: 'center' },
+  bmiValue: { color: colors.textPrimary, fontSize: 20, fontWeight: '900' },
+  bmiCategory: { color: colors.textMuted, fontSize: 9, marginTop: 1 },
+  bmiLabels: { width: 244, flexDirection: 'row', justifyContent: 'space-between', marginTop: -7 },
+  bmiLabel: { color: colors.textMuted, fontSize: 8 },
+  bmiHealthyCopy: { color: colors.textSecondary, fontSize: 10, lineHeight: 15, textAlign: 'center', marginTop: 13 },
+  emptyState: { minHeight: 155, alignItems: 'center', justifyContent: 'center' },
+  emptyIcon: { fontSize: 32, marginBottom: 9 },
+  emptyTitle: { color: colors.textPrimary, fontSize: 13, fontWeight: '800' },
+  emptyText: { color: colors.textMuted, fontSize: 10, marginTop: 5, textAlign: 'center' },
+  comparisonCard: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
+  comparisonHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionKicker: { color: colors.accentPurple, fontSize: 9, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  comparisonChange: { fontSize: 10, fontWeight: '800' },
+  comparisonGrid: { flexDirection: 'row' },
+  comparisonTile: { flex: 1, minHeight: 89, backgroundColor: colors.bgElevated, borderRadius: radius.md, padding: 12, borderWidth: 1, borderColor: colors.border },
+  comparisonLabel: { color: colors.textMuted, fontSize: 9 },
+  comparisonValue: { color: colors.accentPurple, fontSize: 23, fontWeight: '900', marginTop: 8 },
+  comparisonMeta: { color: colors.textMuted, fontSize: 8, marginTop: 5 },
+  achievementWall: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
+  achievementHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  achievementGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  achievementCard: { width: '48%', minHeight: 94, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderRadius: radius.md, padding: 9, borderWidth: 1, borderColor: colors.border, opacity: 0.62 },
+  achievementUnlocked: { opacity: 1, borderColor: colors.accentPurple, backgroundColor: 'rgba(124,58,237,0.09)' },
+  achievementIcon: { fontSize: 20, marginBottom: 6 },
+  achievementName: { color: colors.textSecondary, fontSize: 9, fontWeight: '700', textAlign: 'center' },
+  achievementProgress: { color: colors.textMuted, fontSize: 8, marginTop: 5 },
   card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   badge: {
