@@ -8,6 +8,7 @@ import { getInitials } from '../utils/fitness';
 import { colors, createThemedStyles, spacing } from '../utils/theme';
 import UserAvatar from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
+import { FloatingView, MotionPressable, MotionView } from '../components/Motion';
 
 const QUICK_SUGGESTIONS = [
   'What should I eat for lunch? 🍽️',
@@ -58,7 +59,7 @@ const AIAssistant = () => {
     <KeyboardAvoidingView style={s.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <AppBackdrop />
       <View style={s.header}>
-        <Text style={s.headerIcon}>🤖</Text>
+        <FloatingView distance={3} duration={1450}><Text style={s.headerIcon}>🤖</Text></FloatingView>
         <View>
           <Text style={s.headerTitle}>AI Coach</Text>
           <Text style={[s.headerStatus, coachMode === 'limited' && s.headerStatusLimited]}>
@@ -67,12 +68,12 @@ const AIAssistant = () => {
               : '● Online · Knows your data'}
           </Text>
         </View>
-        <TouchableOpacity
+        <MotionPressable
           style={s.clearBtn}
           onPress={() => setMessages([{ role: 'assistant', content: `Fresh start! 🌟 What would you like to work on today, ${user?.name || 'there'}?` }])}
         >
           <Text style={s.clearBtnText}>Clear</Text>
-        </TouchableOpacity>
+        </MotionPressable>
       </View>
 
       <View style={s.planBanner}>
@@ -85,28 +86,28 @@ const AIAssistant = () => {
 
       <ScrollView ref={scrollRef} style={s.messages} contentContainerStyle={{ padding: spacing.md }}>
         {messages.map((msg, index) => (
-          <View key={index} style={[s.msgRow, msg.role === 'user' ? s.msgRowUser : s.msgRowAssistant]}>
+          <MotionView key={`${msg.role}-${index}`} style={[s.msgRow, msg.role === 'user' ? s.msgRowUser : s.msgRowAssistant]} delay={Math.min(index * 45, 260)} variant={msg.role === 'assistant' ? 'left' : 'rise'} layout>
             {msg.role === 'assistant' && <Text style={s.botAvatar}>🤖</Text>}
             <View style={[s.bubble, msg.role === 'user' ? s.bubbleUser : s.bubbleAssistant]}>
               <Text style={[s.bubbleText, msg.role === 'user' && s.bubbleTextUser]}>{msg.content}</Text>
             </View>
             {msg.role === 'user' && <UserAvatar value={user?.profile_picture} initials={initials} size={32} style={s.userAvatar} />}
-          </View>
+          </MotionView>
         ))}
         {loading && (
-          <View style={s.msgRowAssistant}>
+          <MotionView style={s.msgRowAssistant} variant="fade">
             <Text style={s.botAvatar}>🤖</Text>
             <View style={s.bubbleAssistant}><ActivityIndicator size="small" color={colors.accentLime} /></View>
-          </View>
+          </MotionView>
         )}
       </ScrollView>
 
-      {false && messages.length <= 1 && (
+      {messages.length <= 1 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.suggestions} contentContainerStyle={{ padding: spacing.sm }}>
           {QUICK_SUGGESTIONS.map((suggestion, index) => (
-            <TouchableOpacity key={index} style={s.suggestionChip} onPress={() => sendMessage(suggestion)} disabled={loading}>
+            <MotionPressable key={index} style={s.suggestionChip} onPress={() => sendMessage(suggestion)} disabled={loading}>
               <Text style={s.suggestionText}>{suggestion}</Text>
-            </TouchableOpacity>
+            </MotionPressable>
           ))}
         </ScrollView>
       )}
@@ -121,9 +122,9 @@ const AIAssistant = () => {
           multiline
           maxHeight={100}
         />
-        <TouchableOpacity style={[s.sendBtn, (!input.trim() || loading) && s.sendBtnDisabled]} onPress={() => sendMessage()} disabled={!input.trim() || loading}>
+        <MotionPressable style={s.sendBtn} onPress={() => sendMessage()} disabled={!input.trim() || loading}>
           {loading ? <ActivityIndicator size="small" color={colors.textInverse} /> : <Text style={s.sendBtnText}>↑</Text>}
-        </TouchableOpacity>
+        </MotionPressable>
       </View>
     </KeyboardAvoidingView>
   );

@@ -89,6 +89,8 @@ const AppBackdrop = ({ compact = false }) => {
   const sceneRotateY = progress.interpolate({ inputRange: [0, 1], outputRange: ['-5deg', '5deg'] });
   const sceneRotateZ = progress.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '3deg'] });
   const sparkle = progress.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.58, 1, 0.7] });
+  const sweepY = progress.interpolate({ inputRange: [0, 1], outputRange: [-180, 760] });
+  const sweepOpacity = progress.interpolate({ inputRange: [0, 0.15, 0.72, 1], outputRange: [0, 0.2, 0.12, 0] });
 
   return (
     <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
@@ -171,6 +173,7 @@ const AppBackdrop = ({ compact = false }) => {
       <Animated.View style={[s.orb, s.orbAmber, { transform: [{ translateX: driftX }, { translateY: reverseY }] }]} />
       <Animated.View style={[s.ringLarge, { transform: [{ perspective: 700 }, { rotateX: '62deg' }, { rotateZ: orbit }, { scale: scaleUp }] }]} />
       <Animated.View style={[s.ringMedium, { transform: [{ perspective: 700 }, { rotateY: '58deg' }, { rotateZ: orbit }, { scale: scaleDown }] }]} />
+      <Animated.View style={[s.lightSweep, { opacity: sweepOpacity, transform: [{ translateY: sweepY }, { rotate: '-14deg' }] }]} />
       <View style={s.ringSmall} />
       <View style={s.topHalo} />
       <Animated.View style={[s.sparkField, { opacity: sparkle, transform: [{ translateY: driftY }] }]}>
@@ -193,6 +196,7 @@ const s = createThemedStyles(() => ({
   orbAmber: { width: 230, height: 230, right: -140, bottom: 54, backgroundColor: colors.accentAmber, opacity: 0.055 },
   ringLarge: { position: 'absolute', width: 210, height: 210, top: 92, right: -122, borderRadius: 999, borderWidth: 1, borderColor: colors.accentPurple, opacity: 0.22 },
   ringMedium: { position: 'absolute', width: 148, height: 148, top: 123, right: -91, borderRadius: 999, borderWidth: 1, borderColor: colors.accentBlue, opacity: 0.17 },
+  lightSweep: { position: 'absolute', width: 540, height: 92, left: -70, top: 0, borderRadius: 999, backgroundColor: colors.surfaceHighlight, borderWidth: 1, borderColor: colors.border },
   ringSmall: { position: 'absolute', width: 106, height: 106, bottom: 105, left: -56, borderRadius: 999, borderWidth: 1, borderColor: colors.accentBlue, opacity: 0.2 },
   topHalo: { position: 'absolute', width: 74, height: 74, top: 28, left: -40, borderRadius: 999, borderWidth: 12, borderColor: colors.accentAmber, opacity: 0.045 },
   sparkField: { position: 'absolute', top: 150, left: 22, width: 100, flexDirection: 'row', flexWrap: 'wrap', gap: 13 },

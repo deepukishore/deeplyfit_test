@@ -2,9 +2,11 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, Image, ActivityIndicator, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { RefreshProvider } from '../context/RefreshContext';
 import { colors, createThemedStyles } from '../utils/theme';
+import { AnimatedTabIcon, ScreenTransition } from '../components/Motion';
 
 import Login from '../pages/Login';
 import Onboarding from '../pages/Onboarding';
@@ -31,31 +33,59 @@ const TAB_ICON = {
   Profile: '\u{1F464}',
 };
 
-const MainTabs = () => (
-  <RefreshProvider>
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: colors.accentLime,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', letterSpacing: 0.3 },
-        tabBarIcon: ({ focused }) => (
-          <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-            <Text style={{ fontSize: 19, opacity: focused ? 1 : 0.45 }}>{TAB_ICON[route.name]}</Text>
-          </View>
-        ),
-      })}
-    >
-      <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="Diary" component={Diary} />
-      <Tab.Screen name="Community" component={Community} />
-      <Tab.Screen name="Coach" component={AIAssistant} />
-      <Tab.Screen name="Progress" component={Progress} />
-      <Tab.Screen name="Profile" component={Profile} />
-    </Tab.Navigator>
-  </RefreshProvider>
-);
+const withScreenTransition = (Screen) => {
+  const AnimatedScreen = (props) => (
+    <ScreenTransition>
+      <Screen {...props} />
+    </ScreenTransition>
+  );
+  AnimatedScreen.displayName = `Animated${Screen.displayName || Screen.name || 'Screen'}`;
+  return AnimatedScreen;
+};
+
+const AnimatedHome = withScreenTransition(Home);
+const AnimatedDiary = withScreenTransition(Diary);
+const AnimatedCommunity = withScreenTransition(Community);
+const AnimatedCoach = withScreenTransition(AIAssistant);
+const AnimatedProgress = withScreenTransition(Progress);
+const AnimatedProfile = withScreenTransition(Profile);
+
+const MainTabs = () => {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 7);
+
+  return (
+    <RefreshProvider>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarStyle: [styles.tabBar, { height: 59 + bottomPadding, paddingBottom: bottomPadding }],
+          tabBarActiveTintColor: colors.accentLime,
+          tabBarInactiveTintColor: colors.textMuted,
+          tabBarLabelStyle: { fontSize: 10, fontWeight: '600', letterSpacing: 0.1 },
+          tabBarHideOnKeyboard: true,
+          tabBarIcon: ({ focused }) => (
+            <AnimatedTabIcon
+              focused={focused}
+              icon={TAB_ICON[route.name]}
+              style={styles.tabIcon}
+              activeStyle={styles.tabIconActive}
+              textStyle={styles.tabIconText}
+              indicatorStyle={styles.tabIndicator}
+            />
+          ),
+        })}
+      >
+        <Tab.Screen name="Home" component={AnimatedHome} />
+        <Tab.Screen name="Diary" component={AnimatedDiary} />
+        <Tab.Screen name="Community" component={AnimatedCommunity} />
+        <Tab.Screen name="Coach" component={AnimatedCoach} />
+        <Tab.Screen name="Progress" component={AnimatedProgress} />
+        <Tab.Screen name="Profile" component={AnimatedProfile} />
+      </Tab.Navigator>
+    </RefreshProvider>
+  );
+};
 
 const AppNavigator = () => {
   const { user, loading } = useAuth();
@@ -71,7 +101,7 @@ const AppNavigator = () => {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade_from_bottom', animationDuration: 280 }}>
       {!user ? (
         <>
           <Stack.Screen name="Login" component={Login} />
@@ -95,9 +125,11 @@ const styles = createThemedStyles(() => ({
   loading: { flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' },
   loadingLogo: { width: 76, height: 76, borderRadius: 20, marginBottom: 18 },
   loadingText: { color: colors.textSecondary, marginTop: 14, fontSize: 14 },
-  tabBar: { height: 66, paddingTop: 5, paddingBottom: 7, backgroundColor: colors.bgCard, borderTopWidth: 1, borderTopColor: colors.border, shadowColor: '#311a57', shadowOpacity: 0.13, shadowRadius: 18, shadowOffset: { width: 0, height: -7 }, elevation: 18 },
+  tabBar: { paddingTop: 5, backgroundColor: colors.bgCard, borderTopWidth: 1, borderTopColor: colors.border, shadowColor: '#311a57', shadowOpacity: 0.13, shadowRadius: 18, shadowOffset: { width: 0, height: -7 }, elevation: 18 },
   tabIcon: { width: 34, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 11 },
   tabIconActive: { backgroundColor: colors.glowPurple, borderWidth: 1, borderColor: 'rgba(124,58,237,0.12)' },
+  tabIconText: { fontSize: 19 },
+  tabIndicator: { position: 'absolute', width: 13, height: 2.5, borderRadius: 2, bottom: 1, backgroundColor: colors.accentLime },
 }));
 
 export default AppNavigator;

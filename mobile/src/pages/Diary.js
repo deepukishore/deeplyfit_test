@@ -7,6 +7,7 @@ import { addDays, formatDate, formatDisplayDate, getMealIcon } from '../utils/fi
 import { createEmptySummary, getCachedDiaryDate, getFavorites, setFavorites as saveFavorites } from '../utils/storage';
 import FoodScannerModal from '../components/FoodScannerModal';
 import AppBackdrop from '../components/AppBackdrop';
+import { AnimatedProgressFill, MotionPressable, MotionView } from '../components/Motion';
 import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snacks'];
@@ -353,12 +354,12 @@ const MealPlanEntryModal = ({ templates, weekStart, visible, onClose, onSaved })
   );
 };
 
-const MealSection = ({ meal, items, onAdd, onScan, onDelete, onFavorite, onSaveTemplate }) => {
+const MealSection = ({ meal, items, onAdd, onScan, onDelete, onFavorite, onSaveTemplate, motionDelay = 0 }) => {
   const [expanded, setExpanded] = useState(true);
   const mealItems = items.filter((i) => i.meal_type === meal);
   const mealCal = mealItems.reduce((s, i) => s + i.calories, 0);
   return (
-    <View style={s.mealSection}>
+    <MotionView style={s.mealSection} delay={motionDelay} layout>
       <TouchableOpacity style={s.mealHeader} onPress={() => setExpanded((e) => !e)}>
         <View style={s.mealHeaderLeft}>
           <Text style={{ fontSize: 24, marginRight: 10 }}>{getMealIcon(meal)}</Text>
@@ -368,7 +369,7 @@ const MealSection = ({ meal, items, onAdd, onScan, onDelete, onFavorite, onSaveT
           </View>
         </View>
         <View style={s.mealActions}>
-          {mealItems.length > 0 && <TouchableOpacity style={s.mealBtn} onPress={() => onSaveTemplate(meal, mealItems)}><Text style={s.mealBtnText}>Save</Text></TouchableOpacity>}
+          {mealItems.length > 0 && <MotionPressable style={s.mealBtn} onPress={() => onSaveTemplate(meal, mealItems)}><Text style={s.mealBtnText}>Save</Text></MotionPressable>}
           <TouchableOpacity style={s.mealBtn} onPress={() => onScan(meal)}><Text style={s.mealBtnText}>Scan</Text></TouchableOpacity>
           <TouchableOpacity style={s.mealBtn} onPress={() => onAdd(meal)}><Text style={s.mealBtnText}>+</Text></TouchableOpacity>
         </View>
@@ -394,7 +395,7 @@ const MealSection = ({ meal, items, onAdd, onScan, onDelete, onFavorite, onSaveT
           )}
         </View>
       )}
-    </View>
+    </MotionView>
   );
 };
 
@@ -483,14 +484,14 @@ const Diary = () => {
 
       <ScrollView style={s.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accentLime} />}>
         {summary && (
-          <View style={s.summaryCard}>
+          <MotionView style={s.summaryCard} delay={30}>
             <View style={s.rowBetween}>
               <Text style={s.summaryText}>{Math.round(summary.calories_consumed)} / {Math.round(summary.calories_target)} kcal</Text>
               <Text style={[s.summaryText, { color: summary.calories_consumed > summary.calories_target ? colors.accentCoral : colors.accentLime }]}>
                 {summary.calories_consumed > summary.calories_target ? 'Over' : `${Math.round(summary.calories_target - summary.calories_consumed)} left`}
               </Text>
             </View>
-            <View style={s.progressBar}><View style={[s.progressFill, { width: `${Math.min((summary.calories_consumed / summary.calories_target) * 100, 100)}%` }]} /></View>
+            <View style={s.progressBar}><AnimatedProgressFill progress={Math.min((summary.calories_consumed / summary.calories_target) * 100, 100)} style={s.progressFill} /></View>
             <View style={s.macroRow}>
               {[{ label: 'Protein', value: summary.protein, color: '#4facfe' }, { label: 'Carbs', value: summary.carbs, color: colors.accentLime }, { label: 'Fat', value: summary.fat, color: colors.accentAmber }].map((m) => (
                 <View key={m.label} style={{ alignItems: 'center', flex: 1 }}>
@@ -499,11 +500,11 @@ const Diary = () => {
                 </View>
               ))}
             </View>
-          </View>
+          </MotionView>
         )}
 
         {summary?.micronutrients && (
-          <View style={s.card}>
+          <MotionView style={s.card} delay={80}>
             <View style={s.sectionHeaderRow}>
               <Text style={s.sectionTitle}>Micronutrients</Text>
               <Text style={s.infoBadge}>Daily % RDA</Text>
@@ -520,16 +521,16 @@ const Diary = () => {
                       <Text style={s.microPercent}>{Math.round(percent)}%</Text>
                     </View>
                     <Text style={[s.microValue, { color: accent }]}>{Math.round(total)}{field.unit}</Text>
-                    <View style={s.microTrack}><View style={[s.microFill, { width: `${Math.min(percent, 100)}%`, backgroundColor: accent }]} /></View>
+                    <View style={s.microTrack}><AnimatedProgressFill progress={percent} style={[s.microFill, { backgroundColor: accent }]} /></View>
                   </View>
                 );
               })}
             </View>
-          </View>
+          </MotionView>
         )}
 
         {favorites.length > 0 && (
-          <View style={s.card}>
+          <MotionView style={s.card} delay={130}>
             <Text style={s.sectionTitle}>Favorite Foods</Text>
             {favorites.map((fav) => (
               <View key={fav.id} style={s.favCard}>
@@ -551,10 +552,10 @@ const Diary = () => {
                 </TouchableOpacity>
               </View>
             ))}
-          </View>
+          </MotionView>
         )}
 
-        <View style={s.card}>
+        <MotionView style={s.card} delay={180}>
           <View style={s.sectionHeaderRow}>
             <Text style={s.sectionTitle}>Meal Prep Planner</Text>
             <View style={s.plannerNav}>
@@ -631,10 +632,10 @@ const Diary = () => {
               </View>
             </>
           )}
-        </View>
+        </MotionView>
 
-        {MEALS.map((meal) => (
-          <MealSection key={meal} meal={meal} items={items} onAdd={setAddModal} onScan={setScanModal} onDelete={handleDelete} onFavorite={handleFavorite} onSaveTemplate={(mealName, mealItems) => setTemplateDraft({ meal: mealName, items: mealItems })} />
+        {MEALS.map((meal, index) => (
+          <MealSection key={meal} meal={meal} items={items} onAdd={setAddModal} onScan={setScanModal} onDelete={handleDelete} onFavorite={handleFavorite} onSaveTemplate={(mealName, mealItems) => setTemplateDraft({ meal: mealName, items: mealItems })} motionDelay={230 + (index * 45)} />
         ))}
         <View style={{ height: 20 }} />
       </ScrollView>

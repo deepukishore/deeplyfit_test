@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import AppBackdrop from '../components/AppBackdrop';
+import { MotionPressable, MotionView } from '../components/Motion';
 
 const TOTAL_STEPS = 4;
 
@@ -110,13 +111,13 @@ const Onboarding = () => {
       <AppBackdrop compact />
       <View style={s.dots}>
         {Array.from({ length: TOTAL_STEPS }).map((_, index) => (
-          <View key={index} style={[s.dot, index === step && s.dotActive, index < step && s.dotDone]} />
+          <MotionView key={index} style={[s.dot, index === step && s.dotActive, index < step && s.dotDone]} variant="fade" layout />
         ))}
       </View>
       <Text style={s.stepLabel}>Step {step + 1} of {TOTAL_STEPS}</Text>
 
       {step === 0 && (
-        <View>
+        <MotionView key="about" delay={30}>
           <Text style={s.title}>{`About you ${'\u{1F464}'}`}</Text>
           <Text style={s.subtitle}>We'll use this to personalize your plan</Text>
           <View style={s.inputGroup}>
@@ -125,15 +126,15 @@ const Onboarding = () => {
           </View>
           <Text style={s.label}>Gender</Text>
           {[{ v: 'male', l: `${'\u2642'}${'\uFE0F'} Male` }, { v: 'female', l: `${'\u2640'}${'\uFE0F'} Female` }, { v: 'other', l: `${'\u26A7'}${'\uFE0F'} Other` }].map((gender) => (
-            <TouchableOpacity key={gender.v} style={[s.radioOption, data.gender === gender.v && s.radioSelected]} onPress={() => update('gender', gender.v)}>
+            <MotionPressable key={gender.v} style={[s.radioOption, data.gender === gender.v && s.radioSelected]} onPress={() => update('gender', gender.v)}>
               <Text style={[s.radioText, data.gender === gender.v && s.radioTextSelected]}>{gender.l}</Text>
-            </TouchableOpacity>
+            </MotionPressable>
           ))}
-        </View>
+        </MotionView>
       )}
 
       {step === 1 && (
-        <View>
+        <MotionView key="body" delay={30}>
           <Text style={s.title}>{`Body stats ${'\u{1F4CF}'}`}</Text>
           <Text style={s.subtitle}>Your current measurements</Text>
           <View style={s.inputGroup}>
@@ -150,32 +151,32 @@ const Onboarding = () => {
               <TextInput style={s.input} placeholder="70" placeholderTextColor={colors.textMuted} value={data.goal_weight} onChangeText={(value) => update('goal_weight', value)} keyboardType="numeric" />
             </View>
           </View>
-        </View>
+        </MotionView>
       )}
 
       {step === 2 && (
-        <View>
+        <MotionView key="goals" delay={30}>
           <Text style={s.title}>{`Your goals ${'\u{1F3AF}'}`}</Text>
           <Text style={s.subtitle}>Tell us about your lifestyle</Text>
           <Text style={s.label}>Activity Level</Text>
           {ACTIVITY_LEVELS.map((activity) => (
-            <TouchableOpacity key={activity.value} style={[s.radioOption, data.activity_level === activity.value && s.radioSelected]} onPress={() => update('activity_level', activity.value)}>
+            <MotionPressable key={activity.value} style={[s.radioOption, data.activity_level === activity.value && s.radioSelected]} onPress={() => update('activity_level', activity.value)}>
               <Text style={[s.radioText, data.activity_level === activity.value && s.radioTextSelected]}>{activity.label}</Text>
               <Text style={s.radioDesc}>{activity.desc}</Text>
-            </TouchableOpacity>
+            </MotionPressable>
           ))}
           <Text style={[s.label, { marginTop: 16 }]}>Fitness Goal</Text>
           {FITNESS_GOALS.map((goal) => (
-            <TouchableOpacity key={goal.value} style={[s.radioOption, data.fitness_goal === goal.value && s.radioSelected]} onPress={() => update('fitness_goal', goal.value)}>
+            <MotionPressable key={goal.value} style={[s.radioOption, data.fitness_goal === goal.value && s.radioSelected]} onPress={() => update('fitness_goal', goal.value)}>
               <Text style={[s.radioText, data.fitness_goal === goal.value && s.radioTextSelected]}>{goal.label}</Text>
               <Text style={s.radioDesc}>{goal.desc}</Text>
-            </TouchableOpacity>
+            </MotionPressable>
           ))}
-        </View>
+        </MotionView>
       )}
 
       {step === 3 && calculated && (
-        <View>
+        <MotionView key="plan" delay={30}>
           <Text style={s.title}>{`Your plan is ready! ${'\u{1F680}'}`}</Text>
           <Text style={s.subtitle}>Based on your profile, here's your personalized plan</Text>
           <View style={s.summaryCard}>
@@ -193,23 +194,23 @@ const Onboarding = () => {
               </View>
             ))}
           </View>
-        </View>
+        </MotionView>
       )}
 
       <View style={s.nav}>
         {step > 0 && (
-          <TouchableOpacity style={[s.btn, s.btnSecondary, { flex: 1, marginRight: 8 }]} onPress={() => setStep((current) => Math.max(current - 1, 0))}>
+          <MotionPressable style={[s.btn, s.btnSecondary, { flex: 1, marginRight: 8 }]} onPress={() => setStep((current) => Math.max(current - 1, 0))}>
             <Text style={s.btnSecText}>{'\u2190'} Back</Text>
-          </TouchableOpacity>
+          </MotionPressable>
         )}
         {step < TOTAL_STEPS - 1 ? (
-          <TouchableOpacity style={[s.btn, { flex: 2 }]} onPress={next}>
+          <MotionPressable style={[s.btn, { flex: 2 }]} onPress={next}>
             <Text style={s.btnText}>Continue {'\u2192'}</Text>
-          </TouchableOpacity>
+          </MotionPressable>
         ) : (
-          <TouchableOpacity style={[s.btn, { flex: 2 }, loading && s.btnDisabled]} onPress={submit} disabled={loading}>
+          <MotionPressable style={[s.btn, { flex: 2 }]} onPress={submit} disabled={loading}>
             {loading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>{`Let's Go! ${'\u{1F525}'}`}</Text>}
-          </TouchableOpacity>
+          </MotionPressable>
         )}
       </View>
     </ScrollView>

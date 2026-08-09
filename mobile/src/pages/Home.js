@@ -12,6 +12,7 @@ import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import WorkoutPlannerModal from '../components/WorkoutPlannerModal';
 import UserAvatar from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
+import { AnimatedProgressFill, FloatingView, MotionPressable, MotionView } from '../components/Motion';
 
 const MACRO_COLORS = ['#4facfe', '#a855f7', '#f5a623'];
 
@@ -451,23 +452,23 @@ const Home = ({ navigation }) => {
       </View>
 
       <ScrollView style={s.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accentLime} />}>
-        <View style={s.quoteCard}>
+        <MotionView style={s.quoteCard} delay={20} variant="fade">
           <Text style={s.quoteText}>💬 "{getDailyQuote()}"</Text>
-        </View>
+        </MotionView>
 
-        <View style={s.card}>
+        <MotionView style={s.card} delay={70}>
           <Text style={s.sectionTitle}>Calories Remaining</Text>
           <Text style={[s.bigNumber, remaining < 0 && { color: colors.accentCoral }]}>{Math.abs(Math.round(remaining))}</Text>
           {remaining < 0 && <Text style={{ color: colors.accentCoral, fontSize: 12 }}>Over goal by {Math.abs(Math.round(remaining))} kcal</Text>}
           <View style={s.formulaRow}><Text style={s.formulaLabel}>Goal</Text><Text style={s.formulaValue}>{Math.round(summary?.calories_target || 0)}</Text></View>
           <View style={s.formulaRow}><Text style={s.formulaLabel}>Food −</Text><Text style={s.formulaValue}>{Math.round(summary?.calories_consumed || 0)}</Text></View>
           <View style={s.formulaRow}><Text style={s.formulaLabel}>Exercise +</Text><Text style={s.formulaValue}>{Math.round(summary?.calories_burned || 0)}</Text></View>
-          <View style={s.progressBar}><View style={[s.progressFill, { width: `${progress}%`, backgroundColor: progress >= 100 ? colors.accentCoral : progress >= 80 ? colors.accentAmber : colors.accentLime }]} /></View>
+          <View style={s.progressBar}><AnimatedProgressFill progress={progress} style={[s.progressFill, { backgroundColor: progress >= 100 ? colors.accentCoral : progress >= 80 ? colors.accentAmber : colors.accentLime }]} /></View>
           <Text style={s.progressLabel}>{Math.round(progress)}% of goal</Text>
-        </View>
+        </MotionView>
 
         {calorieStreak && (
-          <View style={s.card}>
+          <MotionView style={s.card} delay={120}>
             <View style={s.streakHead}>
               <View style={s.streakIcon}><Text style={s.streakIconText}>F</Text></View>
               <View style={{ flex: 1 }}>
@@ -476,7 +477,7 @@ const Home = ({ navigation }) => {
               </View>
               <Text style={s.streakCount}>{streakDays}/7</Text>
             </View>
-            <View style={s.streakProgress}><View style={[s.streakProgressFill, { width: `${(streakDays / 7) * 100}%` }]} /></View>
+            <View style={s.streakProgress}><AnimatedProgressFill progress={(streakDays / 7) * 100} style={s.streakProgressFill} /></View>
             <View style={s.streakWeek}>
               {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((day, index) => (
                 <View key={day} style={s.streakDay}>
@@ -490,10 +491,10 @@ const Home = ({ navigation }) => {
             <Text style={s.streakNudge}>
               {streakDays === 7 ? 'Week Warrior unlocked.' : `Keep going. ${7 - streakDays} more ${7 - streakDays === 1 ? 'day' : 'days'} to unlock Week Warrior.`}
             </Text>
-          </View>
+          </MotionView>
         )}
 
-        <View style={s.card}>
+        <MotionView style={s.card} delay={170}>
           <View style={s.rowBetweenCompact}>
             <Text style={s.sectionTitle}>Macro balance</Text>
             <Text style={s.sectionKicker}>Today</Text>
@@ -509,34 +510,34 @@ const Home = ({ navigation }) => {
                   </View>
                   <Text style={s.macroValue}>{Math.round(macro.value)}g <Text style={s.macroTarget}>/ {Math.round(macro.target)}g</Text></Text>
                 </View>
-                <View style={s.macroTrack}><View style={[s.macroFill, { width: `${macroProgress}%`, backgroundColor: macro.color }]} /></View>
+                <View style={s.macroTrack}><AnimatedProgressFill progress={macroProgress} style={[s.macroFill, { backgroundColor: macro.color }]} /></View>
               </View>
             );
           })}
           {!macroRows.some((macro) => macro.value > 0) && <Text style={s.macroEmpty}>Log food to start building your macro picture.</Text>}
-        </View>
+        </MotionView>
 
-        <View style={s.card}>
+        <MotionView style={s.card} delay={220}>
           <View style={s.rowBetween}>
             <View>
               <Text style={s.sectionTitle}>Water Intake</Text>
               <Text style={s.bigNumber}>{summary?.water_glasses || 0}</Text>
               <Text style={s.subText}>of {waterGoal} glasses</Text>
             </View>
-            <Text style={{ fontSize: 40 }}>💧</Text>
+            <FloatingView distance={5} duration={1600}><Text style={{ fontSize: 40 }}>💧</Text></FloatingView>
           </View>
           <View style={s.glassRow}>
             {Array.from({ length: waterGoal }).map((_, i) => (
               <Text key={i} style={[s.glass, i < (summary?.water_glasses || 0) && s.glassFilled]}>💧</Text>
             ))}
           </View>
-          <TouchableOpacity style={[s.btnSecondary, (summary?.water_glasses || 0) >= waterGoal && s.btnDisabled]} onPress={handleAddGlass} disabled={(summary?.water_glasses || 0) >= waterGoal}>
+          <MotionPressable style={s.btnSecondary} onPress={handleAddGlass} disabled={(summary?.water_glasses || 0) >= waterGoal}>
             <Text style={s.btnSecText}>+ Add Glass</Text>
-          </TouchableOpacity>
-        </View>
+          </MotionPressable>
+        </MotionView>
 
         {suggestionsData && (
-          <View style={s.card}>
+          <MotionView style={s.card} delay={270}>
             <View style={s.suggestionHeader}>
               <Text style={s.sectionTitle}>AI Meal Suggestions</Text>
               <TouchableOpacity style={s.refreshBtn} onPress={refreshSuggestions} disabled={suggestionsRefreshing}>
@@ -547,7 +548,7 @@ const Home = ({ navigation }) => {
             </View>
             <Text style={s.suggestionSummary}>{suggestionsData.summary_text}</Text>
             {(suggestionsData.suggestions || []).map((suggestion) => (
-              <View key={suggestion.name} style={s.suggestionTile}>
+              <MotionView key={suggestion.name} style={s.suggestionTile} variant="fade" layout>
                 <View style={s.suggestionTop}>
                   <Text style={s.suggestionName}>{suggestion.name}</Text>
                   <Text style={s.suggestionCalories}>{Math.round(suggestion.calories)} kcal</Text>
@@ -559,12 +560,12 @@ const Home = ({ navigation }) => {
                   <Text style={s.suggestionMacro}>C {Math.round(suggestion.carbs)}g</Text>
                   <Text style={s.suggestionMacro}>F {Math.round(suggestion.fat)}g</Text>
                 </View>
-              </View>
+              </MotionView>
             ))}
-          </View>
+          </MotionView>
         )}
 
-        <View style={s.card}>
+        <MotionView style={s.card} delay={320}>
           <Text style={s.sectionTitle}>Quick Actions</Text>
           <View style={s.quickActions}>
             {[
@@ -573,15 +574,15 @@ const Home = ({ navigation }) => {
               { icon: '⚖️', label: 'Log Weight', action: () => setModal('weight') },
               { icon: '📚', label: 'Planner', action: () => setShowPlanner(true) },
             ].map((a) => (
-              <TouchableOpacity key={a.label} style={s.quickBtn} onPress={a.action}>
+              <MotionPressable key={a.label} style={s.quickBtn} onPress={a.action}>
                 <Text style={{ fontSize: 28 }}>{a.icon}</Text>
                 <Text style={s.quickLabel}>{a.label}</Text>
-              </TouchableOpacity>
+              </MotionPressable>
             ))}
           </View>
-        </View>
+        </MotionView>
 
-        <View style={s.card}>
+        <MotionView style={s.card} delay={370}>
           <Text style={s.sectionTitle}>Suggested Workouts</Text>
           {suggestions.map((sg, i) => (
             <View key={i} style={s.workoutRow}>
@@ -593,7 +594,7 @@ const Home = ({ navigation }) => {
               <Text style={s.workoutCal}>~{sg.calories} kcal</Text>
             </View>
           ))}
-        </View>
+        </MotionView>
 
         <View style={{ height: 20 }} />
       </ScrollView>

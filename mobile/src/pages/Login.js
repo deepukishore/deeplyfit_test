@@ -4,6 +4,7 @@ import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
 import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import AppBackdrop from '../components/AppBackdrop';
+import { FloatingView, MotionPressable, MotionView } from '../components/Motion';
 
 const Login = ({ navigation }) => {
   const [mode, setMode] = useState('login');
@@ -42,21 +43,23 @@ const Login = ({ navigation }) => {
   return (
     <ScrollView style={s.page} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
       <AppBackdrop compact />
-      <View style={s.logo}>
-        <Image source={require('../../assets/icon.png')} style={s.logoImage} resizeMode="cover" />
+      <MotionView style={s.logo} delay={30} variant="fade">
+        <FloatingView distance={6} duration={1900}>
+          <Image source={require('../../assets/icon.png')} style={s.logoImage} resizeMode="cover" />
+        </FloatingView>
         <Text style={s.logoTitle}>Deeply Fit</Text>
         <Text style={s.logoSub}>Your intelligent guide to a deeper, fitter you.</Text>
-      </View>
+      </MotionView>
 
-      <View style={s.card}>
+      <MotionView style={s.card} delay={120}>
         <Text style={s.cardTitle}>{mode === 'login' ? 'Welcome back' : 'Create account'}</Text>
         <Text style={s.subtitle}>{mode === 'login' ? 'Sign in to continue your journey' : 'Start your transformation today'}</Text>
 
         {mode === 'register' && (
-          <View style={s.inputGroup}>
+          <MotionView style={s.inputGroup} variant="fade">
             <Text style={s.label}>Full Name</Text>
             <TextInput style={s.input} placeholder="Alex Johnson" placeholderTextColor={colors.textMuted} value={name} onChangeText={setName} autoComplete="name" />
-          </View>
+          </MotionView>
         )}
 
         <View style={s.inputGroup}>
@@ -74,9 +77,9 @@ const Login = ({ navigation }) => {
           )}
         </View>
 
-        <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={handleSubmit} disabled={loading}>
+        <MotionPressable style={s.btn} onPress={handleSubmit} disabled={loading}>
           {loading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>{mode === 'login' ? '\u2192 Sign In' : '\u2192 Create Account'}</Text>}
-        </TouchableOpacity>
+        </MotionPressable>
 
         <View style={s.switchRow}>
           <Text style={s.switchText}>{mode === 'login' ? "Don't have an account? " : 'Already have an account? '}</Text>
@@ -84,7 +87,7 @@ const Login = ({ navigation }) => {
             <Text style={s.switchLink}>{mode === 'login' ? 'Sign up free' : 'Sign in'}</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </MotionView>
 
       <Text style={s.terms}>By continuing, you agree to our Terms & Privacy Policy</Text>
     </ScrollView>

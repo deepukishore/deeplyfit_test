@@ -9,6 +9,7 @@ import { api } from '../utils/api';
 import { formatDate } from '../utils/fitness';
 import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import AppBackdrop from '../components/AppBackdrop';
+import { MotionPressable, MotionView } from '../components/Motion';
 
 const CHART_WIDTH = Dimensions.get('window').width - 64;
 const CHART_HEIGHT = 160;
@@ -231,9 +232,9 @@ const Progress = () => {
       <AppBackdrop />
       <View style={s.header}>
         <Text style={s.headerTitle}>Progress</Text>
-        <TouchableOpacity style={s.addBtn} onPress={() => setShowWeightModal(true)}>
+        <MotionPressable style={s.addBtn} onPress={() => setShowWeightModal(true)}>
           <Text style={s.addBtnText}>+ Weight</Text>
-        </TouchableOpacity>
+        </MotionPressable>
       </View>
 
       <View style={s.proBanner}>
@@ -249,17 +250,17 @@ const Progress = () => {
           <ActivityIndicator color={colors.accentLime} style={{ marginTop: 40 }} />
         ) : (
           <>
-            <View style={s.statsGrid}>
-              {stats.map((stat) => (
-                <View key={stat.label} style={s.statCard}>
+            <MotionView style={s.statsGrid} delay={30}>
+              {stats.map((stat, index) => (
+                <MotionView key={stat.label} style={s.statCard} delay={50 + (index * 40)} variant="fade">
                   <Text style={{ fontSize: 24 }}>{stat.icon}</Text>
                   <Text style={[s.statValue, { color: stat.color }]}>{stat.value}</Text>
                   <Text style={s.statLabel}>{stat.label}</Text>
-                </View>
+                </MotionView>
               ))}
-            </View>
+            </MotionView>
 
-            <View style={s.chartCard}>
+            <MotionView style={s.chartCard} delay={130}>
               <View style={s.rowBetween}>
                 <Text style={s.chartTitle}>BMI Tracker</Text>
                 {!!bmiHistory?.bmi_category && <Text style={s.badge}>{bmiHistory.bmi_category}</Text>}
@@ -270,9 +271,9 @@ const Progress = () => {
                   ? `Healthy weight range: ${bmiHistory.healthy_weight_min} - ${bmiHistory.healthy_weight_max} kg`
                   : 'Add your height in Profile and log your weight to calculate BMI.'}
               </Text>
-            </View>
+            </MotionView>
 
-            <View style={s.chartCard}>
+            <MotionView style={s.chartCard} delay={180}>
               <Text style={s.chartTitle}>Weight Trend</Text>
               {weightValues.length < 2 ? (
                 <View style={s.emptyState}>
@@ -289,9 +290,9 @@ const Progress = () => {
                   </View>
                 </>
               )}
-            </View>
+            </MotionView>
 
-            <View style={s.chartCard}>
+            <MotionView style={s.chartCard} delay={230}>
               <Text style={s.chartTitle}>Weekly Calories vs Goal</Text>
               {calorieValues.length === 0 ? (
                 <View style={s.emptyState}>
@@ -308,9 +309,9 @@ const Progress = () => {
                   </View>
                 </>
               )}
-            </View>
+            </MotionView>
 
-            <View style={s.comparisonCard}>
+            <MotionView style={s.comparisonCard} delay={280}>
               <View style={s.comparisonHeader}>
                 <View>
                   <Text style={s.sectionKicker}>Comparison</Text>
@@ -334,10 +335,10 @@ const Progress = () => {
                   <Text style={s.comparisonMeta}>{previousAverage !== null ? 'kcal per day' : 'Keep logging'}</Text>
                 </View>
               </View>
-            </View>
+            </MotionView>
 
             {achievements.length > 0 && (
-              <View style={s.achievementWall}>
+              <MotionView style={s.achievementWall} delay={330}>
                 <View style={s.achievementHeader}>
                   <View>
                     <Text style={s.sectionKicker}>Milestones</Text>
@@ -346,19 +347,19 @@ const Progress = () => {
                   <Text style={s.badge}>{achievements.filter((item) => item.unlocked).length} unlocked</Text>
                 </View>
                 <View style={s.achievementGrid}>
-                  {achievements.slice(0, 8).map((achievement) => (
-                    <View key={achievement.key} style={[s.achievementCard, achievement.unlocked && s.achievementUnlocked]}>
+                  {achievements.slice(0, 8).map((achievement, index) => (
+                    <MotionView key={achievement.key} style={[s.achievementCard, achievement.unlocked && s.achievementUnlocked]} delay={360 + (index * 45)} variant="fade" layout>
                       <Text style={s.achievementIcon}>{achievement.unlocked ? achievement.icon : '🔒'}</Text>
                       <Text style={s.achievementName}>{achievement.name}</Text>
                       <Text style={s.achievementProgress}>{achievement.unlocked ? 'Unlocked' : `${achievement.progress?.current || 0}/${achievement.progress?.target || 0}`}</Text>
-                    </View>
+                    </MotionView>
                   ))}
                 </View>
-              </View>
+              </MotionView>
             )}
 
             {weightLogs.length > 0 && (
-              <View style={s.card}>
+              <MotionView style={s.card} delay={380}>
                 <Text style={s.chartTitle}>Weight History</Text>
                 {[...weightLogs]
                   .reverse()
@@ -373,11 +374,11 @@ const Progress = () => {
                       </Text>
                     </View>
                   ))}
-              </View>
+              </MotionView>
             )}
 
             {user?.bmr && (
-              <View style={s.card}>
+              <MotionView style={s.card} delay={430}>
                 <Text style={s.chartTitle}>Your Metrics</Text>
                 {[
                   { label: 'BMR', val: `${Math.round(user.bmr)} kcal` },
@@ -392,7 +393,7 @@ const Progress = () => {
                     <Text style={s.statValue}>{metric.val}</Text>
                   </View>
                 ))}
-              </View>
+              </MotionView>
             )}
           </>
         )}

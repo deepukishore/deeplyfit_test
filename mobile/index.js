@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import { registerRootComponent } from 'expo';
-import { ActivityIndicator, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -23,6 +23,8 @@ Text.defaultProps.style = [defaultTextStyle, Text.defaultProps.style];
 TextInput.defaultProps = TextInput.defaultProps || {};
 TextInput.defaultProps.style = [defaultTextStyle, TextInput.defaultProps.style];
 TextInput.defaultProps.placeholderTextColor = TextInput.defaultProps.placeholderTextColor || colors.textMuted;
+TouchableOpacity.defaultProps = TouchableOpacity.defaultProps || {};
+TouchableOpacity.defaultProps.activeOpacity = TouchableOpacity.defaultProps.activeOpacity ?? 0.72;
 
 const ThemedApplication = () => {
   const { user } = useAuth();

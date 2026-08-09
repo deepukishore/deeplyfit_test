@@ -9,6 +9,7 @@ import { useRefreshRegistration } from '../context/RefreshContext';
 import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import UserAvatar from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
+import { AnimatedProgressFill, MotionPressable, MotionView } from '../components/Motion';
 
 const POST_TYPES = [
   { value: 'general', label: 'General' },
@@ -167,16 +168,16 @@ const Community = ({ navigation }) => {
       <AppBackdrop />
       <View style={s.header}>
         <Text style={s.headerTitle}>Community</Text>
-        <TouchableOpacity style={s.addBtn} onPress={() => setShowCreate(true)}>
+        <MotionPressable style={s.addBtn} onPress={() => setShowCreate(true)}>
           <Text style={s.addBtnText}>+ Post</Text>
-        </TouchableOpacity>
+        </MotionPressable>
       </View>
 
       <View style={s.tabs}>
         {['feed', 'challenges'].map((t) => (
-          <TouchableOpacity key={t} style={[s.tab, tab === t && s.tabActive]} onPress={() => setTab(t)}>
+          <MotionPressable key={t} style={[s.tab, tab === t && s.tabActive]} onPress={() => setTab(t)}>
             <Text style={[s.tabText, tab === t && s.tabTextActive]}>{t.charAt(0).toUpperCase() + t.slice(1)}</Text>
-          </TouchableOpacity>
+          </MotionPressable>
         ))}
       </View>
 
@@ -184,8 +185,8 @@ const Community = ({ navigation }) => {
         {tab === 'feed' && (
           loading ? <ActivityIndicator color={colors.accentLime} style={{ marginTop: 40 }} /> : (
             <>
-              {posts.map((post) => (
-                <View key={post.id} style={s.postCard}>
+              {posts.map((post, index) => (
+                <MotionView key={post.id} style={s.postCard} delay={Math.min(30 + (index * 55), 300)} layout>
                   <View style={s.postHeader}>
                     <TouchableOpacity style={s.postAvatar} onPress={() => post.author.public_profile_slug && navigation.navigate('PublicProfile', { slug: post.author.public_profile_slug })}>
                       <UserAvatar value={post.author.profile_picture} initials={initialsFor(post.author)} size={42} />
@@ -199,9 +200,9 @@ const Community = ({ navigation }) => {
                   <Text style={s.postContent}>{post.content}</Text>
                   {post.image_data && <Image source={{ uri: post.image_data }} style={s.postImg} />}
                   <View style={s.postActions}>
-                    <TouchableOpacity style={s.actionBtn} onPress={() => toggleLike(post.id)}>
+                    <MotionPressable style={s.actionBtn} onPress={() => toggleLike(post.id)}>
                       <Text style={[s.actionText, post.liked_by_me && { color: colors.accentCoral }]}>{post.liked_by_me ? '❤️' : '🤍'} {post.like_count}</Text>
-                    </TouchableOpacity>
+                    </MotionPressable>
                     <Text style={s.actionText}>💬 {post.comment_count}</Text>
                   </View>
                   {post.comments.map((c) => (
@@ -216,7 +217,7 @@ const Community = ({ navigation }) => {
                       <Text style={s.sendBtnText}>Send</Text>
                     </TouchableOpacity>
                   </View>
-                </View>
+                </MotionView>
               ))}
               {posts.length === 0 && <View style={s.emptyCard}><Text style={s.emptyTitle}>No posts yet</Text><Text style={s.emptyText}>Be the first to share a win!</Text></View>}
             </>
@@ -229,13 +230,13 @@ const Community = ({ navigation }) => {
             {challengeLoading ? (
               <ActivityIndicator color={colors.accentLime} style={{ marginTop: 24 }} />
             ) : (
-              challenges.map((ch) => (
-                <View key={ch.id} style={s.challengeCard}>
+              challenges.map((ch, index) => (
+                <MotionView key={ch.id} style={s.challengeCard} delay={Math.min(30 + (index * 60), 300)} layout>
                   <Text style={{ fontSize: 36, marginRight: 16 }}>{ch.icon}</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={s.challengeName}>{ch.name}</Text>
                     <Text style={s.challengeMeta}>{ch.participants} participants · {ch.daysLeft} days left</Text>
-                    <View style={s.progressBar}><View style={[s.progressFill, { width: `${Math.max(8, Math.min(100, ((30 - ch.daysLeft) / 30) * 100))}%` }]} /></View>
+                    <View style={s.progressBar}><AnimatedProgressFill progress={Math.max(8, Math.min(100, ((30 - ch.daysLeft) / 30) * 100))} style={s.progressFill} /></View>
                   </View>
                   <TouchableOpacity
                     style={[s.joinBtn, ch.joinedByMe && s.joinBtnActive]}
@@ -244,7 +245,7 @@ const Community = ({ navigation }) => {
                   >
                     <Text style={s.joinBtnText}>{ch.joinedByMe ? 'Joined' : 'Join'}</Text>
                   </TouchableOpacity>
-                </View>
+                </MotionView>
               ))
             )}
           </>

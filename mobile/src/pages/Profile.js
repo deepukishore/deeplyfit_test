@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, TextInput } from 'react-native';
+import { Alert, View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Modal, TextInput, RefreshControl } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
@@ -12,23 +13,30 @@ import { colors, createThemedStyles, isDarkModeEnabled, radius, spacing } from '
 import PremiumUpgradeModal from '../components/PremiumUpgradeModal';
 import UserAvatar, { BUILT_IN_AVATARS } from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
+import { AnimatedProgressFill, FloatingView, MotionPressable, MotionView } from '../components/Motion';
 import { formatPremiumExpiry, getProExpiry, isPro } from '../utils/premium';
 
+const profileFormFromUser = (user) => ({
+  name: user.name || '',
+  bio: user.bio || '',
+  profile_picture: user.profile_picture || '',
+  goal_weight: String(user.goal_weight || ''),
+  activity_level: user.activity_level || '',
+  fitness_goal: user.fitness_goal || '',
+  public_profile_slug: user.public_profile_slug || '',
+  profile_visibility: user.profile_visibility || 'public',
+  share_achievements: user.share_achievements ?? 1,
+});
+
 const ProfileSettingsModal = ({ visible, user, onClose, onSave }) => {
-  const [form, setForm] = useState({
-    name: user.name || '',
-    bio: user.bio || '',
-    profile_picture: user.profile_picture || '',
-    goal_weight: String(user.goal_weight || ''),
-    activity_level: user.activity_level || '',
-    fitness_goal: user.fitness_goal || '',
-    public_profile_slug: user.public_profile_slug || '',
-    profile_visibility: user.profile_visibility || 'public',
-    share_achievements: user.share_achievements ?? 1,
-  });
+  const [form, setForm] = useState(() => profileFormFromUser(user));
   const [loading, setLoading] = useState(false);
   const [preparingImage, setPreparingImage] = useState(false);
   const initials = getInitials(form.name, user.email);
+
+  useEffect(() => {
+    if (visible) setForm(profileFormFromUser(user));
+  }, [user, visible]);
 
   const chooseProfilePicture = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -64,7 +72,7 @@ const ProfileSettingsModal = ({ visible, user, onClose, onSave }) => {
         name: form.name,
         bio: form.bio,
         profile_picture: form.profile_picture,
-        goal_weight: parseFloat(form.goal_weight),
+        goal_weight: form.goal_weight ? parseFloat(form.goal_weight) : null,
         activity_level: form.activity_level,
         fitness_goal: form.fitness_goal,
         public_profile_slug: form.public_profile_slug,
@@ -184,6 +192,26 @@ const ProfileSettingsModal = ({ visible, user, onClose, onSave }) => {
               </View>
             </View>
             <View style={s.inputGroup}>
+              <Text style={s.label}>Activity level</Text>
+              <View style={s.chipRowWrap}>
+                {[
+                  ['sedentary', 'Sedentary'],
+                  ['lightly_active', 'Light'],
+                  ['moderately_active', 'Moderate'],
+                  ['very_active', 'Very active'],
+                  ['extra_active', 'Extra active'],
+                ].map(([value, label]) => (
+                  <TouchableOpacity
+                    key={value}
+                    style={[s.activityChip, form.activity_level === value && s.chipActive]}
+                    onPress={() => setForm((current) => ({ ...current, activity_level: value }))}
+                  >
+                    <Text style={[s.chipText, form.activity_level === value && s.chipTextActive]}>{label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+            <View style={s.inputGroup}>
               <Text style={s.label}>Profile visibility</Text>
               <View style={s.chipRow}>
                 {[['public', 'Public'], ['private', 'Private']].map(([value, label]) => (
@@ -197,6 +225,18 @@ const ProfileSettingsModal = ({ visible, user, onClose, onSave }) => {
                 ))}
               </View>
             </View>
+            <TouchableOpacity
+              style={s.privacyToggleRow}
+              onPress={() => setForm((current) => ({ ...current, share_achievements: current.share_achievements ? 0 : 1 }))}
+            >
+              <View style={{ flex: 1, marginRight: 12 }}>
+                <Text style={s.privacyToggleTitle}>Share achievements</Text>
+                <Text style={s.privacyToggleCopy}>Show unlocked milestones on your public profile.</Text>
+              </View>
+              <View style={[s.toggle, Boolean(form.share_achievements) && s.toggleOn]}>
+                <View style={[s.toggleThumb, Boolean(form.share_achievements) && s.toggleThumbOn]} />
+              </View>
+            </TouchableOpacity>
             <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={handleSave} disabled={loading}>
               {loading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>Save changes</Text>}
             </TouchableOpacity>
@@ -210,9 +250,11 @@ const ProfileSettingsModal = ({ visible, user, onClose, onSave }) => {
 
 const Profile = ({ navigation }) => {
   const { user, logout, refreshUser, updateUser, toggleDarkMode } = useAuth();
+  const insets = useSafeAreaInsets();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [achievements, setAchievements] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadAchievements = useCallback(async () => {
     try {
@@ -226,9 +268,17 @@ const Profile = ({ navigation }) => {
     loadAchievements();
   }, [loadAchievements]);
 
-  useRefreshRegistration(async () => {
+  const refreshProfile = useCallback(async () => {
     await Promise.all([refreshUser().catch(() => null), loadAchievements()]);
-  });
+  }, [loadAchievements, refreshUser]);
+
+  useRefreshRegistration(refreshProfile);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshProfile();
+    setRefreshing(false);
+  };
 
   if (!user) return null;
 
@@ -237,9 +287,18 @@ const Profile = ({ navigation }) => {
   const premiumExpiry = getProExpiry(user);
   const darkMode = isDarkModeEnabled(user.dark_mode);
 
-  const handleLogout = async () => {
-    await logout();
-    Toast.show({ type: 'success', text1: 'Logged out. See you soon!' });
+  const handleLogout = () => {
+    Alert.alert('Log out?', 'You will need to sign in again to access your account.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log Out',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+          Toast.show({ type: 'success', text1: 'Logged out. See you soon!' });
+        },
+      },
+    ]);
   };
 
   const handleToggleDarkMode = async () => {
@@ -262,13 +321,23 @@ const Profile = ({ navigation }) => {
   return (
     <View style={s.page}>
       <AppBackdrop />
-      <View style={s.header}>
+      <View style={[s.header, { paddingTop: Math.max(insets.top, 20) + 10 }]}>
         <Text style={s.headerTitle}>Profile</Text>
       </View>
 
-      <ScrollView style={s.scroll}>
-        <View style={s.profileHeader}>
-          <UserAvatar value={user.profile_picture} initials={initials} size={72} style={s.avatarLarge} />
+      <ScrollView
+        style={s.scroll}
+        contentContainerStyle={[s.scrollContent, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accentLime} />}
+      >
+        <MotionView style={s.profileHeader} delay={30}>
+          <MotionPressable style={s.editProfileBtn} onPress={() => setShowEditModal(true)}>
+            <Text style={s.editProfileBtnText}>Edit</Text>
+          </MotionPressable>
+          <FloatingView distance={4} duration={2100}>
+            <UserAvatar value={user.profile_picture} initials={initials} size={72} style={s.avatarLarge} />
+          </FloatingView>
           <Text style={s.profileName}>{user.name || 'Athlete'}</Text>
           <Text style={s.profileEmail}>{user.email}</Text>
           <View style={[s.proBadge, isPremiumActive ? s.proBadgeActive : s.proBadgeInactive]}>
@@ -280,13 +349,13 @@ const Profile = ({ navigation }) => {
               : 'Unlock unlimited scans, AI coaching, advanced analytics, and premium reports.'}
           </Text>
           {user.bio ? <Text style={s.profileBio}>{user.bio}</Text> : null}
-          <TouchableOpacity style={s.proBtn} onPress={() => setShowPremiumModal(true)}>
+          <MotionPressable style={s.proBtn} onPress={() => setShowPremiumModal(true)}>
             <Text style={s.proBtnText}>{isPremiumActive ? 'Manage PRO' : 'Get Premium'}</Text>
-          </TouchableOpacity>
-        </View>
+          </MotionPressable>
+        </MotionView>
 
         {user.current_weight ? (
-          <View style={s.statsGrid}>
+          <MotionView style={s.statsGrid} delay={90}>
             {[
               { label: 'Current', value: `${user.current_weight}kg`, color: colors.accentBlue },
               { label: 'Goal', value: `${user.goal_weight || '-'}kg`, color: colors.accentLime },
@@ -298,10 +367,16 @@ const Profile = ({ navigation }) => {
                 <Text style={s.statLabel}>{item.label}</Text>
               </View>
             ))}
-          </View>
+          </MotionView>
         ) : null}
 
-        <View style={s.settingsSection}>
+        <MotionView style={s.settingsSection} delay={140}>
+          <View style={s.sectionHeader}>
+            <View>
+              <Text style={s.sectionEyebrow}>Account</Text>
+              <Text style={s.sectionTitle}>Settings</Text>
+            </View>
+          </View>
           <TouchableOpacity style={s.settingsItem} onPress={() => setShowEditModal(true)}>
             <Text style={s.settingsLabel}>✏️ Goals, public profile & privacy</Text>
             <Text style={s.settingsArrow}>›</Text>
@@ -316,15 +391,31 @@ const Profile = ({ navigation }) => {
             <Text style={s.settingsLabel}>About Deeply Fit</Text>
             <Text style={s.settingsArrow}>{'>'}</Text>
           </TouchableOpacity>
-        </View>
+        </MotionView>
 
-        <View style={s.settingsSection}>
-          <View style={s.settingsItem}>
-            <Text style={s.settingsLabel}>🔗 @{user.public_profile_slug || 'unset'}</Text>
+        <MotionView style={s.settingsSection} delay={190}>
+          <View style={s.sectionHeader}>
+            <View>
+              <Text style={s.sectionEyebrow}>Sharing</Text>
+              <Text style={s.sectionTitle}>Public profile</Text>
+            </View>
             <Text style={[s.badge, user.profile_visibility === 'private' ? s.badgeAmber : s.badgeLime]}>{user.profile_visibility}</Text>
           </View>
+          <View style={s.publicProfileBody}>
+            <View style={s.publicHandleRow}>
+              <View style={s.publicLinkIcon}><Text style={s.publicLinkIconText}>@</Text></View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.publicHandle}>@{user.public_profile_slug || 'unset'}</Text>
+                <Text style={s.publicHint}>{user.public_profile_slug ? 'Your shareable Deeply Fit profile' : 'Add a public handle in Edit Profile'}</Text>
+              </View>
+            </View>
+            <View style={s.publicStatRow}>
+              <Text style={s.publicStatLabel}>Achievement visibility</Text>
+              <Text style={s.publicStatValue}>{user.share_achievements ? 'Shared' : 'Hidden'}</Text>
+            </View>
+          </View>
           <View style={s.btnRow}>
-            <TouchableOpacity style={[s.btnSmall, { marginRight: 8 }]} onPress={copyPublicLink}>
+            <TouchableOpacity style={[s.btnSmall, { marginRight: 8 }, !user.public_profile_slug && s.btnDisabled]} onPress={copyPublicLink} disabled={!user.public_profile_slug}>
               <Text style={s.btnSmallText}>Copy link</Text>
             </TouchableOpacity>
             {user.public_profile_slug ? (
@@ -333,37 +424,45 @@ const Profile = ({ navigation }) => {
               </TouchableOpacity>
             ) : null}
           </View>
-        </View>
+        </MotionView>
 
         {achievements.length > 0 ? (
-          <View style={s.settingsSection}>
-            <View style={s.rowBetween}>
-              <Text style={s.sectionTitle}>Achievements</Text>
-              <Text style={s.badge}>{achievements.filter((achievement) => achievement.unlocked).length} unlocked</Text>
+          <MotionView style={s.achievementsSection} delay={240}>
+            <View style={s.sectionHeader}>
+              <View>
+                <Text style={s.sectionEyebrow}>Milestones</Text>
+                <Text style={s.sectionTitle}>Achievements</Text>
+              </View>
+              <Text style={[s.badge, s.badgePurple]}>{achievements.filter((achievement) => achievement.unlocked).length} unlocked</Text>
             </View>
-            {achievements.map((achievement) => {
-              const pct = Math.min((achievement.progress.current / achievement.progress.target) * 100, 100);
-              return (
-                <View key={achievement.key} style={[s.achCard, achievement.unlocked && s.achUnlocked]}>
-                  <View style={s.rowBetween}>
-                    <Text style={{ fontSize: 28 }}>{achievement.icon}</Text>
-                    <Text style={[s.badge, achievement.unlocked ? s.badgeLime : s.badgeAmber]}>
-                      {achievement.unlocked ? 'Unlocked' : `${achievement.progress.current}/${achievement.progress.target}`}
-                    </Text>
-                  </View>
-                  <Text style={s.achName}>{achievement.name}</Text>
-                  <Text style={s.achDesc}>{achievement.description}</Text>
-                  <View style={s.progressBar}><View style={[s.progressFill, { width: `${pct}%` }]} /></View>
-                </View>
-              );
-            })}
-          </View>
+            <View style={s.achievementGrid}>
+              {achievements.map((achievement, index) => {
+                const current = Number(achievement.progress?.current || 0);
+                const target = Math.max(Number(achievement.progress?.target || 1), 1);
+                const pct = Math.min((current / target) * 100, 100);
+                return (
+                  <MotionView key={achievement.key} style={[s.achCard, achievement.unlocked && s.achUnlocked]} delay={280 + (index * 55)} variant="fade" layout>
+                    <View style={s.achievementTopRow}>
+                      <View style={[s.achievementIconWrap, achievement.unlocked && s.achievementIconWrapUnlocked]}>
+                        <Text style={s.achievementIcon}>{achievement.icon}</Text>
+                      </View>
+                      <Text style={[s.badge, achievement.unlocked ? s.badgeLime : s.badgeAmber]}>
+                        {achievement.unlocked ? 'Done' : `${current}/${target}`}
+                      </Text>
+                    </View>
+                    <Text style={s.achName}>{achievement.name}</Text>
+                    <Text style={s.achDesc} numberOfLines={3}>{achievement.description}</Text>
+                    <View style={s.progressBar}><AnimatedProgressFill progress={pct} style={s.progressFill} /></View>
+                  </MotionView>
+                );
+              })}
+            </View>
+          </MotionView>
         ) : null}
 
-        <TouchableOpacity style={s.logoutBtn} onPress={handleLogout}>
+        <MotionPressable style={s.logoutBtn} onPress={handleLogout}>
           <Text style={s.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-        <View style={{ height: 20 }} />
+        </MotionPressable>
       </ScrollView>
 
       <ProfileSettingsModal
@@ -384,10 +483,13 @@ const Profile = ({ navigation }) => {
 
 const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { padding: spacing.lg, paddingTop: 56, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
-  scroll: { flex: 1, padding: spacing.lg },
-  profileHeader: { alignItems: 'center', marginBottom: 20 },
+  header: { paddingHorizontal: spacing.lg, paddingBottom: 16, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerTitle: { fontSize: 24, fontWeight: '800', color: colors.textPrimary },
+  scroll: { flex: 1 },
+  scrollContent: { padding: spacing.lg },
+  profileHeader: { position: 'relative', alignItems: 'center', backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.xl, marginBottom: 14, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  editProfileBtn: { position: 'absolute', top: 14, right: 14, paddingHorizontal: 11, paddingVertical: 6, borderRadius: 10, backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
+  editProfileBtnText: { color: colors.accentPurple, fontSize: 11, fontWeight: '800' },
   avatarLarge: { marginBottom: 10 },
   profileName: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   profileEmail: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
@@ -403,7 +505,9 @@ const s = createThemedStyles(() => ({
   statCard: { flex: 1, minWidth: '45%', backgroundColor: colors.bgCard, borderRadius: radius.lg, padding: spacing.md, alignItems: 'center', borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 2 },
   statValue: { fontSize: 18, fontWeight: '800', color: colors.textPrimary },
   statLabel: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
-  settingsSection: { backgroundColor: colors.bgCard, borderRadius: radius.xl, marginBottom: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+  settingsSection: { backgroundColor: colors.bgCard, borderRadius: radius.xl, marginBottom: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden', shadowColor: '#48236f', shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 2 },
+  sectionHeader: { minHeight: 62, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: colors.border },
+  sectionEyebrow: { color: colors.accentPurple, fontSize: 9, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 3 },
   settingsItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
   settingsLabel: { color: colors.textPrimary, fontSize: 14, fontWeight: '600' },
   settingsArrow: { color: colors.textMuted, fontSize: 18 },
@@ -414,20 +518,35 @@ const s = createThemedStyles(() => ({
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, fontSize: 11, fontWeight: '700', overflow: 'hidden' },
   badgeLime: { backgroundColor: 'rgba(200,241,53,0.12)', color: colors.accentLime },
   badgeAmber: { backgroundColor: 'rgba(245,166,35,0.12)', color: colors.accentAmber },
-  btnRow: { flexDirection: 'row', padding: spacing.md },
-  btnSmall: { backgroundColor: colors.accentLime, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
+  badgePurple: { backgroundColor: 'rgba(124,58,237,0.1)', color: colors.accentPurple },
+  publicProfileBody: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
+  publicHandleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  publicLinkIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(37,99,235,0.1)', marginRight: 11 },
+  publicLinkIconText: { color: colors.accentBlue, fontSize: 17, fontWeight: '900' },
+  publicHandle: { color: colors.textPrimary, fontSize: 15, fontWeight: '800' },
+  publicHint: { color: colors.textMuted, fontSize: 10, marginTop: 2 },
+  publicStatRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.border },
+  publicStatLabel: { color: colors.textMuted, fontSize: 11 },
+  publicStatValue: { color: colors.textPrimary, fontSize: 11, fontWeight: '700' },
+  btnRow: { flexDirection: 'row', paddingHorizontal: spacing.lg, paddingTop: 5, paddingBottom: spacing.lg },
+  btnSmall: { backgroundColor: colors.accentLime, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9 },
   btnSmallText: { color: colors.textInverse, fontWeight: '700', fontSize: 12 },
-  btnSmallSec: { backgroundColor: colors.bgElevated, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7, borderWidth: 1, borderColor: colors.border },
+  btnSmallSec: { backgroundColor: colors.bgElevated, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: colors.border },
   btnSmallSecText: { color: colors.textPrimary, fontWeight: '700', fontSize: 12 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  achCard: { backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: spacing.md, marginBottom: 7, borderWidth: 1, borderColor: colors.border },
-  achUnlocked: { borderColor: colors.accentLime },
-  achName: { color: colors.textPrimary, fontWeight: '700', fontSize: 14, marginTop: 6 },
-  achDesc: { color: colors.textSecondary, fontSize: 12, marginTop: 3, marginBottom: 7 },
+  achievementsSection: { backgroundColor: colors.bgCard, borderRadius: radius.xl, marginBottom: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden', shadowColor: '#48236f', shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 2 },
+  achievementGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, padding: spacing.md },
+  achCard: { width: '48%', minHeight: 154, backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: spacing.md, borderWidth: 1, borderColor: colors.border },
+  achUnlocked: { borderColor: colors.accentLime, backgroundColor: 'rgba(124,58,237,0.08)' },
+  achievementTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  achievementIconWrap: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgCard },
+  achievementIconWrapUnlocked: { backgroundColor: 'rgba(124,58,237,0.12)' },
+  achievementIcon: { fontSize: 21 },
+  achName: { color: colors.textPrimary, fontWeight: '800', fontSize: 12, lineHeight: 16 },
+  achDesc: { flex: 1, color: colors.textSecondary, fontSize: 9, lineHeight: 13, marginTop: 5, marginBottom: 9 },
   progressBar: { height: 5, backgroundColor: colors.bgPrimary, borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 3, backgroundColor: colors.accentLime },
-  logoutBtn: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(248,113,113,0.3)', marginBottom: 14 },
+  logoutBtn: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: 15, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(248,113,113,0.3)', marginTop: 2 },
   logoutText: { color: colors.accentCoral, fontWeight: '700', fontSize: 15 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xl, maxHeight: '90%' },
@@ -453,10 +572,15 @@ const s = createThemedStyles(() => ({
   input: { backgroundColor: colors.bgElevated, borderRadius: 10, padding: 12, color: colors.textPrimary, fontSize: 14, borderWidth: 1, borderColor: colors.border },
   row: { flexDirection: 'row', marginBottom: 14 },
   chipRow: { flexDirection: 'row', gap: 7 },
+  chipRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   chip: { flex: 1, padding: 9, borderRadius: 8, backgroundColor: colors.bgElevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  activityChip: { width: '31%', minHeight: 40, paddingHorizontal: 7, paddingVertical: 9, borderRadius: 8, backgroundColor: colors.bgElevated, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
   chipActive: { backgroundColor: 'rgba(200,241,53,0.12)', borderColor: colors.accentLime },
   chipText: { color: colors.textMuted, fontWeight: '600', fontSize: 11 },
   chipTextActive: { color: colors.accentLime },
+  privacyToggleRow: { flexDirection: 'row', alignItems: 'center', padding: 13, marginBottom: 14, backgroundColor: colors.bgElevated, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
+  privacyToggleTitle: { color: colors.textPrimary, fontSize: 12, fontWeight: '800' },
+  privacyToggleCopy: { color: colors.textMuted, fontSize: 9, lineHeight: 13, marginTop: 3 },
   btn: { backgroundColor: colors.accentLime, borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 8 },
   btnDisabled: { opacity: 0.5 },
   btnText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },
