@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import AppBackdrop from '../components/AppBackdrop';
 
 const Login = ({ navigation }) => {
@@ -91,7 +91,7 @@ const Login = ({ navigation }) => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
   content: { padding: spacing.xl, paddingTop: 60 },
   logo: { alignItems: 'center', marginBottom: 28 },
@@ -111,6 +111,6 @@ const s = StyleSheet.create({
   switchText: { color: colors.textSecondary, fontSize: 13 },
   switchLink: { color: colors.accentLime, fontSize: 13, fontWeight: '700' },
   terms: { textAlign: 'center', color: colors.textMuted, fontSize: 11, marginTop: 20 },
-});
+}));
 
 export default Login;

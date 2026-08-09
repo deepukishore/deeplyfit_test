@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ActivityIndicator, ScrollView } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { api } from '../utils/api';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 
 const COMMON_ALLERGENS = ['gluten', 'lactose', 'nuts', 'peanuts', 'eggs', 'soy', 'shellfish', 'fish', 'sesame', 'mustard'];
 
@@ -62,7 +62,7 @@ const AllergenSettingsModal = ({ visible, onClose, onSave }) => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xl, maxHeight: '80%' },
   handle: { width: 40, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
@@ -78,6 +78,6 @@ const s = StyleSheet.create({
   btnSec: { backgroundColor: colors.bgElevated, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   btnText: { color: colors.textInverse, fontWeight: '800', fontSize: 15 },
   btnSecText: { color: colors.textPrimary, fontWeight: '700', fontSize: 15 },
-});
+}));
 
 export default AllergenSettingsModal;

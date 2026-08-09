@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNetworkStatus } from '../context/NetworkContext';
-import { colors } from '../utils/theme';
+import { colors, createThemedStyles } from '../utils/theme';
 
 const OfflineBanner = () => {
   const { online, syncing, pendingCount } = useNetworkStatus();
@@ -20,7 +20,7 @@ const OfflineBanner = () => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   banner: { flexDirection: 'row', alignItems: 'center', padding: 10, paddingHorizontal: 16 },
   bannerOnline: { backgroundColor: 'rgba(200,241,53,0.1)' },
   bannerOffline: { backgroundColor: 'rgba(248,113,113,0.1)' },
@@ -29,6 +29,6 @@ const s = StyleSheet.create({
   dotOffline: { backgroundColor: colors.accentCoral },
   text: { flex: 1, fontSize: 13, color: colors.textSecondary },
   bold: { fontWeight: '700' },
-});
+}));
 
 export default OfflineBanner;

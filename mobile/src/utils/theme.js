@@ -1,8 +1,11 @@
-// Theme constants replacing CSS variables. The mobile app defaults to light mode.
-export const colors = {
+import { StyleSheet } from 'react-native';
+
+export const lightColors = {
   bgPrimary: '#f8f5ff',
   bgCard: 'rgba(255,255,255,0.9)',
   bgElevated: 'rgba(241,234,252,0.84)',
+  headerBackground: 'rgba(255,255,255,0.82)',
+  inputBackground: 'rgba(255,255,255,0.78)',
   border: 'rgba(91,57,143,0.17)',
   textPrimary: '#1d1230',
   textSecondary: '#5f5575',
@@ -16,6 +19,66 @@ export const colors = {
   surfaceHighlight: 'rgba(255,255,255,0.76)',
   glowPurple: 'rgba(124,58,237,0.2)',
   glowBlue: 'rgba(37,99,235,0.14)',
+};
+
+export const darkColors = {
+  bgPrimary: '#0e0918',
+  bgCard: 'rgba(27,18,43,0.96)',
+  bgElevated: 'rgba(48,33,70,0.9)',
+  headerBackground: 'rgba(20,13,33,0.96)',
+  inputBackground: 'rgba(39,27,58,0.94)',
+  border: 'rgba(196,181,253,0.2)',
+  textPrimary: '#f8f4ff',
+  textSecondary: '#c9bfd9',
+  textMuted: '#9b8dac',
+  accentLime: '#9f7aea',
+  accentAmber: '#f4b942',
+  accentBlue: '#60a5fa',
+  accentPurple: '#8b5cf6',
+  accentCoral: '#fb7185',
+  textInverse: '#ffffff',
+  surfaceHighlight: 'rgba(255,255,255,0.08)',
+  glowPurple: 'rgba(139,92,246,0.28)',
+  glowBlue: 'rgba(96,165,250,0.2)',
+};
+
+let activeColors = lightColors;
+let activeMode = 'light';
+let themeVersion = 0;
+
+export const isDarkModeEnabled = (value) => value === true || value === 1 || value === '1';
+
+export const setThemeMode = (darkMode) => {
+  const nextMode = darkMode ? 'dark' : 'light';
+  if (nextMode === activeMode) return;
+  activeMode = nextMode;
+  activeColors = darkMode ? darkColors : lightColors;
+  themeVersion += 1;
+};
+
+export const getThemeColors = () => activeColors;
+
+// Existing screens can keep using semantic color names while resolving them
+// against the currently selected palette at render time.
+export const colors = new Proxy({}, {
+  get: (_target, property) => activeColors[property],
+  ownKeys: () => Reflect.ownKeys(activeColors),
+  getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }),
+});
+
+export const createThemedStyles = (factory) => {
+  let cachedVersion = -1;
+  let cachedStyles = null;
+
+  return new Proxy({}, {
+    get: (_target, property) => {
+      if (!cachedStyles || cachedVersion !== themeVersion) {
+        cachedStyles = StyleSheet.create(factory());
+        cachedVersion = themeVersion;
+      }
+      return cachedStyles[property];
+    },
+  });
 };
 
 export const radius = {

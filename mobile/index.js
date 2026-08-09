@@ -4,6 +4,7 @@ import { registerRootComponent } from 'expo';
 import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import Toast from 'react-native-toast-message';
 import { useFonts } from 'expo-font';
 import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
@@ -11,10 +12,10 @@ import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
 import { Inter_800ExtraBold } from '@expo-google-fonts/inter/800ExtraBold';
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { NetworkProvider } from './src/context/NetworkContext';
 import AppNavigator from './src/navigation/AppNavigator';
-import { colors, typography } from './src/utils/theme';
+import { colors, getThemeColors, isDarkModeEnabled, setThemeMode, typography } from './src/utils/theme';
 
 const defaultTextStyle = { fontFamily: typography.fontFamily.regular };
 Text.defaultProps = Text.defaultProps || {};
@@ -22,6 +23,34 @@ Text.defaultProps.style = [defaultTextStyle, Text.defaultProps.style];
 TextInput.defaultProps = TextInput.defaultProps || {};
 TextInput.defaultProps.style = [defaultTextStyle, TextInput.defaultProps.style];
 TextInput.defaultProps.placeholderTextColor = TextInput.defaultProps.placeholderTextColor || colors.textMuted;
+
+const ThemedApplication = () => {
+  const { user } = useAuth();
+  const darkMode = isDarkModeEnabled(user?.dark_mode);
+  setThemeMode(darkMode);
+  const palette = getThemeColors();
+  const navigationTheme = {
+    dark: darkMode,
+    colors: {
+      primary: palette.accentLime,
+      background: palette.bgPrimary,
+      card: palette.bgCard,
+      text: palette.textPrimary,
+      border: palette.border,
+      notification: palette.accentCoral,
+    },
+  };
+
+  return (
+    <NetworkProvider>
+      <NavigationContainer theme={navigationTheme}>
+        <StatusBar style={darkMode ? 'light' : 'dark'} />
+        <AppNavigator />
+      </NavigationContainer>
+      <Toast />
+    </NetworkProvider>
+  );
+};
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -45,12 +74,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <NetworkProvider>
-          <NavigationContainer>
-            <AppNavigator />
-          </NavigationContainer>
-          <Toast />
-        </NetworkProvider>
+        <ThemedApplication />
       </AuthProvider>
     </SafeAreaProvider>
   );

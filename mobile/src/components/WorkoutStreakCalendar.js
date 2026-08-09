@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { api } from '../utils/api';
-import { colors, spacing } from '../utils/theme';
+import { colors, createThemedStyles, spacing } from '../utils/theme';
 
 const WorkoutStreakCalendar = () => {
   const [streakData, setStreakData] = useState({ current_streak: 0, best_streak: 0 });
@@ -71,7 +71,7 @@ const WorkoutStreakCalendar = () => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   container: { paddingVertical: spacing.lg },
   streakRow: { flexDirection: 'row', gap: 16, marginBottom: 16 },
   streakBox: {},
@@ -85,6 +85,6 @@ const s = StyleSheet.create({
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendDot: { width: 14, height: 14, borderRadius: 2 },
   legendText: { fontSize: 12, color: colors.textMuted },
-});
+}));
 
 export default WorkoutStreakCalendar;

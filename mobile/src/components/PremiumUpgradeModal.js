@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { api } from '../utils/api';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import { formatPremiumExpiry, getProExpiry, isPro, PREMIUM_PLANS, PRO_FEATURES } from '../utils/premium';
 
 const CHECKOUT_UNAVAILABLE_MESSAGE = 'Secure checkout requires a Deeply Fit development or release build. It is not available in Expo Go.';
@@ -187,7 +187,7 @@ const PremiumUpgradeModal = ({ visible, onClose, onActivated, currentUser }) => 
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
   header: {
     flexDirection: 'row',
@@ -233,6 +233,6 @@ const s = StyleSheet.create({
   cancelBtnText: { color: colors.accentCoral, fontWeight: '800', fontSize: 14 },
   noteText: { color: colors.textMuted, fontSize: 12, marginTop: 10, lineHeight: 18 },
   disabled: { opacity: 0.6 },
-});
+}));
 
 export default PremiumUpgradeModal;

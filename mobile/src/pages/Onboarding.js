@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Activi
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import AppBackdrop from '../components/AppBackdrop';
 
 const TOTAL_STEPS = 4;
@@ -216,7 +216,7 @@ const Onboarding = () => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
   content: { padding: spacing.xl, paddingTop: 60, paddingBottom: 40 },
   dots: { flexDirection: 'row', gap: 8, marginBottom: 8 },
@@ -245,6 +245,6 @@ const s = StyleSheet.create({
   btnDisabled: { opacity: 0.6 },
   btnText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },
   btnSecText: { color: colors.textPrimary, fontWeight: '600', fontSize: 15 },
-});
+}));
 
 export default Onboarding;

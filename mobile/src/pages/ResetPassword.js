@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { api } from '../utils/api';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 
 const ResetPassword = ({ route, navigation }) => {
   const token = route?.params?.token || '';
@@ -61,7 +61,7 @@ const ResetPassword = ({ route, navigation }) => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
   content: { padding: spacing.xl, paddingTop: 80 },
   logo: { alignItems: 'center', marginBottom: 32 },
@@ -76,6 +76,6 @@ const s = StyleSheet.create({
   btn: { backgroundColor: colors.accentLime, borderRadius: radius.md, padding: 16, alignItems: 'center', marginTop: 8 },
   btnDisabled: { opacity: 0.6 },
   btnText: { color: colors.textInverse, fontWeight: '800', fontSize: 16 },
-});
+}));
 
 export default ResetPassword;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 
 const AllergenWarningModal = ({ visible, foodName, allergens, onLogAnyway, onCancel }) => (
   <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -23,7 +23,7 @@ const AllergenWarningModal = ({ visible, foodName, allergens, onLogAnyway, onCan
   </Modal>
 );
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xl },
   handle: { width: 40, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
@@ -37,6 +37,6 @@ const s = StyleSheet.create({
   btnSec: { backgroundColor: colors.bgElevated, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   btnText: { color: colors.textInverse, fontWeight: '800', fontSize: 15 },
   btnSecText: { color: colors.textPrimary, fontWeight: '700', fontSize: 15 },
-});
+}));
 
 export default AllergenWarningModal;

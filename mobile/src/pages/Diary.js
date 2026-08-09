@@ -7,7 +7,7 @@ import { addDays, formatDate, formatDisplayDate, getMealIcon } from '../utils/fi
 import { createEmptySummary, getCachedDiaryDate, getFavorites, setFavorites as saveFavorites } from '../utils/storage';
 import FoodScannerModal from '../components/FoodScannerModal';
 import AppBackdrop from '../components/AppBackdrop';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snacks'];
 
@@ -283,9 +283,9 @@ const Diary = () => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: 'rgba(255,255,255,0.82)', borderBottomWidth: 1, borderBottomColor: colors.border },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border },
   headerTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   badge: { backgroundColor: 'rgba(200,241,53,0.12)', color: colors.accentLime, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20, fontSize: 12, fontWeight: '700' },
   dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.md, backgroundColor: colors.bgCard, borderBottomWidth: 1, borderBottomColor: colors.border },
@@ -339,6 +339,6 @@ const s = StyleSheet.create({
   btn: { backgroundColor: colors.accentLime, borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 8 },
   btnDisabled: { opacity: 0.5 },
   btnText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },
-});
+}));
 
 export default Diary;

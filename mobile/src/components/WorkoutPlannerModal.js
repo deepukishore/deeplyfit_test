@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, ScrollView,
 import Toast from 'react-native-toast-message';
 import { api } from '../utils/api';
 import { estimateWorkoutCalories } from '../utils/workoutCalories';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 
 const repDefault = (range) => {
   const match = String(range || '').match(/\d+/);
@@ -185,7 +185,7 @@ const WorkoutPlannerModal = ({ visible = true, user, date, onClose, onSuccess })
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing.xl, maxHeight: '92%', borderWidth: 1, borderColor: 'rgba(124,58,237,0.18)', shadowColor: '#24113f', shadowOpacity: 0.24, shadowRadius: 26, shadowOffset: { width: 0, height: -10 }, elevation: 24 },
   handle: { width: 44, height: 5, backgroundColor: colors.accentPurple, borderRadius: 3, alignSelf: 'center', marginBottom: 16 },
@@ -203,7 +203,7 @@ const s = StyleSheet.create({
   pickerTextActive: { color: colors.accentLime },
   inputGroup: { marginBottom: 16 },
   label: { fontSize: 13, color: colors.textSecondary, marginBottom: 6, fontWeight: '600' },
-  input: { backgroundColor: 'rgba(255,255,255,0.78)', borderRadius: 12, padding: 14, color: colors.textPrimary, fontSize: 15, borderWidth: 1, borderColor: colors.border },
+  input: { backgroundColor: colors.inputBackground, borderRadius: 12, padding: 14, color: colors.textPrimary, fontSize: 15, borderWidth: 1, borderColor: colors.border },
   estimateError: { padding: 11, marginBottom: 12, borderRadius: 10, color: colors.accentCoral, backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: 'rgba(255,107,107,0.22)', fontSize: 11, lineHeight: 16 },
   caloriePreview: { padding: 14, marginBottom: 16, borderRadius: 14, backgroundColor: 'rgba(245,166,35,0.08)', borderWidth: 1, borderColor: 'rgba(245,166,35,0.28)' },
   caloriePreviewHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 9 },
@@ -224,6 +224,6 @@ const s = StyleSheet.create({
   btnDisabled: { opacity: 0.5 },
   btnText: { color: colors.textInverse, fontWeight: '800', fontSize: 16 },
   btnSecText: { color: colors.textPrimary, fontWeight: '700', fontSize: 16 },
-});
+}));
 
 export default WorkoutPlannerModal;

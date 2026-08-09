@@ -6,7 +6,7 @@ import { isPro } from '../utils/premium';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
 import { formatDate } from '../utils/fitness';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import AppBackdrop from '../components/AppBackdrop';
 
 const CHART_WIDTH = Dimensions.get('window').width - 64;
@@ -268,7 +268,7 @@ const Progress = () => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
   header: {
     flexDirection: 'row',
@@ -276,7 +276,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.lg,
     paddingTop: 56,
-    backgroundColor: 'rgba(255,255,255,0.82)',
+    backgroundColor: colors.headerBackground,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -333,6 +333,6 @@ const s = StyleSheet.create({
   btn: { backgroundColor: colors.accentLime, borderRadius: 12, padding: 14, alignItems: 'center' },
   btnDisabled: { opacity: 0.5 },
   btnText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },
-});
+}));
 
 export default Progress;

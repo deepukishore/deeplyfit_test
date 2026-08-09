@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { isPro } from '../utils/premium';
 import { api } from '../utils/api';
 import { getInitials } from '../utils/fitness';
-import { colors, spacing } from '../utils/theme';
+import { colors, createThemedStyles, spacing } from '../utils/theme';
 import UserAvatar from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
 
@@ -129,7 +129,7 @@ const AIAssistant = () => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
   header: {
     flexDirection: 'row',
@@ -176,6 +176,6 @@ const s = StyleSheet.create({
   sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accentLime, alignItems: 'center', justifyContent: 'center' },
   sendBtnDisabled: { opacity: 0.4 },
   sendBtnText: { color: colors.textInverse, fontWeight: '800', fontSize: 18 },
-});
+}));
 
 export default AIAssistant;

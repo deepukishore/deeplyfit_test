@@ -8,7 +8,7 @@ import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
 import { compressImageUri } from '../utils/image';
 import { getInitials } from '../utils/fitness';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, isDarkModeEnabled, radius, spacing } from '../utils/theme';
 import PremiumUpgradeModal from '../components/PremiumUpgradeModal';
 import UserAvatar, { BUILT_IN_AVATARS } from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
@@ -235,10 +235,19 @@ const Profile = ({ navigation }) => {
   const initials = getInitials(user.name, user.email);
   const isPremiumActive = isPro(user);
   const premiumExpiry = getProExpiry(user);
+  const darkMode = isDarkModeEnabled(user.dark_mode);
 
   const handleLogout = async () => {
     await logout();
     Toast.show({ type: 'success', text1: 'Logged out. See you soon!' });
+  };
+
+  const handleToggleDarkMode = async () => {
+    try {
+      await toggleDarkMode();
+    } catch (error) {
+      Toast.show({ type: 'error', text1: error.message || 'Could not save appearance setting' });
+    }
   };
 
   const copyPublicLink = async () => {
@@ -297,9 +306,11 @@ const Profile = ({ navigation }) => {
             <Text style={s.settingsLabel}>✏️ Goals, public profile & privacy</Text>
             <Text style={s.settingsArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={s.settingsItem} onPress={toggleDarkMode}>
-            <Text style={s.settingsLabel}>{user.dark_mode ? '🌙 Dark mode' : '☀️ Light mode'}</Text>
-            <View style={[s.toggle, !user.dark_mode && s.toggleOn]}><View style={s.toggleThumb} /></View>
+          <TouchableOpacity style={s.settingsItem} onPress={handleToggleDarkMode}>
+            <Text style={s.settingsLabel}>{darkMode ? '🌙 Dark mode' : '☀️ Light mode'}</Text>
+            <View style={[s.toggle, darkMode && s.toggleOn]}>
+              <View style={[s.toggleThumb, darkMode && s.toggleThumbOn]} />
+            </View>
           </TouchableOpacity>
           <TouchableOpacity style={s.settingsItem} onPress={() => navigation.navigate('About')}>
             <Text style={s.settingsLabel}>About Deeply Fit</Text>
@@ -371,9 +382,9 @@ const Profile = ({ navigation }) => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { padding: spacing.lg, paddingTop: 56, backgroundColor: 'rgba(255,255,255,0.82)', borderBottomWidth: 1, borderBottomColor: colors.border },
+  header: { padding: spacing.lg, paddingTop: 56, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border },
   headerTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   scroll: { flex: 1, padding: spacing.lg },
   profileHeader: { alignItems: 'center', marginBottom: 20 },
@@ -399,6 +410,7 @@ const s = StyleSheet.create({
   toggle: { width: 42, height: 22, borderRadius: 11, backgroundColor: colors.bgElevated, justifyContent: 'center', paddingHorizontal: 2, borderWidth: 1, borderColor: colors.border },
   toggleOn: { backgroundColor: colors.accentLime },
   toggleThumb: { width: 18, height: 18, borderRadius: 9, backgroundColor: '#fff' },
+  toggleThumbOn: { transform: [{ translateX: 18 }] },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, fontSize: 11, fontWeight: '700', overflow: 'hidden' },
   badgeLime: { backgroundColor: 'rgba(200,241,53,0.12)', color: colors.accentLime },
   badgeAmber: { backgroundColor: 'rgba(245,166,35,0.12)', color: colors.accentAmber },
@@ -448,6 +460,6 @@ const s = StyleSheet.create({
   btn: { backgroundColor: colors.accentLime, borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 8 },
   btnDisabled: { opacity: 0.5 },
   btnText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },
-});
+}));
 
 export default Profile;

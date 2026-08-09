@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { api } from '../utils/api';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import UserAvatar from '../components/UserAvatar';
 
 const PublicProfile = ({ route, navigation }) => {
@@ -80,7 +80,7 @@ const PublicProfile = ({ route, navigation }) => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
   loading: { flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.bgCard, borderBottomWidth: 1, borderBottomColor: colors.border },
@@ -107,6 +107,6 @@ const s = StyleSheet.create({
   emptyCard: { margin: spacing.lg, backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.xl, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   emptyTitle: { color: colors.textPrimary, fontWeight: '700', fontSize: 16, marginBottom: 4 },
   emptyText: { color: colors.textMuted, fontSize: 13 },
-});
+}));
 
 export default PublicProfile;

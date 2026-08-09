@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import AppBackdrop from '../components/AppBackdrop';
 
 const CAPABILITIES = [
@@ -29,19 +29,47 @@ const LEADERS = [
 
 const About = ({ navigation }) => {
   const floatValue = useRef(new Animated.Value(0)).current;
+  const spinValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const animation = Animated.loop(Animated.sequence([
-      Animated.timing(floatValue, { toValue: 1, duration: 1800, useNativeDriver: true }),
-      Animated.timing(floatValue, { toValue: 0, duration: 1800, useNativeDriver: true }),
-    ]));
-    animation.start();
-    return () => animation.stop();
-  }, [floatValue]);
+    let active = true;
+    let floatAnimation = null;
+    let spinAnimation = null;
+
+    AccessibilityInfo.isReduceMotionEnabled().then((reduceMotion) => {
+      if (!active || reduceMotion) return;
+      floatAnimation = Animated.loop(Animated.sequence([
+        Animated.timing(floatValue, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(floatValue, { toValue: 0, duration: 1800, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]));
+      spinAnimation = Animated.loop(Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 14000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }));
+      floatAnimation.start();
+      spinAnimation.start();
+    });
+
+    return () => {
+      active = false;
+      if (floatAnimation) floatAnimation.stop();
+      if (spinAnimation) spinAnimation.stop();
+    };
+  }, [floatValue, spinValue]);
 
   const floatStyle = {
     transform: [{ translateY: floatValue.interpolate({ inputRange: [0, 1], outputRange: [0, -8] }) }],
   };
+  const signalFloatStyle = {
+    transform: [
+      { translateY: floatValue.interpolate({ inputRange: [0, 1], outputRange: [0, -6] }) },
+      { rotate: '-4deg' },
+    ],
+  };
+  const orbitOneSpin = spinValue.interpolate({ inputRange: [0, 1], outputRange: ['12deg', '372deg'] });
+  const orbitTwoSpin = spinValue.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-360deg'] });
 
   return (
     <SafeAreaView style={s.page} edges={['top']}>
@@ -56,19 +84,33 @@ const About = ({ navigation }) => {
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         <View style={s.hero}>
-          <Animated.View style={[s.heroMark, floatStyle]}>
-            <Image source={require('../../assets/icon.png')} style={s.heroLogo} resizeMode="cover" />
-          </Animated.View>
+          <View style={s.heroVisual} accessibilityLabel="Deeply Fit product highlights">
+            <Animated.View
+              style={[
+                s.aboutOrbit,
+                s.aboutOrbitOne,
+                { transform: [{ perspective: 800 }, { rotateX: '66deg' }, { rotateZ: orbitOneSpin }] },
+              ]}
+            />
+            <Animated.View
+              style={[
+                s.aboutOrbit,
+                s.aboutOrbitTwo,
+                { transform: [{ perspective: 800 }, { rotateY: '62deg' }, { rotateX: '20deg' }, { rotateZ: orbitTwoSpin }] },
+              ]}
+            />
+            <Animated.View style={[s.heroMark, floatStyle]}>
+              <Image source={require('../../assets/icon.png')} style={s.heroLogo} resizeMode="cover" />
+            </Animated.View>
+            <Animated.View style={[s.heroSignal, s.heroSignalAi, signalFloatStyle]}><Text style={s.heroSignalText}>AI COACH</Text></Animated.View>
+            <View style={[s.heroSignal, s.heroSignalLog]}><Text style={s.heroSignalText}>SMART LOG</Text></View>
+            <View style={[s.heroSignal, s.heroSignalProgress]}><Text style={s.heroSignalText}>PROGRESS</Text></View>
+          </View>
           <Text style={s.kicker}>INTELLIGENTLY DEEP. DEEPLY FIT.</Text>
           <Text style={s.title}>Deeply Fit</Text>
           <Text style={s.lead}>
             A clearer way to understand what you eat, how you move, and where your routine is taking you.
           </Text>
-          <View style={s.signalRow}>
-            <View style={s.signal}><Text style={s.signalValue}>AI</Text><Text style={s.signalLabel}>Coach</Text></View>
-            <View style={s.signal}><Text style={s.signalValue}>1</Text><Text style={s.signalLabel}>Daily view</Text></View>
-            <View style={s.signal}><Text style={s.signalValue}>360</Text><Text style={s.signalLabel}>Progress</Text></View>
-          </View>
         </View>
 
         <View style={s.section}>
@@ -157,17 +199,26 @@ const About = ({ navigation }) => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: 'rgba(255,255,255,0.82)' },
+  header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.headerBackground },
   backButton: { width: 38, height: 38, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
   backButtonText: { color: colors.textPrimary, fontSize: 19, fontWeight: '700' },
   headerTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: '800' },
   headerSpacer: { width: 38 },
   content: { padding: spacing.lg, paddingBottom: 44 },
   hero: { alignItems: 'center', paddingVertical: 34, borderBottomWidth: 1, borderBottomColor: colors.border },
-  heroMark: { width: 82, height: 82, borderRadius: radius.lg, marginBottom: 22, shadowColor: colors.accentPurple, shadowOpacity: 0.35, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 8, overflow: 'hidden' },
+  heroVisual: { width: '100%', height: 275, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  aboutOrbit: { position: 'absolute', borderWidth: 1, borderColor: colors.accentPurple, opacity: 0.34 },
+  aboutOrbitOne: { width: 250, height: 250, borderRadius: 125 },
+  aboutOrbitTwo: { width: 184, height: 184, borderRadius: 92, borderColor: colors.accentBlue, opacity: 0.3 },
+  heroMark: { width: 88, height: 88, borderRadius: radius.lg, shadowColor: colors.accentPurple, shadowOpacity: 0.42, shadowRadius: 22, shadowOffset: { width: 0, height: 12 }, elevation: 10, overflow: 'hidden', zIndex: 3 },
   heroLogo: { width: '100%', height: '100%' },
+  heroSignal: { position: 'absolute', zIndex: 4, paddingHorizontal: 11, paddingVertical: 8, borderRadius: radius.sm, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, shadowColor: colors.accentPurple, shadowOpacity: 0.16, shadowRadius: 12, shadowOffset: { width: 0, height: 7 }, elevation: 6 },
+  heroSignalAi: { left: 2, top: 48 },
+  heroSignalLog: { right: 0, top: 104, transform: [{ rotate: '4deg' }] },
+  heroSignalProgress: { left: 48, bottom: 25, transform: [{ rotate: '2deg' }] },
+  heroSignalText: { color: colors.textPrimary, fontSize: 10, fontWeight: '800', letterSpacing: 0.7 },
   kicker: { color: colors.accentLime, fontSize: 10, fontWeight: '800', marginBottom: 10 },
   title: { color: colors.textPrimary, fontSize: 40, fontWeight: '900', marginBottom: 12 },
   lead: { color: colors.textSecondary, fontSize: 15, lineHeight: 23, textAlign: 'center', maxWidth: 330 },
@@ -207,6 +258,6 @@ const s = StyleSheet.create({
   closingTitle: { color: colors.textPrimary, fontSize: 22, fontWeight: '800', marginBottom: 7 },
   primaryButton: { height: 48, marginTop: 20, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentLime },
   primaryButtonText: { color: colors.textInverse, fontSize: 14, fontWeight: '800' },
-});
+}));
 
 export default About;

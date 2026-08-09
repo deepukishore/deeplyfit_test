@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, Image, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { RefreshProvider } from '../context/RefreshContext';
-import { colors } from '../utils/theme';
+import { colors, createThemedStyles } from '../utils/theme';
 
 import Login from '../pages/Login';
 import Onboarding from '../pages/Onboarding';
@@ -91,13 +91,13 @@ const AppNavigator = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles(() => ({
   loading: { flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' },
   loadingLogo: { width: 76, height: 76, borderRadius: 20, marginBottom: 18 },
   loadingText: { color: colors.textSecondary, marginTop: 14, fontSize: 14 },
   tabBar: { height: 66, paddingTop: 5, paddingBottom: 7, backgroundColor: colors.bgCard, borderTopWidth: 1, borderTopColor: colors.border, shadowColor: '#311a57', shadowOpacity: 0.13, shadowRadius: 18, shadowOffset: { width: 0, height: -7 }, elevation: 18 },
   tabIcon: { width: 34, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 11 },
   tabIconActive: { backgroundColor: colors.glowPurple, borderWidth: 1, borderColor: 'rgba(124,58,237,0.12)' },
-});
+}));
 
 export default AppNavigator;

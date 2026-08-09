@@ -8,7 +8,7 @@ import { createEmptySummary, getCachedDiaryDate } from '../utils/storage';
 import { getGreeting, getDailyQuote, formatDate, getWorkoutSuggestions, getInitials } from '../utils/fitness';
 import { formatFoodAmount, scaleNutrition } from '../utils/nutrition';
 import { estimateWorkoutCalories } from '../utils/workoutCalories';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import WorkoutPlannerModal from '../components/WorkoutPlannerModal';
 import UserAvatar from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
@@ -519,9 +519,9 @@ const Home = ({ navigation }) => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: 'rgba(255,255,255,0.82)', borderBottomWidth: 1, borderBottomColor: colors.border },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border },
   greeting: { fontSize: 11, color: colors.textMuted, letterSpacing: 0.4, textTransform: 'uppercase' },
   name: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   avatar: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.accentPurple, alignItems: 'center', justifyContent: 'center' },
@@ -608,6 +608,6 @@ const s = StyleSheet.create({
   btnDisabled: { opacity: 0.5 },
   btnText: { color: colors.textInverse, fontWeight: '700', fontSize: 15 },
   btnSecText: { color: colors.textPrimary, fontWeight: '600', fontSize: 13 },
-});
+}));
 
 export default Home;

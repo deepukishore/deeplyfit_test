@@ -9,6 +9,7 @@ import {
   setStorageUser,
   setToken,
 } from '../utils/storage';
+import { isDarkModeEnabled } from '../utils/theme';
 
 const AuthContext = createContext(null);
 
@@ -94,12 +95,21 @@ export const AuthProvider = ({ children }) => {
 
   const toggleDarkMode = async () => {
     if (!user) return;
-    const newMode = user.dark_mode ? 0 : 1;
+    const newMode = isDarkModeEnabled(user.dark_mode) ? 0 : 1;
+    const previousUser = user;
+    const optimisticUser = { ...user, dark_mode: newMode };
+    setUser(optimisticUser);
+    await setCachedUser(optimisticUser);
     try {
       const updated = await api.updateProfile({ dark_mode: newMode });
       setUser(updated);
       await setCachedUser(updated);
-    } catch {}
+      return updated;
+    } catch (error) {
+      setUser(previousUser);
+      await setCachedUser(previousUser);
+      throw error;
+    }
   };
 
   return (

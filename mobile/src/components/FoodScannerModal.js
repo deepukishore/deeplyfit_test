@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { isPro } from '../utils/premium';
 import { api } from '../utils/api';
 import { compressImageUri } from '../utils/image';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snacks'];
 
@@ -202,7 +202,7 @@ const FoodScannerModal = ({ visible, onClose, onSuccess, defaultMeal = 'breakfas
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.bgCard, borderBottomWidth: 1, borderBottomColor: colors.border },
   title: { fontSize: 20, fontWeight: '800', color: colors.textPrimary },
@@ -244,6 +244,6 @@ const s = StyleSheet.create({
   btnDisabled: { opacity: 0.5 },
   btnText: { color: colors.textInverse, fontWeight: '800', fontSize: 16 },
   btnSecText: { color: colors.textPrimary, fontWeight: '700', fontSize: 16 },
-});
+}));
 
 export default FoodScannerModal;

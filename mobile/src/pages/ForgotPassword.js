@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { api } from '../utils/api';
-import { colors, radius, spacing } from '../utils/theme';
+import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 
 const ForgotPassword = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -59,7 +59,7 @@ const ForgotPassword = ({ navigation }) => {
   );
 };
 
-const s = StyleSheet.create({
+const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
   content: { padding: spacing.xl, paddingTop: 80 },
   logo: { alignItems: 'center', marginBottom: 32 },
@@ -77,6 +77,6 @@ const s = StyleSheet.create({
   switchRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
   switchText: { color: colors.textSecondary, fontSize: 14 },
   switchLink: { color: colors.accentLime, fontSize: 14, fontWeight: '700' },
-});
+}));
 
 export default ForgotPassword;
