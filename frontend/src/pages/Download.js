@@ -16,8 +16,8 @@ import { useAuth } from '../context/AuthContext';
 import '../styles/download.css';
 import '../styles/animations.css';
 
-const APK_URL = process.env.REACT_APP_APK_DOWNLOAD_URL?.trim() || '/downloads/deeply-fit.apk';
-const APK_FILENAME = process.env.REACT_APP_APK_FILE_NAME?.trim() || 'deeply-fit.apk';
+const APK_URL = 'https://drive.usercontent.google.com/download?id=1pXhZZvRIxAXKB-XxMpm8X8cYPu2lu8FJ&export=download&confirm=t';
+const APK_FILENAME = 'Deeplyfit V1.apk';
 
 const MOBILE_FEATURES = [
   {
