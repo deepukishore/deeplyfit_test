@@ -44,6 +44,8 @@ class IndianFoodSearchTests(unittest.TestCase):
             "briyani": "Chicken Biryani",
             "paner": "Paneer",
             "omellete": "Plain Omelette",
+            "pesaratu": "Pesarattu",
+            "idiappam": "Idiyappam",
         }
 
         for query, expected_name in expectations.items():
@@ -53,6 +55,23 @@ class IndianFoodSearchTests(unittest.TestCase):
                     for result in _local_food_results(query, page=1, page_size=20)["results"]
                 ]
                 self.assertIn(expected_name, names)
+
+    def test_south_indian_sides_and_diet_queries_are_discoverable(self):
+        expectations = {
+            "side dish": ["Vegetable Kurma", "Coconut Chutney", "Rasam", "South Indian Fish Fry"],
+            "vegetarian": ["Rava Idli", "Pesarattu", "Vegetable Poriyal", "Coconut Chutney"],
+            "non veg": ["Egg Roast", "Chicken Chettinad", "Kerala Fish Curry"],
+            "south indian": ["Rava Idli", "Bisi Bele Bath", "Rasam", "Chicken Chettinad"],
+        }
+
+        for query, expected_names in expectations.items():
+            with self.subTest(query=query):
+                names = [
+                    result["name"]
+                    for result in _local_food_results(query, page=1, page_size=50)["results"]
+                ]
+                for expected_name in expected_names:
+                    self.assertIn(expected_name, names)
 
     def test_explicit_english_name_is_preferred(self):
         product = {

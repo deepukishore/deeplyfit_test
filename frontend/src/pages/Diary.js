@@ -220,13 +220,13 @@ const FoodSearchBox = ({ onSelect, compact = false }) => {
     <div className="food-search-panel">
       <div className="food-search-head">
         <div>
-          <p className="food-search-title">Search Indian &amp; global foods</p>
-          <p className="food-search-copy">English results with Indian dishes first. Choose a quantity, then tap to log.</p>
+          <p className="food-search-title">Search South Indian, veg, non-veg &amp; global foods</p>
+          <p className="food-search-copy">Mains and side dishes use familiar regional names. Choose a quantity, then tap to log.</p>
         </div>
         {!compact && <span className="badge badge-blue">India first</span>}
       </div>
       <div className="food-search-row">
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try: dosa, paneer, biryani, roti" />
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try: pesarattu, poriyal, chutney, fish fry" />
         <input
           type="number"
           value={quantity}
@@ -493,7 +493,7 @@ const AddFoodModal = ({ meal, date, onClose, onSave }) => {
           <FoodSearchBox onSelect={handleSearchLog} />
           <div className="input-group">
             <label>Food Name</label>
-            <input value={form.food_name} onChange={(event) => setForm((current) => ({ ...current, food_name: event.target.value }))} placeholder="Example: Greek yogurt" autoFocus />
+            <input value={form.food_name} onChange={(event) => setForm((current) => ({ ...current, food_name: event.target.value }))} placeholder="Example: idli with sambar" autoFocus />
           </div>
           <div className="planner-grid">
             <div className="input-group">

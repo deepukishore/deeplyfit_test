@@ -545,6 +545,7 @@ class MealSuggestionItem(BaseModel):
     protein: float
     carbs: float
     fat: float
+    diet_type: str
     reason: str
 
 

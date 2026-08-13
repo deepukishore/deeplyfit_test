@@ -203,7 +203,7 @@ const LogFoodModal = ({ onClose, onSave }) => {
             <label>Food Name</label>
             <div className="auto-nutrition-search">
               <input
-                placeholder="e.g. Chicken breast, dosa, banana"
+                placeholder="e.g. dosa, poriyal, chutney, fish curry"
                 value={form.food_name}
                 onChange={(event) => handleFoodNameChange(event.target.value)}
                 onKeyDown={(event) => {
@@ -732,7 +732,12 @@ const Home = () => {
                 <div key={suggestion.name} className="meal-suggestion-tile">
                   <div className="meal-suggestion-head">
                     <h3>{suggestion.name}</h3>
-                    <span className="badge badge-lime">{Math.round(suggestion.calories)} kcal</span>
+                    <div className="meal-suggestion-badges">
+                      <span className={`badge ${suggestion.diet_type === 'vegetarian' ? 'badge-lime' : 'badge-amber'}`}>
+                        {suggestion.diet_type === 'vegetarian' ? 'Veg' : 'Non-veg'}
+                      </span>
+                      <span className="badge badge-blue">{Math.round(suggestion.calories)} kcal</span>
+                    </div>
                   </div>
                   <p className="meal-suggestion-portion">{suggestion.portion_hint}</p>
                   <p className="meal-suggestion-reason">{suggestion.reason}</p>

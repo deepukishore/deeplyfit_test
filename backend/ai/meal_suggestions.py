@@ -15,18 +15,29 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODELS[0])
 
 
 FOOD_CATALOG = [
-    {"name": "Greek yogurt bowl", "portion_hint": "1 cup nonfat Greek yogurt", "calories": 130, "protein": 23, "carbs": 9, "fat": 0, "tags": ["protein", "light"]},
-    {"name": "Grilled chicken", "portion_hint": "150g grilled chicken breast", "calories": 248, "protein": 46, "carbs": 0, "fat": 5, "tags": ["protein", "lean"]},
-    {"name": "Protein shake", "portion_hint": "1 scoop whey with water", "calories": 120, "protein": 24, "carbs": 3, "fat": 2, "tags": ["protein", "fast"]},
-    {"name": "Cottage cheese", "portion_hint": "1 cup low-fat cottage cheese", "calories": 180, "protein": 24, "carbs": 8, "fat": 5, "tags": ["protein"]},
-    {"name": "Eggs and toast", "portion_hint": "2 eggs with 2 slices toast", "calories": 260, "protein": 18, "carbs": 22, "fat": 10, "tags": ["balanced"]},
-    {"name": "Oats with banana", "portion_hint": "1 bowl oats plus 1 banana", "calories": 290, "protein": 9, "carbs": 57, "fat": 4, "tags": ["carbs"]},
-    {"name": "Rice and chicken", "portion_hint": "1 cup rice with 120g chicken", "calories": 390, "protein": 35, "carbs": 42, "fat": 8, "tags": ["balanced", "meal"]},
-    {"name": "Salmon and potatoes", "portion_hint": "120g salmon with roasted potatoes", "calories": 410, "protein": 30, "carbs": 28, "fat": 18, "tags": ["fat", "balanced"]},
-    {"name": "Peanut butter toast", "portion_hint": "2 slices toast with 2 tbsp peanut butter", "calories": 320, "protein": 12, "carbs": 28, "fat": 17, "tags": ["fat", "snack"]},
-    {"name": "Tuna wrap", "portion_hint": "1 tuna whole-wheat wrap", "calories": 330, "protein": 28, "carbs": 27, "fat": 10, "tags": ["balanced"]},
-    {"name": "Apple and almonds", "portion_hint": "1 apple with 20g almonds", "calories": 210, "protein": 5, "carbs": 23, "fat": 11, "tags": ["snack"]},
-    {"name": "Turkey sandwich", "portion_hint": "1 turkey sandwich on whole grain bread", "calories": 340, "protein": 29, "carbs": 31, "fat": 9, "tags": ["balanced"]},
+    # Familiar, affordable meals that are easy to prepare or find across India.
+    {"name": "Idli, sambar and chutney", "portion_hint": "3 idlis, 1 cup sambar and 1 tbsp chutney", "calories": 360, "protein": 13, "carbs": 62, "fat": 7, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
+    {"name": "Dosa with sambar", "portion_hint": "1 plain dosa with 1 cup sambar", "calories": 330, "protein": 10, "carbs": 52, "fat": 9, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
+    {"name": "Vegetable upma with curd", "portion_hint": "1.5 cups vegetable upma with 1/2 cup curd", "calories": 350, "protein": 11, "carbs": 52, "fat": 11, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
+    {"name": "Pesarattu with chutney", "portion_hint": "2 pesarattu with 2 tbsp tomato chutney", "calories": 350, "protein": 16, "carbs": 52, "fat": 8, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "protein"]},
+    {"name": "Pongal and sambar", "portion_hint": "1 cup ven pongal with 1 cup sambar", "calories": 390, "protein": 13, "carbs": 58, "fat": 12, "diet_type": "vegetarian", "tags": ["south indian", "balanced"]},
+    {"name": "Rice, sambar, poriyal and curd", "portion_hint": "1 cup rice, 1 cup sambar, 1/2 cup poriyal and 1/2 cup curd", "calories": 520, "protein": 18, "carbs": 82, "fat": 13, "diet_type": "vegetarian", "tags": ["south indian", "meal", "balanced"]},
+    {"name": "Chapati, dal and sabzi", "portion_hint": "2 chapatis, 1 cup dal and 1 cup vegetable sabzi", "calories": 510, "protein": 22, "carbs": 78, "fat": 13, "diet_type": "vegetarian", "tags": ["meal", "balanced", "protein"]},
+    {"name": "Rajma rice with salad", "portion_hint": "1 cup rice, 1 cup rajma and cucumber salad", "calories": 520, "protein": 20, "carbs": 91, "fat": 8, "diet_type": "vegetarian", "tags": ["meal", "balanced"]},
+    {"name": "Moong dal khichdi with curd", "portion_hint": "1.5 cups khichdi with 1/2 cup curd", "calories": 390, "protein": 16, "carbs": 62, "fat": 9, "diet_type": "vegetarian", "tags": ["meal", "light", "balanced"]},
+    {"name": "Paneer bhurji with roti", "portion_hint": "1 cup paneer bhurji with 2 rotis", "calories": 500, "protein": 29, "carbs": 43, "fat": 24, "diet_type": "vegetarian", "tags": ["meal", "protein"]},
+    {"name": "Roasted chana and banana", "portion_hint": "50g roasted chana with 1 small banana", "calories": 270, "protein": 10, "carbs": 51, "fat": 3, "diet_type": "vegetarian", "tags": ["snack", "affordable"]},
+    {"name": "Curd, fruit and peanuts", "portion_hint": "1 cup curd, 1 seasonal fruit and 20g peanuts", "calories": 300, "protein": 13, "carbs": 33, "fat": 14, "diet_type": "vegetarian", "tags": ["snack", "balanced"]},
+    {"name": "Egg bhurji with roti", "portion_hint": "3-egg bhurji with 2 rotis", "calories": 470, "protein": 29, "carbs": 39, "fat": 22, "diet_type": "non_vegetarian", "tags": ["meal", "protein", "affordable"]},
+    {"name": "Egg dosa with sambar", "portion_hint": "1 egg dosa with 1 cup sambar", "calories": 420, "protein": 19, "carbs": 53, "fat": 14, "diet_type": "non_vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
+    {"name": "Chicken curry with rice", "portion_hint": "1 cup rice with 1 cup home-style chicken curry", "calories": 520, "protein": 35, "carbs": 55, "fat": 17, "diet_type": "non_vegetarian", "tags": ["meal", "protein", "balanced"]},
+    {"name": "Chicken curry with chapati", "portion_hint": "1 cup chicken curry with 2 chapatis and salad", "calories": 500, "protein": 38, "carbs": 42, "fat": 18, "diet_type": "non_vegetarian", "tags": ["meal", "protein", "balanced"]},
+    {"name": "Fish curry rice", "portion_hint": "1 cup rice with 1 cup fish curry and vegetables", "calories": 490, "protein": 31, "carbs": 57, "fat": 15, "diet_type": "non_vegetarian", "tags": ["south indian", "meal", "protein"]},
+    {"name": "Fish fry with rice and rasam", "portion_hint": "1 medium fish fry, 1 cup rice and 1 cup rasam", "calories": 500, "protein": 34, "carbs": 55, "fat": 17, "diet_type": "non_vegetarian", "tags": ["south indian", "meal", "protein"]},
+    {"name": "Chicken biryani with raita", "portion_hint": "1.5 cups chicken biryani with 1/2 cup raita", "calories": 560, "protein": 28, "carbs": 70, "fat": 19, "diet_type": "non_vegetarian", "tags": ["meal", "balanced"]},
+    {"name": "Boiled eggs, poha and fruit", "portion_hint": "2 boiled eggs, 1 cup vegetable poha and 1 small fruit", "calories": 430, "protein": 20, "carbs": 54, "fat": 15, "diet_type": "non_vegetarian", "tags": ["breakfast", "balanced", "affordable"]},
+    {"name": "Egg curry with rice", "portion_hint": "2 eggs in curry with 1 cup rice and salad", "calories": 470, "protein": 23, "carbs": 55, "fat": 17, "diet_type": "non_vegetarian", "tags": ["meal", "balanced", "affordable"]},
+    {"name": "Pepper chicken with dosa", "portion_hint": "100g pepper chicken with 1 plain dosa", "calories": 430, "protein": 30, "carbs": 32, "fat": 20, "diet_type": "non_vegetarian", "tags": ["south indian", "meal", "protein"]},
 ]
 
 
@@ -103,21 +114,32 @@ def _heuristic_suggestions(
         reverse=True,
     )
     excluded = _normalize_excluded_names(exclude_names)
-    available = [
-        food for food in all_ranked
-        if food["name"].casefold() not in excluded
-    ]
+    available = [food for food in all_ranked if food["name"].casefold() not in excluded]
 
-    # Rotate through the strongest matches so refreshed ideas stay relevant.
-    # Excluded meals are restored only as a safety net if the catalog shrinks.
-    if len(available) < 3:
-        available.extend(
+    # Every set contains both vegetarian and non-vegetarian choices. Alternate
+    # which group gets the third slot when the user refreshes the suggestions.
+    diet_order = (
+        ["vegetarian", "non_vegetarian", "vegetarian"]
+        if max(variant, 0) % 2 == 0
+        else ["non_vegetarian", "vegetarian", "non_vegetarian"]
+    )
+    pools = {
+        diet_type: [food for food in available if food["diet_type"] == diet_type]
+        for diet_type in ("vegetarian", "non_vegetarian")
+    }
+    ranked = []
+    for diet_type in diet_order:
+        if pools[diet_type]:
+            ranked.append(pools[diet_type].pop(0))
+
+    # This should only be needed if the catalog is reduced or almost entirely
+    # excluded by a future client.
+    if len(ranked) < 3:
+        ranked.extend(
             food for food in all_ranked
-            if food["name"].casefold() in excluded
+            if food not in ranked
         )
-    pool = available[:min(9, len(available))]
-    start = (max(variant, 0) * 2) % len(pool)
-    ranked = [pool[(start + index) % len(pool)] for index in range(3)]
+        ranked = ranked[:3]
 
     focus_parts = []
     if remaining["protein"] > 0:
@@ -146,12 +168,13 @@ def _heuristic_suggestions(
             "protein": item["protein"],
             "carbs": item["carbs"],
             "fat": item["fat"],
+            "diet_type": item["diet_type"],
             "reason": reason,
         })
 
     return {
         "remaining": remaining,
-        "summary_text": f"You still need about {focus_text}. These next-meal ideas fit that gap best.",
+        "summary_text": f"You still need about {focus_text}. Here are familiar vegetarian and non-vegetarian choices for that gap.",
         "suggestions": suggestions,
     }
 
@@ -186,7 +209,11 @@ Remaining macros for today:
 
 This is suggestion variation {max(variant, 0)}.
 {excluded_instruction}
-Use practical, common foods. Respond with ONLY valid JSON in this format:
+Use affordable, practical Indian home-style foods, with a preference for common
+South Indian meals and sides. Avoid specialty Western ingredients. Include at
+least one vegetarian and one non-vegetarian option. In India, meals containing
+egg, chicken, meat, or fish are non-vegetarian.
+Respond with ONLY valid JSON in this format:
 {{
   "summary_text": "short coaching sentence",
   "suggestions": [
@@ -197,6 +224,7 @@ Use practical, common foods. Respond with ONLY valid JSON in this format:
       "protein": 0,
       "carbs": 0,
       "fat": 0,
+      "diet_type": "vegetarian or non_vegetarian",
       "reason": "why it fits"
     }}
   ]
@@ -228,9 +256,13 @@ Return exactly 3 suggestions.
             str(item.get("name", "")).strip().casefold()
             for item in suggestions
         ]
+        diet_types = {
+            str(item.get("diet_type", "")).strip().casefold()
+            for item in suggestions
+        }
         if len(set(suggestion_names)) != 3 or any(
             name in excluded for name in suggestion_names
-        ):
+        ) or not {"vegetarian", "non_vegetarian"}.issubset(diet_types):
             return None
 
         return {
@@ -244,6 +276,7 @@ Return exactly 3 suggestions.
                     "protein": float(item.get("protein", 0)),
                     "carbs": float(item.get("carbs", 0)),
                     "fat": float(item.get("fat", 0)),
+                    "diet_type": str(item.get("diet_type", "vegetarian")).strip().casefold(),
                     "reason": str(item.get("reason", "Good fit for your remaining macros.")),
                 }
                 for item in suggestions

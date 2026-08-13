@@ -44,3 +44,13 @@ def test_variant_rotates_relevant_meals_without_exclusions():
     assert [item["name"] for item in first["suggestions"]] != [
         item["name"] for item in refreshed["suggestions"]
     ]
+
+
+def test_suggestions_always_include_veg_and_non_veg_common_meals():
+    for variant in range(4):
+        result = _heuristic_suggestions(_user(), _summary(), variant=variant)
+        diet_types = {item["diet_type"] for item in result["suggestions"]}
+
+        assert len(result["suggestions"]) == 3
+        assert diet_types == {"vegetarian", "non_vegetarian"}
+        assert "vegetarian and non-vegetarian" in result["summary_text"]

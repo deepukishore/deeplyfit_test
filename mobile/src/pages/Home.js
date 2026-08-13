@@ -136,7 +136,7 @@ const LogFoodModal = ({ onClose, onSave }) => {
           <Text style={s.label}>Food Name</Text>
           <TextInput
             style={s.input}
-            placeholder="e.g. Chicken breast, dosa, banana"
+            placeholder="e.g. dosa, poriyal, chutney, fish curry"
             placeholderTextColor={colors.textMuted}
             value={form.food_name}
             onChangeText={handleFoodNameChange}
@@ -551,7 +551,12 @@ const Home = ({ navigation }) => {
               <MotionView key={suggestion.name} style={s.suggestionTile} variant="fade" layout>
                 <View style={s.suggestionTop}>
                   <Text style={s.suggestionName}>{suggestion.name}</Text>
-                  <Text style={s.suggestionCalories}>{Math.round(suggestion.calories)} kcal</Text>
+                  <View style={s.suggestionBadges}>
+                    <Text style={[s.suggestionDiet, suggestion.diet_type !== 'vegetarian' && s.suggestionDietNonVeg]}>
+                      {suggestion.diet_type === 'vegetarian' ? 'Veg' : 'Non-veg'}
+                    </Text>
+                    <Text style={s.suggestionCalories}>{Math.round(suggestion.calories)} kcal</Text>
+                  </View>
                 </View>
                 <Text style={s.suggestionPortion}>{suggestion.portion_hint}</Text>
                 <Text style={s.suggestionReason}>{suggestion.reason}</Text>
@@ -674,6 +679,9 @@ const s = createThemedStyles(() => ({
   suggestionTile: { backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 13, borderWidth: 1, borderColor: colors.border, marginBottom: 9 },
   suggestionTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   suggestionName: { flex: 1, color: colors.textPrimary, fontSize: 13, lineHeight: 18, fontWeight: '800', marginRight: 8 },
+  suggestionBadges: { alignItems: 'flex-end', gap: 4 },
+  suggestionDiet: { color: colors.accentLime, fontSize: 9, fontWeight: '800', backgroundColor: 'rgba(200,241,53,0.12)', borderRadius: 10, overflow: 'hidden', paddingHorizontal: 7, paddingVertical: 3 },
+  suggestionDietNonVeg: { color: colors.accentAmber, backgroundColor: 'rgba(245,166,35,0.12)' },
   suggestionCalories: { color: colors.accentLime, fontSize: 10, fontWeight: '800', backgroundColor: 'rgba(124,58,237,0.09)', borderRadius: 12, overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 4 },
   suggestionPortion: { color: colors.textSecondary, fontSize: 10, lineHeight: 15, marginTop: 7 },
   suggestionReason: { color: colors.textMuted, fontSize: 10, lineHeight: 15, marginTop: 5 },

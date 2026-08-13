@@ -390,6 +390,13 @@
   font-size: 14px;
 }
 
+.meal-suggestion-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
 .meal-suggestion-portion {
   color: var(--text-primary);
   font-size: 12px;

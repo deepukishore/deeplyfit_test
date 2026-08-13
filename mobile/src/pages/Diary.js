@@ -114,7 +114,7 @@ const AddFoodModal = ({ meal, date, visible, onClose, onSave }) => {
   return (
     <ModalSheet visible={visible} title={`${getMealIcon(meal)} Add to ${meal.charAt(0).toUpperCase() + meal.slice(1)}`} onClose={onClose}>
       <View style={s.searchRow}>
-        <TextInput style={[s.input, { flex: 1, marginRight: 8 }]} placeholder="Try dosa, paneer, biryani..." placeholderTextColor={colors.textMuted} value={query} onChangeText={setQuery} />
+        <TextInput style={[s.input, { flex: 1, marginRight: 8 }]} placeholder="Try pesarattu, poriyal, chutney..." placeholderTextColor={colors.textMuted} value={query} onChangeText={setQuery} />
         <TouchableOpacity style={s.searchBtn} onPress={handleSearch} disabled={searching}>
           <Text style={s.searchBtnText}>{searching ? '...' : 'Search'}</Text>
         </TouchableOpacity>
@@ -125,7 +125,7 @@ const AddFoodModal = ({ meal, date, visible, onClose, onSave }) => {
           <Text style={s.resultMeta}>{Math.round(r.calories || 0)} kcal</Text>
         </TouchableOpacity>
       ))}
-      <View style={s.inputGroup}><Text style={s.label}>Food Name</Text><TextInput style={s.input} placeholder="e.g. Greek yogurt" placeholderTextColor={colors.textMuted} value={form.food_name} onChangeText={(v) => setForm((f) => ({ ...f, food_name: v }))} /></View>
+      <View style={s.inputGroup}><Text style={s.label}>Food Name</Text><TextInput style={s.input} placeholder="e.g. idli with sambar" placeholderTextColor={colors.textMuted} value={form.food_name} onChangeText={(v) => setForm((f) => ({ ...f, food_name: v }))} /></View>
       <View style={s.row}>
         <View style={{ flex: 1, marginRight: 8 }}><Text style={s.label}>Calories</Text><TextInput style={s.input} placeholder="0" placeholderTextColor={colors.textMuted} value={form.calories} onChangeText={(v) => setForm((f) => ({ ...f, calories: v }))} keyboardType="numeric" /></View>
         <View style={{ flex: 1 }}><Text style={s.label}>Multiplier</Text><TextInput style={s.input} placeholder="1" placeholderTextColor={colors.textMuted} value={form.quantity} onChangeText={(v) => setForm((f) => ({ ...f, quantity: v }))} keyboardType="numeric" /></View>
