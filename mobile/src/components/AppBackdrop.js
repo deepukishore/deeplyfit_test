@@ -88,6 +88,8 @@ const AppBackdrop = ({ compact = false }) => {
   const sceneRotateX = progress.interpolate({ inputRange: [0, 1], outputRange: ['-2deg', '3deg'] });
   const sceneRotateY = progress.interpolate({ inputRange: [0, 1], outputRange: ['-5deg', '5deg'] });
   const sceneRotateZ = progress.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '3deg'] });
+  const prismRotate = progress.interpolate({ inputRange: [0, 1], outputRange: ['-16deg', '12deg'] });
+  const prismFloat = progress.interpolate({ inputRange: [0, 1], outputRange: [0, -22] });
   const sparkle = progress.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.58, 1, 0.7] });
   const sweepY = progress.interpolate({ inputRange: [0, 1], outputRange: [-180, 760] });
   const sweepOpacity = progress.interpolate({ inputRange: [0, 0.15, 0.72, 1], outputRange: [0, 0.2, 0.12, 0] });
@@ -168,6 +170,39 @@ const AppBackdrop = ({ compact = false }) => {
       </Animated.View>
 
       <Animated.View style={[s.auroraBand, { transform: [{ translateX: driftX }, { translateY: reverseY }, { rotate: '-17deg' }] }]} />
+      <Animated.View
+        style={[
+          s.prism,
+          {
+            transform: [
+              { perspective: 800 },
+              { translateY: prismFloat },
+              { rotateX: '58deg' },
+              { rotateY: prismRotate },
+              { rotateZ: '-18deg' },
+            ],
+          },
+        ]}
+      >
+        <View style={s.prismFace} />
+        <View style={s.prismEdge} />
+      </Animated.View>
+      <Animated.View
+        style={[
+          s.gem,
+          {
+            transform: [
+              { perspective: 650 },
+              { translateX: reverseX },
+              { translateY: driftY },
+              { rotateX: '42deg' },
+              { rotateY: prismRotate },
+              { rotateZ: '34deg' },
+              { scale: scaleDown },
+            ],
+          },
+        ]}
+      />
       <Animated.View style={[s.orb, s.orbPurple, compact && s.orbCompact, { transform: [{ translateX: driftX }, { translateY: driftY }, { scale: scaleUp }] }]} />
       <Animated.View style={[s.orb, s.orbBlue, { transform: [{ translateX: reverseX }, { translateY: reverseY }, { scale: scaleDown }] }]} />
       <Animated.View style={[s.orb, s.orbAmber, { transform: [{ translateX: driftX }, { translateY: reverseY }] }]} />
@@ -190,6 +225,10 @@ const s = createThemedStyles(() => ({
   scene3dCompact: { right: -172, top: -42, opacity: 0.66 },
   orb: { position: 'absolute', borderRadius: 999 },
   auroraBand: { position: 'absolute', width: 540, height: 130, top: 210, left: -84, borderRadius: 999, backgroundColor: colors.glowPurple, opacity: 0.28, borderWidth: 1, borderColor: colors.border, transform: [{ rotate: '-17deg' }] },
+  prism: { position: 'absolute', width: 116, height: 82, top: 168, left: -42, borderRadius: 24, backgroundColor: colors.glowPurple, borderWidth: 1, borderColor: colors.surfaceHighlight, shadowColor: colors.accentPurple, shadowOpacity: 0.22, shadowRadius: 18, shadowOffset: { width: 8, height: 12 }, elevation: 4 },
+  prismFace: { position: 'absolute', top: 10, right: 10, bottom: 10, left: 10, borderRadius: 17, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceHighlight, opacity: 0.28 },
+  prismEdge: { position: 'absolute', right: 12, bottom: -8, left: 18, height: 10, borderRadius: 8, backgroundColor: colors.accentPurple, opacity: 0.14 },
+  gem: { position: 'absolute', width: 62, height: 62, right: 20, bottom: 172, borderRadius: 18, backgroundColor: colors.glowBlue, borderWidth: 1, borderColor: colors.surfaceHighlight, shadowColor: colors.accentBlue, shadowOpacity: 0.2, shadowRadius: 16, shadowOffset: { width: 7, height: 10 }, elevation: 3 },
   orbPurple: { width: 300, height: 300, top: -130, right: -108, backgroundColor: colors.glowPurple, opacity: 0.82 },
   orbCompact: { top: -170, right: -135 },
   orbBlue: { width: 250, height: 250, top: '37%', left: -158, backgroundColor: colors.glowBlue, opacity: 0.72 },

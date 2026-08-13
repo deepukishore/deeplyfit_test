@@ -252,7 +252,7 @@ const Progress = () => {
           <>
             <MotionView style={s.statsGrid} delay={30}>
               {stats.map((stat, index) => (
-                <MotionView key={stat.label} style={s.statCard} delay={50 + (index * 40)} variant="fade">
+                <MotionView depth accentColor={index % 2 ? colors.glowBlue : colors.glowPurple} key={stat.label} style={s.statCard} delay={50 + (index * 40)} variant="fade">
                   <Text style={{ fontSize: 24 }}>{stat.icon}</Text>
                   <Text style={[s.statValue, { color: stat.color }]}>{stat.value}</Text>
                   <Text style={s.statLabel}>{stat.label}</Text>
@@ -260,7 +260,7 @@ const Progress = () => {
               ))}
             </MotionView>
 
-            <MotionView style={s.chartCard} delay={130}>
+            <MotionView depth style={s.chartCard} delay={130}>
               <View style={s.rowBetween}>
                 <Text style={s.chartTitle}>BMI Tracker</Text>
                 {!!bmiHistory?.bmi_category && <Text style={s.badge}>{bmiHistory.bmi_category}</Text>}
@@ -273,7 +273,7 @@ const Progress = () => {
               </Text>
             </MotionView>
 
-            <MotionView style={s.chartCard} delay={180}>
+            <MotionView depth accentColor={colors.glowBlue} style={s.chartCard} delay={180}>
               <Text style={s.chartTitle}>Weight Trend</Text>
               {weightValues.length < 2 ? (
                 <View style={s.emptyState}>
@@ -292,7 +292,7 @@ const Progress = () => {
               )}
             </MotionView>
 
-            <MotionView style={s.chartCard} delay={230}>
+            <MotionView depth accentColor="rgba(245,166,35,0.14)" style={s.chartCard} delay={230}>
               <Text style={s.chartTitle}>Weekly Calories vs Goal</Text>
               {calorieValues.length === 0 ? (
                 <View style={s.emptyState}>
@@ -311,7 +311,7 @@ const Progress = () => {
               )}
             </MotionView>
 
-            <MotionView style={s.comparisonCard} delay={280}>
+            <MotionView depth style={s.comparisonCard} delay={280}>
               <View style={s.comparisonHeader}>
                 <View>
                   <Text style={s.sectionKicker}>Comparison</Text>
@@ -338,7 +338,7 @@ const Progress = () => {
             </MotionView>
 
             {achievements.length > 0 && (
-              <MotionView style={s.achievementWall} delay={330}>
+              <MotionView depth accentColor="rgba(245,166,35,0.14)" style={s.achievementWall} delay={330}>
                 <View style={s.achievementHeader}>
                   <View>
                     <Text style={s.sectionKicker}>Milestones</Text>
@@ -359,7 +359,7 @@ const Progress = () => {
             )}
 
             {weightLogs.length > 0 && (
-              <MotionView style={s.card} delay={380}>
+              <MotionView depth accentColor={colors.glowBlue} style={s.card} delay={380}>
                 <Text style={s.chartTitle}>Weight History</Text>
                 {[...weightLogs]
                   .reverse()
@@ -378,7 +378,7 @@ const Progress = () => {
             )}
 
             {user?.bmr && (
-              <MotionView style={s.card} delay={430}>
+              <MotionView depth style={s.card} delay={430}>
                 <Text style={s.chartTitle}>Your Metrics</Text>
                 {[
                   { label: 'BMR', val: `${Math.round(user.bmr)} kcal` },

@@ -359,7 +359,7 @@ const MealSection = ({ meal, items, onAdd, onScan, onDelete, onFavorite, onSaveT
   const mealItems = items.filter((i) => i.meal_type === meal);
   const mealCal = mealItems.reduce((s, i) => s + i.calories, 0);
   return (
-    <MotionView style={s.mealSection} delay={motionDelay} layout>
+    <MotionView depth style={s.mealSection} delay={motionDelay} layout>
       <TouchableOpacity style={s.mealHeader} onPress={() => setExpanded((e) => !e)}>
         <View style={s.mealHeaderLeft}>
           <Text style={{ fontSize: 24, marginRight: 10 }}>{getMealIcon(meal)}</Text>
@@ -484,7 +484,7 @@ const Diary = () => {
 
       <ScrollView style={s.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accentLime} />}>
         {summary && (
-          <MotionView style={s.summaryCard} delay={30}>
+          <MotionView depth accentColor={colors.glowBlue} style={s.summaryCard} delay={30}>
             <View style={s.rowBetween}>
               <Text style={s.summaryText}>{Math.round(summary.calories_consumed)} / {Math.round(summary.calories_target)} kcal</Text>
               <Text style={[s.summaryText, { color: summary.calories_consumed > summary.calories_target ? colors.accentCoral : colors.accentLime }]}>
@@ -504,7 +504,7 @@ const Diary = () => {
         )}
 
         {summary?.micronutrients && (
-          <MotionView style={s.card} delay={80}>
+          <MotionView depth style={s.card} delay={80}>
             <View style={s.sectionHeaderRow}>
               <Text style={s.sectionTitle}>Micronutrients</Text>
               <Text style={s.infoBadge}>Daily % RDA</Text>
@@ -530,7 +530,7 @@ const Diary = () => {
         )}
 
         {favorites.length > 0 && (
-          <MotionView style={s.card} delay={130}>
+          <MotionView depth accentColor={colors.glowBlue} style={s.card} delay={130}>
             <Text style={s.sectionTitle}>Favorite Foods</Text>
             {favorites.map((fav) => (
               <View key={fav.id} style={s.favCard}>
@@ -555,7 +555,7 @@ const Diary = () => {
           </MotionView>
         )}
 
-        <MotionView style={s.card} delay={180}>
+        <MotionView depth accentColor="rgba(245,166,35,0.14)" style={s.card} delay={180}>
           <View style={s.sectionHeaderRow}>
             <Text style={s.sectionTitle}>Meal Prep Planner</Text>
             <View style={s.plannerNav}>
@@ -652,7 +652,7 @@ const Diary = () => {
 
 const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border },
+  header: { zIndex: 2, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border, shadowColor: '#3b1c63', shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 5 },
   headerTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   badge: { backgroundColor: 'rgba(200,241,53,0.12)', color: colors.accentLime, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20, fontSize: 12, fontWeight: '700' },
   dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.md, backgroundColor: colors.bgCard, borderBottomWidth: 1, borderBottomColor: colors.border },
@@ -669,7 +669,7 @@ const s = createThemedStyles(() => ({
   macroRow: { flexDirection: 'row', marginTop: 4 },
   macroValue: { fontWeight: '700', fontSize: 14 },
   macroLabel: { color: colors.textMuted, fontSize: 10, textTransform: 'uppercase', marginTop: 2 },
-  card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
+  card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.12, shadowRadius: 19, shadowOffset: { width: 0, height: 10 }, elevation: 6 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 10 },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   infoBadge: { color: colors.accentBlue, backgroundColor: 'rgba(37,99,235,0.09)', borderWidth: 1, borderColor: 'rgba(37,99,235,0.16)', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3, fontSize: 9, fontWeight: '700', marginBottom: 10, overflow: 'hidden' },

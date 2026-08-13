@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { RefreshProvider } from '../context/RefreshContext';
 import { colors, createThemedStyles } from '../utils/theme';
-import { AnimatedTabIcon, ScreenTransition } from '../components/Motion';
+import { AnimatedTabIcon, FloatingView, ScreenTransition } from '../components/Motion';
 
 import Login from '../pages/Login';
 import Onboarding from '../pages/Onboarding';
@@ -63,6 +63,7 @@ const MainTabs = () => {
           tabBarActiveTintColor: colors.accentLime,
           tabBarInactiveTintColor: colors.textMuted,
           tabBarLabelStyle: { fontSize: 10, fontWeight: '600', letterSpacing: 0.1 },
+          tabBarItemStyle: styles.tabItem,
           tabBarHideOnKeyboard: true,
           tabBarIcon: ({ focused }) => (
             <AnimatedTabIcon
@@ -93,7 +94,9 @@ const AppNavigator = () => {
   if (loading) {
     return (
       <View style={styles.loading}>
-        <Image source={require('../../assets/icon.png')} style={styles.loadingLogo} resizeMode="cover" />
+        <FloatingView distance={7} duration={1900}>
+          <Image source={require('../../assets/icon.png')} style={styles.loadingLogo} resizeMode="cover" />
+        </FloatingView>
         <ActivityIndicator size="large" color={colors.accentLime} />
         <Text style={styles.loadingText}>Loading Deeply Fit...</Text>
       </View>
@@ -125,9 +128,10 @@ const styles = createThemedStyles(() => ({
   loading: { flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' },
   loadingLogo: { width: 76, height: 76, borderRadius: 20, marginBottom: 18 },
   loadingText: { color: colors.textSecondary, marginTop: 14, fontSize: 14 },
-  tabBar: { paddingTop: 5, backgroundColor: colors.bgCard, borderTopWidth: 1, borderTopColor: colors.border, shadowColor: '#311a57', shadowOpacity: 0.13, shadowRadius: 18, shadowOffset: { width: 0, height: -7 }, elevation: 18 },
-  tabIcon: { width: 34, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 11 },
-  tabIconActive: { backgroundColor: colors.glowPurple, borderWidth: 1, borderColor: 'rgba(124,58,237,0.12)' },
+  tabBar: { marginHorizontal: 9, marginBottom: 6, paddingTop: 6, backgroundColor: colors.bgCard, borderWidth: 1, borderTopWidth: 1, borderColor: colors.border, borderRadius: 23, shadowColor: '#311a57', shadowOpacity: 0.2, shadowRadius: 22, shadowOffset: { width: 0, height: -8 }, elevation: 20, overflow: 'visible' },
+  tabItem: { marginHorizontal: 1, borderRadius: 16 },
+  tabIcon: { width: 36, height: 31, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
+  tabIconActive: { backgroundColor: colors.glowPurple, borderWidth: 1, borderColor: 'rgba(124,58,237,0.2)', shadowColor: colors.accentPurple, shadowOpacity: 0.22, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   tabIconText: { fontSize: 19 },
   tabIndicator: { position: 'absolute', width: 13, height: 2.5, borderRadius: 2, bottom: 1, backgroundColor: colors.accentLime },
 }));

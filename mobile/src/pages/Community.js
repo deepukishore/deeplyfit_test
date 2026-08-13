@@ -186,7 +186,7 @@ const Community = ({ navigation }) => {
           loading ? <ActivityIndicator color={colors.accentLime} style={{ marginTop: 40 }} /> : (
             <>
               {posts.map((post, index) => (
-                <MotionView key={post.id} style={s.postCard} delay={Math.min(30 + (index * 55), 300)} layout>
+                <MotionView depth key={post.id} style={s.postCard} delay={Math.min(30 + (index * 55), 300)} layout>
                   <View style={s.postHeader}>
                     <TouchableOpacity style={s.postAvatar} onPress={() => post.author.public_profile_slug && navigation.navigate('PublicProfile', { slug: post.author.public_profile_slug })}>
                       <UserAvatar value={post.author.profile_picture} initials={initialsFor(post.author)} size={42} />
@@ -231,7 +231,7 @@ const Community = ({ navigation }) => {
               <ActivityIndicator color={colors.accentLime} style={{ marginTop: 24 }} />
             ) : (
               challenges.map((ch, index) => (
-                <MotionView key={ch.id} style={s.challengeCard} delay={Math.min(30 + (index * 60), 300)} layout>
+                <MotionView depth accentColor={colors.glowBlue} key={ch.id} style={s.challengeCard} delay={Math.min(30 + (index * 60), 300)} layout>
                   <Text style={{ fontSize: 36, marginRight: 16 }}>{ch.icon}</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={s.challengeName}>{ch.name}</Text>
@@ -260,7 +260,7 @@ const Community = ({ navigation }) => {
 
 const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border },
+  header: { zIndex: 2, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border, shadowColor: '#3b1c63', shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 5 },
   headerTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   addBtn: { backgroundColor: colors.accentLime, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
   addBtnText: { color: colors.textInverse, fontWeight: '700', fontSize: 12 },
@@ -270,7 +270,7 @@ const s = createThemedStyles(() => ({
   tabText: { color: colors.textSecondary, fontWeight: '700', fontSize: 12 },
   tabTextActive: { color: colors.textInverse },
   scroll: { flex: 1, padding: spacing.md },
-  postCard: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
+  postCard: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.12, shadowRadius: 19, shadowOffset: { width: 0, height: 10 }, elevation: 6 },
   postHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   postAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(79,172,254,0.14)', alignItems: 'center', justifyContent: 'center', marginRight: 9 },
   postAvatarText: { color: colors.accentBlue, fontWeight: '800', fontSize: 13 },

@@ -331,7 +331,7 @@ const Profile = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accentLime} />}
       >
-        <MotionView style={s.profileHeader} delay={30}>
+        <MotionView depth style={s.profileHeader} delay={30}>
           <MotionPressable style={s.editProfileBtn} onPress={() => setShowEditModal(true)}>
             <Text style={s.editProfileBtnText}>Edit</Text>
           </MotionPressable>
@@ -370,7 +370,7 @@ const Profile = ({ navigation }) => {
           </MotionView>
         ) : null}
 
-        <MotionView style={s.settingsSection} delay={140}>
+        <MotionView depth accentColor={colors.glowBlue} style={s.settingsSection} delay={140}>
           <View style={s.sectionHeader}>
             <View>
               <Text style={s.sectionEyebrow}>Account</Text>
@@ -393,7 +393,7 @@ const Profile = ({ navigation }) => {
           </TouchableOpacity>
         </MotionView>
 
-        <MotionView style={s.settingsSection} delay={190}>
+        <MotionView depth style={s.settingsSection} delay={190}>
           <View style={s.sectionHeader}>
             <View>
               <Text style={s.sectionEyebrow}>Sharing</Text>
@@ -427,7 +427,7 @@ const Profile = ({ navigation }) => {
         </MotionView>
 
         {achievements.length > 0 ? (
-          <MotionView style={s.achievementsSection} delay={240}>
+          <MotionView depth accentColor="rgba(245,166,35,0.14)" style={s.achievementsSection} delay={240}>
             <View style={s.sectionHeader}>
               <View>
                 <Text style={s.sectionEyebrow}>Milestones</Text>
@@ -487,7 +487,7 @@ const s = createThemedStyles(() => ({
   headerTitle: { fontSize: 24, fontWeight: '800', color: colors.textPrimary },
   scroll: { flex: 1 },
   scrollContent: { padding: spacing.lg },
-  profileHeader: { position: 'relative', alignItems: 'center', backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.xl, marginBottom: 14, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  profileHeader: { position: 'relative', alignItems: 'center', backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.xl, marginBottom: 14, borderWidth: 1, borderColor: colors.border, shadowColor: '#48236f', shadowOpacity: 0.14, shadowRadius: 22, shadowOffset: { width: 0, height: 11 }, elevation: 7 },
   editProfileBtn: { position: 'absolute', top: 14, right: 14, paddingHorizontal: 11, paddingVertical: 6, borderRadius: 10, backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
   editProfileBtnText: { color: colors.accentPurple, fontSize: 11, fontWeight: '800' },
   avatarLarge: { marginBottom: 10 },

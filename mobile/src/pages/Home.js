@@ -452,11 +452,11 @@ const Home = ({ navigation }) => {
       </View>
 
       <ScrollView style={s.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accentLime} />}>
-        <MotionView style={s.quoteCard} delay={20} variant="fade">
+        <MotionView depth accentColor={colors.glowBlue} style={s.quoteCard} delay={20} variant="fade">
           <Text style={s.quoteText}>💬 "{getDailyQuote()}"</Text>
         </MotionView>
 
-        <MotionView style={s.card} delay={70}>
+        <MotionView depth style={s.card} delay={70}>
           <Text style={s.sectionTitle}>Calories Remaining</Text>
           <Text style={[s.bigNumber, remaining < 0 && { color: colors.accentCoral }]}>{Math.abs(Math.round(remaining))}</Text>
           {remaining < 0 && <Text style={{ color: colors.accentCoral, fontSize: 12 }}>Over goal by {Math.abs(Math.round(remaining))} kcal</Text>}
@@ -468,7 +468,7 @@ const Home = ({ navigation }) => {
         </MotionView>
 
         {calorieStreak && (
-          <MotionView style={s.card} delay={120}>
+          <MotionView depth accentColor="rgba(245,166,35,0.16)" style={s.card} delay={120}>
             <View style={s.streakHead}>
               <View style={s.streakIcon}><Text style={s.streakIconText}>F</Text></View>
               <View style={{ flex: 1 }}>
@@ -494,7 +494,7 @@ const Home = ({ navigation }) => {
           </MotionView>
         )}
 
-        <MotionView style={s.card} delay={170}>
+        <MotionView depth accentColor={colors.glowBlue} style={s.card} delay={170}>
           <View style={s.rowBetweenCompact}>
             <Text style={s.sectionTitle}>Macro balance</Text>
             <Text style={s.sectionKicker}>Today</Text>
@@ -517,7 +517,7 @@ const Home = ({ navigation }) => {
           {!macroRows.some((macro) => macro.value > 0) && <Text style={s.macroEmpty}>Log food to start building your macro picture.</Text>}
         </MotionView>
 
-        <MotionView style={s.card} delay={220}>
+        <MotionView depth accentColor={colors.glowBlue} style={s.card} delay={220}>
           <View style={s.rowBetween}>
             <View>
               <Text style={s.sectionTitle}>Water Intake</Text>
@@ -537,7 +537,7 @@ const Home = ({ navigation }) => {
         </MotionView>
 
         {suggestionsData && (
-          <MotionView style={s.card} delay={270}>
+          <MotionView depth style={s.card} delay={270}>
             <View style={s.suggestionHeader}>
               <Text style={s.sectionTitle}>AI Meal Suggestions</Text>
               <TouchableOpacity style={s.refreshBtn} onPress={refreshSuggestions} disabled={suggestionsRefreshing}>
@@ -571,7 +571,7 @@ const Home = ({ navigation }) => {
           </MotionView>
         )}
 
-        <MotionView style={s.card} delay={320}>
+        <MotionView depth accentColor="rgba(245,166,35,0.14)" style={s.card} delay={320}>
           <Text style={s.sectionTitle}>Quick Actions</Text>
           <View style={s.quickActions}>
             {[
@@ -588,7 +588,7 @@ const Home = ({ navigation }) => {
           </View>
         </MotionView>
 
-        <MotionView style={s.card} delay={370}>
+        <MotionView depth accentColor={colors.glowBlue} style={s.card} delay={370}>
           <Text style={s.sectionTitle}>Suggested Workouts</Text>
           {suggestions.map((sg, i) => (
             <View key={i} style={s.workoutRow}>
@@ -615,15 +615,15 @@ const Home = ({ navigation }) => {
 
 const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border },
+  header: { zIndex: 2, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border, shadowColor: '#3b1c63', shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 5 },
   greeting: { fontSize: 11, color: colors.textMuted, letterSpacing: 0.4, textTransform: 'uppercase' },
   name: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
-  avatar: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.accentPurple, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.accentPurple, alignItems: 'center', justifyContent: 'center', shadowColor: colors.accentPurple, shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 6 },
   avatarText: { color: '#fff', fontWeight: '800', fontSize: 14 },
   scroll: { flex: 1, padding: spacing.lg },
   quoteCard: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: 'rgba(124,58,237,0.16)', shadowColor: '#4b2679', shadowOpacity: 0.08, shadowRadius: 15, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
   quoteText: { color: colors.textSecondary, fontSize: 13, fontStyle: 'italic', lineHeight: 20 },
-  card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#4b2679', shadowOpacity: 0.09, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#4b2679', shadowOpacity: 0.13, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 6 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 10 },
   bigNumber: { fontSize: 42, fontWeight: '800', color: colors.accentLime, lineHeight: 46 },
   subText: { fontSize: 12, color: colors.textMuted, marginBottom: 10 },
@@ -667,7 +667,7 @@ const s = createThemedStyles(() => ({
   glass: { fontSize: 18, opacity: 0.3 },
   glassFilled: { opacity: 1 },
   quickActions: { flexDirection: 'row', justifyContent: 'space-between' },
-  quickBtn: { flex: 1, alignItems: 'center', backgroundColor: 'rgba(246,241,255,0.9)', borderRadius: radius.lg, padding: 10, marginHorizontal: 3, borderWidth: 1, borderColor: 'rgba(124,58,237,0.11)' },
+  quickBtn: { flex: 1, alignItems: 'center', backgroundColor: 'rgba(246,241,255,0.94)', borderRadius: radius.lg, padding: 10, marginHorizontal: 3, borderWidth: 1, borderColor: 'rgba(124,58,237,0.16)', shadowColor: '#4b2679', shadowOpacity: 0.12, shadowRadius: 9, shadowOffset: { width: 0, height: 5 }, elevation: 4 },
   quickLabel: { color: colors.textSecondary, fontSize: 10, marginTop: 4, textAlign: 'center', fontWeight: '600' },
   workoutRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: colors.border },
   workoutName: { color: colors.textPrimary, fontWeight: '600', fontSize: 13 },
@@ -677,7 +677,7 @@ const s = createThemedStyles(() => ({
   refreshBtn: { minWidth: 62, height: 30, borderRadius: 9, paddingHorizontal: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border, marginBottom: 10 },
   refreshBtnText: { color: colors.textPrimary, fontSize: 10, fontWeight: '700' },
   suggestionSummary: { color: colors.textSecondary, fontSize: 11, lineHeight: 17, marginBottom: 12 },
-  suggestionTile: { backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 13, borderWidth: 1, borderColor: colors.border, marginBottom: 9 },
+  suggestionTile: { backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 13, borderWidth: 1, borderColor: colors.border, marginBottom: 9, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 3 },
   suggestionTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   suggestionName: { flex: 1, color: colors.textPrimary, fontSize: 13, lineHeight: 18, fontWeight: '800', marginRight: 8 },
   suggestionBadges: { alignItems: 'flex-end', gap: 4 },
