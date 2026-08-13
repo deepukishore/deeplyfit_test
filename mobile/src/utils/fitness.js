@@ -47,36 +47,41 @@ export const addDays = (dateStr, days) => {
 export const getWorkoutSuggestions = (fitnessGoal) => {
   const suggestions = {
     lose: [
-      { icon: '🏃', name: 'HIIT Cardio', detail: '30 min • High Intensity', calories: 350 },
-      { icon: '🚴', name: 'Cycling', detail: '45 min • Moderate', calories: 280 },
-      { icon: '🏊', name: 'Swimming', detail: '30 min • Full Body', calories: 300 },
+      { icon: '\u{1F3C3}', name: 'HIIT Cardio', detail: '30 min \u2022 High intensity', calories: 350 },
+      { icon: '\u{1F6B4}', name: 'Cycling', detail: '45 min \u2022 Moderate', calories: 280 },
+      { icon: '\u{1F3CA}', name: 'Swimming', detail: '30 min \u2022 Full body', calories: 300 },
     ],
     gain: [
-      { icon: '🏋️', name: 'Weight Training', detail: '60 min • Progressive', calories: 250 },
-      { icon: '💪', name: 'Push Day', detail: '45 min • Chest & Triceps', calories: 200 },
-      { icon: '🦵', name: 'Leg Day', detail: '60 min • Compound Lifts', calories: 280 },
+      { icon: '\u{1F3CB}\uFE0F', name: 'Weight Training', detail: '60 min \u2022 Progressive', calories: 250 },
+      { icon: '\u{1F4AA}', name: 'Push Day', detail: '45 min \u2022 Chest & triceps', calories: 200 },
+      { icon: '\u{1F9B5}', name: 'Leg Day', detail: '60 min \u2022 Compound lifts', calories: 280 },
     ],
     maintain: [
-      { icon: '🧘', name: 'Yoga Flow', detail: '45 min • Flexibility', calories: 150 },
-      { icon: '🚶', name: 'Power Walk', detail: '30 min • Steady State', calories: 180 },
-      { icon: '⚡', name: 'Circuit Training', detail: '40 min • Mixed', calories: 300 },
+      { icon: '\u{1F9D8}', name: 'Yoga Flow', detail: '45 min \u2022 Flexibility', calories: 150 },
+      { icon: '\u{1F6B6}', name: 'Power Walk', detail: '30 min \u2022 Steady state', calories: 180 },
+      { icon: '\u26A1', name: 'Circuit Training', detail: '40 min \u2022 Mixed', calories: 300 },
     ],
   };
   return suggestions[fitnessGoal] || suggestions.maintain;
 };
 
 export const getMealIcon = (mealType) => {
-  const icons = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snacks: '🍎' };
-  return icons[mealType] || '🍽️';
+  const icons = {
+    breakfast: '\u{1F305}',
+    lunch: '\u2600\uFE0F',
+    dinner: '\u{1F319}',
+    snacks: '\u{1F34E}',
+  };
+  return icons[mealType] || '\u{1F37D}\uFE0F';
 };
 
 export const getInitials = (name, email) => {
-  if (name) return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+  if (name) return name.split(' ').map((part) => part[0]).join('').toUpperCase().slice(0, 2);
   return email ? email[0].toUpperCase() : '?';
 };
 
 export const ACTIVE_CHALLENGES = [
-  { id: 'steps-daily', name: '10K Steps Daily', icon: '👟', participants: 234, daysLeft: 5 },
-  { id: 'sugar-free-week', name: 'Sugar-Free Week', icon: '🚫', participants: 128, daysLeft: 3 },
-  { id: 'core-30-day', name: '30-Day Core', icon: '💪', participants: 456, daysLeft: 18 },
+  { id: 'steps-daily', name: '10K Steps Daily', icon: '\u{1F45F}', participants: 234, daysLeft: 5 },
+  { id: 'sugar-free-week', name: 'Sugar-Free Week', icon: '\u{1F6AB}', participants: 128, daysLeft: 3 },
+  { id: 'core-30-day', name: '30-Day Core', icon: '\u{1F4AA}', participants: 456, daysLeft: 18 },
 ];

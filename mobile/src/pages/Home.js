@@ -15,6 +15,22 @@ import AppBackdrop from '../components/AppBackdrop';
 import { AnimatedProgressFill, FloatingView, MotionPressable, MotionView } from '../components/Motion';
 
 const MACRO_COLORS = ['#4facfe', '#a855f7', '#f5a623'];
+const QUICK_ACTION_META = {
+  'Log Food': { detail: 'Track a meal', tone: 'rgba(168,85,247,0.14)' },
+  'Log Workout': { detail: 'Start moving', tone: 'rgba(245,166,35,0.14)' },
+  'Log Weight': { detail: 'Record progress', tone: 'rgba(220,38,38,0.1)' },
+  Planner: { detail: 'Plan ahead', tone: 'rgba(37,99,235,0.12)' },
+  Progress: { detail: 'See your trends', tone: 'rgba(37,99,235,0.12)' },
+  Community: { detail: 'Stay motivated', tone: 'rgba(168,85,247,0.14)' },
+};
+const QUICK_ACTION_ICONS = {
+  'Log Food': '\u{1F37D}\uFE0F',
+  'Log Workout': '\u{1F3CB}\uFE0F',
+  'Log Weight': '\u2696\uFE0F',
+  Planner: '\u{1F4D6}',
+  Progress: '\u{1F4C8}',
+  Community: '\u{1F91D}',
+};
 
 const LogModal = ({ title, onClose, children }) => (
   <Modal visible transparent animationType="slide" onRequestClose={onClose}>
@@ -247,8 +263,13 @@ const LogFoodModal = ({ onClose, onSave }) => {
   );
 };
 
-const LogWorkoutModal = ({ user, onClose, onSave }) => {
-  const [form, setForm] = useState({ workout_type: '', duration_minutes: '', notes: '' });
+const LogWorkoutModal = ({ user, preset, onClose, onSave }) => {
+  const suggestedDuration = String(preset?.detail || '').match(/\d+/)?.[0] || '';
+  const [form, setForm] = useState({
+    workout_type: preset?.name || '',
+    duration_minutes: suggestedDuration,
+    notes: '',
+  });
   const [loading, setLoading] = useState(false);
   const today = formatDate(new Date());
 
@@ -355,6 +376,7 @@ const Home = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [suggestionsRefreshing, setSuggestionsRefreshing] = useState(false);
   const [modal, setModal] = useState(null);
+  const [workoutPreset, setWorkoutPreset] = useState(null);
   const [showPlanner, setShowPlanner] = useState(false);
   const suggestionVariantRef = useRef(0);
   const loadSummary = useCallback(async ({ rotateSuggestions = false } = {}) => {
@@ -427,6 +449,11 @@ const Home = ({ navigation }) => {
     } catch { Toast.show({ type: 'error', text1: 'Failed to log water' }); }
   };
 
+  const openWorkout = (preset = null) => {
+    setWorkoutPreset(preset);
+    setModal('workout');
+  };
+
   const remaining = (summary?.calories_target || 0) - (summary?.calories_consumed || 0) + (summary?.calories_burned || 0);
   const progress = Math.min(((summary?.calories_consumed || 0) / (summary?.calories_target || 2000)) * 100, 100);
   const suggestions = getWorkoutSuggestions(user?.fitness_goal);
@@ -437,6 +464,40 @@ const Home = ({ navigation }) => {
     { name: 'Carbs', value: summary?.carbs || 0, target: user?.carbs_target || 200, color: MACRO_COLORS[1] },
     { name: 'Fat', value: summary?.fat || 0, target: user?.fat_target || 65, color: MACRO_COLORS[2] },
   ];
+  const hydrationTarget = Math.min(waterGoal, 4);
+  const dailyMissions = [
+    {
+      key: 'food',
+      icon: '\u{1F957}',
+      title: 'Fuel your day',
+      detail: 'Log your first meal',
+      complete: Number(summary?.calories_consumed || 0) > 0 || Boolean(summary?.food_logs?.length),
+      action: () => setModal('food'),
+    },
+    {
+      key: 'move',
+      icon: '\u{1F3C3}',
+      title: 'Move your body',
+      detail: 'Complete one activity',
+      complete: Number(summary?.calories_burned || 0) > 0 || Boolean(summary?.workouts?.length),
+      action: () => openWorkout(),
+    },
+    {
+      key: 'water',
+      icon: '\u{1F4A7}',
+      title: 'Hydration boost',
+      detail: `${Math.min(summary?.water_glasses || 0, hydrationTarget)}/${hydrationTarget} glasses`,
+      complete: Number(summary?.water_glasses || 0) >= hydrationTarget,
+      action: handleAddGlass,
+    },
+  ];
+  const completedMissions = dailyMissions.filter((mission) => mission.complete).length;
+  const missionProgress = (completedMissions / dailyMissions.length) * 100;
+  const missionMessage = completedMissions === dailyMissions.length
+    ? 'Daily win unlocked. Keep the momentum going!'
+    : completedMissions === 0
+      ? 'Three small actions can make today a healthy win.'
+      : `${dailyMissions.length - completedMissions} small ${dailyMissions.length - completedMissions === 1 ? 'step' : 'steps'} left for today.`;
 
   return (
     <View style={s.page}>
@@ -446,7 +507,7 @@ const Home = ({ navigation }) => {
           <Text style={s.greeting}>{getGreeting()}</Text>
           <Text style={s.name}>{user?.name || user?.email?.split('@')[0] || 'Athlete'} 👋</Text>
         </View>
-        <TouchableOpacity style={s.avatar} onPress={() => navigation.navigate('Profile')}>
+        <TouchableOpacity style={s.avatar} onPress={() => navigation.navigate('Profile')} accessibilityRole="button" accessibilityLabel="Open your profile">
           <UserAvatar value={user?.profile_picture} initials={initials} size={40} />
         </TouchableOpacity>
       </View>
@@ -456,10 +517,50 @@ const Home = ({ navigation }) => {
           <Text style={s.quoteText}>💬 "{getDailyQuote()}"</Text>
         </MotionView>
 
+        <MotionView depth accentColor="rgba(245,166,35,0.18)" style={[s.card, s.missionCard]} delay={50}>
+          <View style={s.missionHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.missionEyebrow}>DAILY MOMENTUM</Text>
+              <Text style={s.missionTitle}>Your healthy wins</Text>
+            </View>
+            <View style={[s.missionScore, completedMissions === dailyMissions.length && s.missionScoreComplete]} accessibilityLiveRegion="polite" accessibilityLabel={`${completedMissions} of 3 daily missions complete`}>
+              <Text style={s.missionScoreValue}>{completedMissions}/3</Text>
+              <Text style={s.missionScoreLabel}>done</Text>
+            </View>
+          </View>
+          <Text style={s.missionMessage}>{missionMessage}</Text>
+          <View style={s.missionTrack}>
+            <AnimatedProgressFill progress={missionProgress} style={s.missionFill} duration={800} />
+          </View>
+          <View style={s.missionList}>
+            {dailyMissions.map((mission) => (
+              <MotionPressable
+                key={mission.key}
+                style={[s.missionRow, mission.complete && s.missionRowComplete]}
+                onPress={mission.action}
+                disabled={mission.key === 'water' && Number(summary?.water_glasses || 0) >= waterGoal}
+                accessibilityLabel={`${mission.title}. ${mission.complete ? 'Completed' : mission.detail}`}
+                accessibilityState={{ checked: mission.complete }}
+              >
+                <View style={[s.missionIcon, mission.complete && s.missionIconComplete]}>
+                  <Text style={s.missionIconText}>{mission.complete ? '\u2713' : mission.icon}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.missionRowTitle, mission.complete && s.missionRowTitleComplete]}>{mission.title}</Text>
+                  <Text style={s.missionRowDetail}>{mission.complete ? 'Completed today' : mission.detail}</Text>
+                </View>
+                <Text style={[s.missionAction, mission.complete && s.missionActionComplete]}>
+                  {mission.complete ? 'Done' : 'Start'}
+                </Text>
+              </MotionPressable>
+            ))}
+          </View>
+        </MotionView>
+
         <MotionView depth style={s.card} delay={70}>
-          <Text style={s.sectionTitle}>Calories Remaining</Text>
-          <Text style={[s.bigNumber, remaining < 0 && { color: colors.accentCoral }]}>{Math.abs(Math.round(remaining))}</Text>
-          {remaining < 0 && <Text style={{ color: colors.accentCoral, fontSize: 12 }}>Over goal by {Math.abs(Math.round(remaining))} kcal</Text>}
+          <Text style={s.sectionTitle}>{remaining < 0 ? "Above today's target" : 'Calories Remaining'}</Text>
+          <Text style={[s.bigNumber, remaining < 0 && { color: colors.accentAmber }]}>{Math.abs(Math.round(remaining))}</Text>
+          {remaining < 0 && <Text style={s.goalNudge}>{Math.abs(Math.round(remaining))} kcal above your food target. A short walk or balanced next meal can help.</Text>}
           <View style={s.formulaRow}><Text style={s.formulaLabel}>Goal</Text><Text style={s.formulaValue}>{Math.round(summary?.calories_target || 0)}</Text></View>
           <View style={s.formulaRow}><Text style={s.formulaLabel}>Food −</Text><Text style={s.formulaValue}>{Math.round(summary?.calories_consumed || 0)}</Text></View>
           <View style={s.formulaRow}><Text style={s.formulaLabel}>Exercise +</Text><Text style={s.formulaValue}>{Math.round(summary?.calories_burned || 0)}</Text></View>
@@ -531,7 +632,7 @@ const Home = ({ navigation }) => {
               <Text key={i} style={[s.glass, i < (summary?.water_glasses || 0) && s.glassFilled]}>💧</Text>
             ))}
           </View>
-          <MotionPressable style={s.btnSecondary} onPress={handleAddGlass} disabled={(summary?.water_glasses || 0) >= waterGoal}>
+          <MotionPressable style={s.btnSecondary} onPress={handleAddGlass} disabled={(summary?.water_glasses || 0) >= waterGoal} accessibilityLabel="Add one glass of water">
             <Text style={s.btnSecText}>+ Add Glass</Text>
           </MotionPressable>
         </MotionView>
@@ -540,7 +641,7 @@ const Home = ({ navigation }) => {
           <MotionView depth style={s.card} delay={270}>
             <View style={s.suggestionHeader}>
               <Text style={s.sectionTitle}>AI Meal Suggestions</Text>
-              <TouchableOpacity style={s.refreshBtn} onPress={refreshSuggestions} disabled={suggestionsRefreshing}>
+              <TouchableOpacity style={s.refreshBtn} onPress={refreshSuggestions} disabled={suggestionsRefreshing} accessibilityRole="button" accessibilityLabel="Refresh meal suggestions">
                 {suggestionsRefreshing
                   ? <ActivityIndicator size="small" color={colors.accentLime} />
                   : <Text style={s.refreshBtnText}>Refresh</Text>}
@@ -572,33 +673,49 @@ const Home = ({ navigation }) => {
         )}
 
         <MotionView depth accentColor="rgba(245,166,35,0.14)" style={s.card} delay={320}>
-          <Text style={s.sectionTitle}>Quick Actions</Text>
+          <View style={s.rowBetweenCompact}>
+            <Text style={s.sectionTitle}>Quick Actions</Text>
+            <Text style={s.sectionKicker}>One tap away</Text>
+          </View>
           <View style={s.quickActions}>
             {[
               { icon: '🍽️', label: 'Log Food', action: () => setModal('food') },
               { icon: '🏋️', label: 'Log Workout', action: () => setModal('workout') },
               { icon: '⚖️', label: 'Log Weight', action: () => setModal('weight') },
               { icon: '📚', label: 'Planner', action: () => setShowPlanner(true) },
-            ].map((a) => (
-              <MotionPressable key={a.label} style={s.quickBtn} onPress={a.action}>
-                <Text style={{ fontSize: 28 }}>{a.icon}</Text>
-                <Text style={s.quickLabel}>{a.label}</Text>
+            ].concat([
+              { icon: '\u{1F4C8}', label: 'Progress', action: () => navigation.navigate('Progress') },
+              { icon: '\u{1F91D}', label: 'Community', action: () => navigation.navigate('Community') },
+            ]).map((a) => (
+              <MotionPressable key={a.label} style={s.quickBtn} onPress={a.action} accessibilityLabel={`${a.label}. ${QUICK_ACTION_META[a.label]?.detail || 'Open action'}`}>
+                <View style={[s.quickIcon, { backgroundColor: QUICK_ACTION_META[a.label]?.tone || colors.glowPurple }]}><Text style={s.quickIconText}>{QUICK_ACTION_ICONS[a.label] || a.icon}</Text></View>
+                <View style={s.quickCopy}>
+                  <Text style={s.quickLabel}>{a.label}</Text>
+                  <Text style={s.quickDetail}>{QUICK_ACTION_META[a.label]?.detail || 'Open'}</Text>
+                </View>
+                <Text style={s.quickArrow}>›</Text>
               </MotionPressable>
             ))}
           </View>
         </MotionView>
 
         <MotionView depth accentColor={colors.glowBlue} style={s.card} delay={370}>
-          <Text style={s.sectionTitle}>Suggested Workouts</Text>
-          {suggestions.map((sg, i) => (
-            <View key={i} style={s.workoutRow}>
+          <View style={s.rowBetweenCompact}>
+            <Text style={s.sectionTitle}>Suggested Workouts</Text>
+            <Text style={s.sectionKicker}>Tap to prefill</Text>
+          </View>
+          {suggestions.map((sg) => (
+            <MotionPressable key={sg.name} style={s.workoutRow} onPress={() => openWorkout(sg)} accessibilityLabel={`Start ${sg.name}. ${sg.detail}`}>
               <Text style={{ fontSize: 28, marginRight: 12 }}>{sg.icon}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={s.workoutName}>{sg.name}</Text>
                 <Text style={s.workoutDetail}>{sg.detail}</Text>
               </View>
-              <Text style={s.workoutCal}>~{sg.calories} kcal</Text>
-            </View>
+              <View style={s.workoutCta}>
+                <Text style={s.workoutCal}>~{sg.calories} kcal</Text>
+                <Text style={s.workoutStart}>Start ›</Text>
+              </View>
+            </MotionPressable>
           ))}
         </MotionView>
 
@@ -606,7 +723,7 @@ const Home = ({ navigation }) => {
       </ScrollView>
 
       {modal === 'food' && <LogFoodModal onClose={() => setModal(null)} onSave={refreshHomeData} />}
-      {modal === 'workout' && <LogWorkoutModal user={user} onClose={() => setModal(null)} onSave={refreshHomeData} />}
+      {modal === 'workout' && <LogWorkoutModal user={user} preset={workoutPreset} onClose={() => { setModal(null); setWorkoutPreset(null); }} onSave={refreshHomeData} />}
       {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={refreshHomeData} />}
       {showPlanner && <WorkoutPlannerModal visible={showPlanner} user={user} date={today} onClose={() => setShowPlanner(false)} onSuccess={refreshHomeData} />}
     </View>
@@ -624,8 +741,31 @@ const s = createThemedStyles(() => ({
   quoteCard: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: 'rgba(124,58,237,0.16)', shadowColor: '#4b2679', shadowOpacity: 0.08, shadowRadius: 15, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
   quoteText: { color: colors.textSecondary, fontSize: 13, fontStyle: 'italic', lineHeight: 20 },
   card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#4b2679', shadowOpacity: 0.13, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 6 },
+  missionCard: { borderColor: 'rgba(245,166,35,0.22)' },
+  missionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 7 },
+  missionEyebrow: { color: colors.accentAmber, fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+  missionTitle: { color: colors.textPrimary, fontSize: 19, fontWeight: '800', marginTop: 2 },
+  missionScore: { width: 54, height: 54, borderRadius: 18, backgroundColor: 'rgba(245,166,35,0.11)', borderWidth: 1, borderColor: 'rgba(245,166,35,0.22)', alignItems: 'center', justifyContent: 'center' },
+  missionScoreComplete: { backgroundColor: 'rgba(124,58,237,0.13)', borderColor: colors.accentLime },
+  missionScoreValue: { color: colors.textPrimary, fontSize: 16, fontWeight: '900' },
+  missionScoreLabel: { color: colors.textMuted, fontSize: 8, fontWeight: '700', textTransform: 'uppercase' },
+  missionMessage: { color: colors.textSecondary, fontSize: 11, lineHeight: 17, marginBottom: 10 },
+  missionTrack: { height: 7, backgroundColor: colors.bgElevated, borderRadius: 4, overflow: 'hidden', marginBottom: 12 },
+  missionFill: { height: '100%', borderRadius: 4, backgroundColor: colors.accentAmber },
+  missionList: { gap: 8 },
+  missionRow: { minHeight: 58, flexDirection: 'row', alignItems: 'center', padding: 9, borderRadius: radius.lg, backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
+  missionRowComplete: { backgroundColor: 'rgba(124,58,237,0.07)', borderColor: 'rgba(124,58,237,0.2)' },
+  missionIcon: { width: 38, height: 38, borderRadius: 13, marginRight: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
+  missionIconComplete: { backgroundColor: colors.accentLime, borderColor: colors.accentLime },
+  missionIconText: { fontSize: 17, color: colors.textInverse, fontWeight: '900' },
+  missionRowTitle: { color: colors.textPrimary, fontSize: 12, fontWeight: '800' },
+  missionRowTitleComplete: { color: colors.accentLime },
+  missionRowDetail: { color: colors.textMuted, fontSize: 10, marginTop: 2 },
+  missionAction: { color: colors.accentPurple, fontSize: 10, fontWeight: '800', paddingHorizontal: 8 },
+  missionActionComplete: { color: colors.textMuted },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 10 },
   bigNumber: { fontSize: 42, fontWeight: '800', color: colors.accentLime, lineHeight: 46 },
+  goalNudge: { color: colors.accentAmber, fontSize: 11, lineHeight: 17, marginBottom: 5 },
   subText: { fontSize: 12, color: colors.textMuted, marginBottom: 10 },
   formulaRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3 },
   formulaLabel: { color: colors.textMuted, fontSize: 12 },
@@ -666,13 +806,20 @@ const s = createThemedStyles(() => ({
   glassRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 10 },
   glass: { fontSize: 18, opacity: 0.3 },
   glassFilled: { opacity: 1 },
-  quickActions: { flexDirection: 'row', justifyContent: 'space-between' },
-  quickBtn: { flex: 1, alignItems: 'center', backgroundColor: 'rgba(246,241,255,0.94)', borderRadius: radius.lg, padding: 10, marginHorizontal: 3, borderWidth: 1, borderColor: 'rgba(124,58,237,0.16)', shadowColor: '#4b2679', shadowOpacity: 0.12, shadowRadius: 9, shadowOffset: { width: 0, height: 5 }, elevation: 4 },
-  quickLabel: { color: colors.textSecondary, fontSize: 10, marginTop: 4, textAlign: 'center', fontWeight: '600' },
-  workoutRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: colors.border },
+  quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
+  quickBtn: { width: '48%', minHeight: 72, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 10, borderWidth: 1, borderColor: 'rgba(124,58,237,0.16)', shadowColor: '#4b2679', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
+  quickIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
+  quickIconText: { fontSize: 19 },
+  quickCopy: { flex: 1 },
+  quickLabel: { color: colors.textPrimary, fontSize: 11, fontWeight: '800' },
+  quickDetail: { color: colors.textMuted, fontSize: 8.5, marginTop: 2 },
+  quickArrow: { color: colors.textMuted, fontSize: 19, marginLeft: 2 },
+  workoutRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border },
   workoutName: { color: colors.textPrimary, fontWeight: '600', fontSize: 13 },
   workoutDetail: { color: colors.textMuted, fontSize: 11, marginTop: 1 },
   workoutCal: { color: colors.accentAmber, fontSize: 12, fontWeight: '600' },
+  workoutCta: { alignItems: 'flex-end' },
+  workoutStart: { color: colors.accentPurple, fontSize: 9, fontWeight: '800', marginTop: 3 },
   suggestionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   refreshBtn: { minWidth: 62, height: 30, borderRadius: 9, paddingHorizontal: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border, marginBottom: 10 },
   refreshBtnText: { color: colors.textPrimary, fontSize: 10, fontWeight: '700' },

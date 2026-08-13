@@ -63,8 +63,12 @@ const MainTabs = () => {
           tabBarActiveTintColor: colors.accentLime,
           tabBarInactiveTintColor: colors.textMuted,
           tabBarLabelStyle: { fontSize: 10, fontWeight: '600', letterSpacing: 0.1 },
+          tabBarAccessibilityLabel: `${route.name} tab`,
+          tabBarAllowFontScaling: true,
           tabBarItemStyle: styles.tabItem,
           tabBarHideOnKeyboard: true,
+          lazy: true,
+          freezeOnBlur: true,
           tabBarIcon: ({ focused }) => (
             <AnimatedTabIcon
               focused={focused}

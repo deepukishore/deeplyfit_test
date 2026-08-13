@@ -87,7 +87,18 @@ export const ScreenTransition = ({ children, style }) => {
   return <Animated.View style={[{ flex: 1 }, style, animatedStyle]}>{children}</Animated.View>;
 };
 
-export const MotionPressable = ({ children, style, disabled, onPressIn, onPressOut, ...props }) => {
+export const MotionPressable = ({
+  children,
+  style,
+  disabled,
+  onPressIn,
+  onPressOut,
+  accessibilityRole = 'button',
+  accessibilityState,
+  android_ripple = { color: 'rgba(124,58,237,0.1)', borderless: false },
+  hitSlop = 4,
+  ...props
+}) => {
   const scale = useSharedValue(1);
   const lift = useSharedValue(0);
   const tilt = useSharedValue(0);
@@ -118,6 +129,11 @@ export const MotionPressable = ({ children, style, disabled, onPressIn, onPressO
     <AnimatedPressable
       style={[style, animatedStyle, disabled && { opacity: 0.5 }]}
       disabled={disabled}
+      accessibilityRole={accessibilityRole}
+      accessibilityState={{ ...accessibilityState, disabled: Boolean(disabled) }}
+      android_ripple={android_ripple}
+      focusable={!disabled}
+      hitSlop={hitSlop}
       onPressIn={pressIn}
       onPressOut={pressOut}
       {...props}
