@@ -552,6 +552,7 @@ const Home = ({ navigation }) => {
                 <View style={s.suggestionTop}>
                   <Text style={s.suggestionName}>{suggestion.name}</Text>
                   <View style={s.suggestionBadges}>
+                    {suggestion.cuisine === 'south_indian' && <Text style={s.suggestionCuisine}>South Indian</Text>}
                     <Text style={[s.suggestionDiet, suggestion.diet_type !== 'vegetarian' && s.suggestionDietNonVeg]}>
                       {suggestion.diet_type === 'vegetarian' ? 'Veg' : 'Non-veg'}
                     </Text>
@@ -680,6 +681,7 @@ const s = createThemedStyles(() => ({
   suggestionTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   suggestionName: { flex: 1, color: colors.textPrimary, fontSize: 13, lineHeight: 18, fontWeight: '800', marginRight: 8 },
   suggestionBadges: { alignItems: 'flex-end', gap: 4 },
+  suggestionCuisine: { color: colors.accentPurple, fontSize: 9, fontWeight: '800', backgroundColor: 'rgba(168,85,247,0.12)', borderRadius: 10, overflow: 'hidden', paddingHorizontal: 7, paddingVertical: 3 },
   suggestionDiet: { color: colors.accentLime, fontSize: 9, fontWeight: '800', backgroundColor: 'rgba(200,241,53,0.12)', borderRadius: 10, overflow: 'hidden', paddingHorizontal: 7, paddingVertical: 3 },
   suggestionDietNonVeg: { color: colors.accentAmber, backgroundColor: 'rgba(245,166,35,0.12)' },
   suggestionCalories: { color: colors.accentLime, fontSize: 10, fontWeight: '800', backgroundColor: 'rgba(124,58,237,0.09)', borderRadius: 12, overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 4 },

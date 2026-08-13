@@ -53,4 +53,6 @@ def test_suggestions_always_include_veg_and_non_veg_common_meals():
 
         assert len(result["suggestions"]) == 3
         assert diet_types == {"vegetarian", "non_vegetarian"}
-        assert "vegetarian and non-vegetarian" in result["summary_text"]
+        assert "south_indian" in {item["cuisine"] for item in result["suggestions"]}
+        assert "South Indian" in result["summary_text"]
+        assert "veg and non-veg" in result["summary_text"]

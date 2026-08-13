@@ -733,6 +733,7 @@ const Home = () => {
                   <div className="meal-suggestion-head">
                     <h3>{suggestion.name}</h3>
                     <div className="meal-suggestion-badges">
+                      {suggestion.cuisine === 'south_indian' && <span className="badge badge-purple">South Indian</span>}
                       <span className={`badge ${suggestion.diet_type === 'vegetarian' ? 'badge-lime' : 'badge-amber'}`}>
                         {suggestion.diet_type === 'vegetarian' ? 'Veg' : 'Non-veg'}
                       </span>

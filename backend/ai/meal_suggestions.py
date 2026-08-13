@@ -101,6 +101,10 @@ def _normalize_excluded_names(exclude_names: list[str] | None) -> set[str]:
     }
 
 
+def _cuisine_for(food: dict) -> str:
+    return "south_indian" if "south indian" in food.get("tags", []) else "indian"
+
+
 def _heuristic_suggestions(
     user,
     summary: dict,
@@ -116,21 +120,30 @@ def _heuristic_suggestions(
     excluded = _normalize_excluded_names(exclude_names)
     available = [food for food in all_ranked if food["name"].casefold() not in excluded]
 
-    # Every set contains both vegetarian and non-vegetarian choices. Alternate
-    # which group gets the third slot when the user refreshes the suggestions.
-    diet_order = (
-        ["vegetarian", "non_vegetarian", "vegetarian"]
-        if max(variant, 0) % 2 == 0
-        else ["non_vegetarian", "vegetarian", "non_vegetarian"]
+    # Guarantee a South Indian choice and both diet types in every set. The
+    # regional choice alternates between veg and non-veg on refresh.
+    south_indian_diet = "vegetarian" if max(variant, 0) % 2 == 0 else "non_vegetarian"
+    opposite_diet = "non_vegetarian" if south_indian_diet == "vegetarian" else "vegetarian"
+    south_indian = next(
+        (
+            food for food in available
+            if food["diet_type"] == south_indian_diet and _cuisine_for(food) == "south_indian"
+        ),
+        next(
+            (
+                food for food in all_ranked
+                if food["diet_type"] == south_indian_diet and _cuisine_for(food) == "south_indian"
+            ),
+            None,
+        ),
     )
-    pools = {
-        diet_type: [food for food in available if food["diet_type"] == diet_type]
-        for diet_type in ("vegetarian", "non_vegetarian")
-    }
-    ranked = []
-    for diet_type in diet_order:
-        if pools[diet_type]:
-            ranked.append(pools[diet_type].pop(0))
+    opposite = next(
+        (food for food in available if food["diet_type"] == opposite_diet and food != south_indian),
+        None,
+    )
+    ranked = [food for food in (south_indian, opposite) if food]
+    ranked.extend(food for food in available if food not in ranked)
+    ranked = ranked[:3]
 
     # This should only be needed if the catalog is reduced or almost entirely
     # excluded by a future client.
@@ -169,12 +182,13 @@ def _heuristic_suggestions(
             "carbs": item["carbs"],
             "fat": item["fat"],
             "diet_type": item["diet_type"],
+            "cuisine": _cuisine_for(item),
             "reason": reason,
         })
 
     return {
         "remaining": remaining,
-        "summary_text": f"You still need about {focus_text}. Here are familiar vegetarian and non-vegetarian choices for that gap.",
+        "summary_text": f"You still need about {focus_text}. Here are familiar South Indian and other everyday choices, with both veg and non-veg options.",
         "suggestions": suggestions,
     }
 
@@ -211,8 +225,9 @@ This is suggestion variation {max(variant, 0)}.
 {excluded_instruction}
 Use affordable, practical Indian home-style foods, with a preference for common
 South Indian meals and sides. Avoid specialty Western ingredients. Include at
-least one vegetarian and one non-vegetarian option. In India, meals containing
-egg, chicken, meat, or fish are non-vegetarian.
+least one vegetarian and one non-vegetarian option, and at least one clearly
+South Indian meal. In India, meals containing egg, chicken, meat, or fish are
+non-vegetarian.
 Respond with ONLY valid JSON in this format:
 {{
   "summary_text": "short coaching sentence",
@@ -225,6 +240,7 @@ Respond with ONLY valid JSON in this format:
       "carbs": 0,
       "fat": 0,
       "diet_type": "vegetarian or non_vegetarian",
+      "cuisine": "south_indian or indian",
       "reason": "why it fits"
     }}
   ]
@@ -260,9 +276,13 @@ Return exactly 3 suggestions.
             str(item.get("diet_type", "")).strip().casefold()
             for item in suggestions
         }
+        cuisines = {
+            str(item.get("cuisine", "")).strip().casefold()
+            for item in suggestions
+        }
         if len(set(suggestion_names)) != 3 or any(
             name in excluded for name in suggestion_names
-        ) or not {"vegetarian", "non_vegetarian"}.issubset(diet_types):
+        ) or not {"vegetarian", "non_vegetarian"}.issubset(diet_types) or "south_indian" not in cuisines:
             return None
 
         return {
@@ -277,6 +297,7 @@ Return exactly 3 suggestions.
                     "carbs": float(item.get("carbs", 0)),
                     "fat": float(item.get("fat", 0)),
                     "diet_type": str(item.get("diet_type", "vegetarian")).strip().casefold(),
+                    "cuisine": str(item.get("cuisine", "indian")).strip().casefold(),
                     "reason": str(item.get("reason", "Good fit for your remaining macros.")),
                 }
                 for item in suggestions
