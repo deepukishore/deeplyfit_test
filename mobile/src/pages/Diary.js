@@ -114,12 +114,12 @@ const AddFoodModal = ({ meal, date, visible, onClose, onSave }) => {
   return (
     <ModalSheet visible={visible} title={`${getMealIcon(meal)} Add to ${meal.charAt(0).toUpperCase() + meal.slice(1)}`} onClose={onClose}>
       <View style={s.searchRow}>
-        <TextInput style={[s.input, { flex: 1, marginRight: 8 }]} placeholder="Try pesarattu, poriyal, chutney..." placeholderTextColor={colors.textMuted} value={query} onChangeText={setQuery} />
+        <TextInput style={[s.input, { flex: 1, marginRight: 8 }]} placeholder="Try chutney, allam pachadi, sambar..." placeholderTextColor={colors.textMuted} value={query} onChangeText={setQuery} />
         <TouchableOpacity style={s.searchBtn} onPress={handleSearch} disabled={searching}>
           <Text style={s.searchBtnText}>{searching ? '...' : 'Search'}</Text>
         </TouchableOpacity>
       </View>
-      {results.slice(0, 5).map((r) => (
+      {results.slice(0, 12).map((r) => (
         <TouchableOpacity key={r.code} style={s.resultRow} onPress={() => { setForm(fillForm(r)); setResults([]); Toast.show({ type: 'success', text1: 'Nutrition details filled' }); }}>
           <Text style={s.resultName}>{r.name}</Text>
           <Text style={s.resultMeta}>{Math.round(r.calories || 0)} kcal</Text>

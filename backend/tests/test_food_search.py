@@ -68,10 +68,47 @@ class IndianFoodSearchTests(unittest.TestCase):
             with self.subTest(query=query):
                 names = [
                     result["name"]
-                    for result in _local_food_results(query, page=1, page_size=50)["results"]
+                    for result in _local_food_results(query, page=1, page_size=100)["results"]
                 ]
                 for expected_name in expected_names:
                     self.assertIn(expected_name, names)
+
+    def test_chutney_and_sambar_searches_show_multiple_varieties(self):
+        chutney_names = [
+            result["name"]
+            for result in _local_food_results("chutney", page=1, page_size=12)["results"]
+        ]
+        sambar_names = [
+            result["name"]
+            for result in _local_food_results("sambar", page=1, page_size=12)["results"]
+        ]
+
+        self.assertEqual(len(chutney_names), 12)
+        self.assertIn("Coconut Chutney", chutney_names)
+        self.assertIn("Ginger Chutney", chutney_names)
+        self.assertIn("Roasted Gram Chutney", chutney_names)
+        self.assertIn("Ridge Gourd Chutney", chutney_names)
+        self.assertIn("Tiffin Sambar", sambar_names)
+        self.assertIn("Drumstick Sambar", sambar_names)
+        self.assertIn("Arachuvitta Sambar", sambar_names)
+        self.assertIn("Keerai Sambar", sambar_names)
+
+    def test_regional_side_dish_aliases_find_the_expected_food(self):
+        expectations = {
+            "allam pachadi": "Ginger Chutney",
+            "pottukadalai chutney": "Roasted Gram Chutney",
+            "vankaya pachadi": "Brinjal Chutney",
+            "murungakkai sambar": "Drumstick Sambar",
+            "karivepaku pachadi": "Curry Leaf Chutney",
+        }
+
+        for query, expected_name in expectations.items():
+            with self.subTest(query=query):
+                names = [
+                    result["name"]
+                    for result in _local_food_results(query, page=1, page_size=12)["results"]
+                ]
+                self.assertIn(expected_name, names)
 
     def test_explicit_english_name_is_preferred(self):
         product = {

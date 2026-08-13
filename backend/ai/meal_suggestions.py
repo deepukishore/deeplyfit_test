@@ -16,12 +16,12 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODELS[0])
 
 FOOD_CATALOG = [
     # Familiar, affordable meals that are easy to prepare or find across India.
-    {"name": "Idli, sambar and chutney", "portion_hint": "3 idlis, 1 cup sambar and 1 tbsp chutney", "calories": 360, "protein": 13, "carbs": 62, "fat": 7, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
-    {"name": "Dosa with sambar", "portion_hint": "1 plain dosa with 1 cup sambar", "calories": 330, "protein": 10, "carbs": 52, "fat": 9, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
-    {"name": "Vegetable upma with curd", "portion_hint": "1.5 cups vegetable upma with 1/2 cup curd", "calories": 350, "protein": 11, "carbs": 52, "fat": 11, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
-    {"name": "Pesarattu with chutney", "portion_hint": "2 pesarattu with 2 tbsp tomato chutney", "calories": 350, "protein": 16, "carbs": 52, "fat": 8, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "protein"]},
-    {"name": "Pongal and sambar", "portion_hint": "1 cup ven pongal with 1 cup sambar", "calories": 390, "protein": 13, "carbs": 58, "fat": 12, "diet_type": "vegetarian", "tags": ["south indian", "balanced"]},
-    {"name": "Rice, sambar, poriyal and curd", "portion_hint": "1 cup rice, 1 cup sambar, 1/2 cup poriyal and 1/2 cup curd", "calories": 520, "protein": 18, "carbs": 82, "fat": 13, "diet_type": "vegetarian", "tags": ["south indian", "meal", "balanced"]},
+    {"name": "Idli with tiffin sambar and coconut chutney", "portion_hint": "3 idlis, 1 cup tiffin sambar and 1 tbsp coconut chutney", "calories": 360, "protein": 13, "carbs": 62, "fat": 7, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
+    {"name": "Dosa with drumstick sambar and tomato chutney", "portion_hint": "1 plain dosa, 1 cup drumstick sambar and 1 tbsp tomato chutney", "calories": 345, "protein": 10, "carbs": 54, "fat": 10, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
+    {"name": "Vegetable upma with peanut chutney", "portion_hint": "1.5 cups vegetable upma with 1 tbsp peanut chutney", "calories": 370, "protein": 12, "carbs": 52, "fat": 13, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
+    {"name": "Pesarattu with ginger chutney", "portion_hint": "2 pesarattu with 2 tbsp ginger chutney", "calories": 350, "protein": 16, "carbs": 52, "fat": 8, "diet_type": "vegetarian", "tags": ["south indian", "breakfast", "protein"]},
+    {"name": "Pongal with brinjal gothsu", "portion_hint": "1 cup ven pongal with 1/2 cup brinjal gothsu", "calories": 375, "protein": 11, "carbs": 55, "fat": 12, "diet_type": "vegetarian", "tags": ["south indian", "balanced"]},
+    {"name": "Rice, vegetable sambar, poriyal and curd", "portion_hint": "1 cup rice, 1 cup mixed vegetable sambar, 1/2 cup poriyal and 1/2 cup curd", "calories": 520, "protein": 18, "carbs": 82, "fat": 13, "diet_type": "vegetarian", "tags": ["south indian", "meal", "balanced"]},
     {"name": "Chapati, dal and sabzi", "portion_hint": "2 chapatis, 1 cup dal and 1 cup vegetable sabzi", "calories": 510, "protein": 22, "carbs": 78, "fat": 13, "diet_type": "vegetarian", "tags": ["meal", "balanced", "protein"]},
     {"name": "Rajma rice with salad", "portion_hint": "1 cup rice, 1 cup rajma and cucumber salad", "calories": 520, "protein": 20, "carbs": 91, "fat": 8, "diet_type": "vegetarian", "tags": ["meal", "balanced"]},
     {"name": "Moong dal khichdi with curd", "portion_hint": "1.5 cups khichdi with 1/2 cup curd", "calories": 390, "protein": 16, "carbs": 62, "fat": 9, "diet_type": "vegetarian", "tags": ["meal", "light", "balanced"]},
@@ -29,7 +29,7 @@ FOOD_CATALOG = [
     {"name": "Roasted chana and banana", "portion_hint": "50g roasted chana with 1 small banana", "calories": 270, "protein": 10, "carbs": 51, "fat": 3, "diet_type": "vegetarian", "tags": ["snack", "affordable"]},
     {"name": "Curd, fruit and peanuts", "portion_hint": "1 cup curd, 1 seasonal fruit and 20g peanuts", "calories": 300, "protein": 13, "carbs": 33, "fat": 14, "diet_type": "vegetarian", "tags": ["snack", "balanced"]},
     {"name": "Egg bhurji with roti", "portion_hint": "3-egg bhurji with 2 rotis", "calories": 470, "protein": 29, "carbs": 39, "fat": 22, "diet_type": "non_vegetarian", "tags": ["meal", "protein", "affordable"]},
-    {"name": "Egg dosa with sambar", "portion_hint": "1 egg dosa with 1 cup sambar", "calories": 420, "protein": 19, "carbs": 53, "fat": 14, "diet_type": "non_vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
+    {"name": "Egg dosa with onion chutney and sambar", "portion_hint": "1 egg dosa, 1 tbsp onion chutney and 1 cup tiffin sambar", "calories": 440, "protein": 19, "carbs": 55, "fat": 15, "diet_type": "non_vegetarian", "tags": ["south indian", "breakfast", "balanced"]},
     {"name": "Chicken curry with rice", "portion_hint": "1 cup rice with 1 cup home-style chicken curry", "calories": 520, "protein": 35, "carbs": 55, "fat": 17, "diet_type": "non_vegetarian", "tags": ["meal", "protein", "balanced"]},
     {"name": "Chicken curry with chapati", "portion_hint": "1 cup chicken curry with 2 chapatis and salad", "calories": 500, "protein": 38, "carbs": 42, "fat": 18, "diet_type": "non_vegetarian", "tags": ["meal", "protein", "balanced"]},
     {"name": "Fish curry rice", "portion_hint": "1 cup rice with 1 cup fish curry and vegetables", "calories": 490, "protein": 31, "carbs": 57, "fat": 15, "diet_type": "non_vegetarian", "tags": ["south indian", "meal", "protein"]},
@@ -227,7 +227,9 @@ Use affordable, practical Indian home-style foods, with a preference for common
 South Indian meals and sides. Avoid specialty Western ingredients. Include at
 least one vegetarian and one non-vegetarian option, and at least one clearly
 South Indian meal. In India, meals containing egg, chicken, meat, or fish are
-non-vegetarian.
+non-vegetarian. For idli, dosa, pongal, upma, pesarattu, or rice meals, name the
+specific chutney, sambar, gothsu, podi, or other side instead of saying only
+"chutney" or "sambar" when practical.
 Respond with ONLY valid JSON in this format:
 {{
   "summary_text": "short coaching sentence",

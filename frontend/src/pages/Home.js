@@ -150,7 +150,7 @@ const LogFoodModal = ({ onClose, onSave }) => {
     setSearching(true);
     setSearched(true);
     try {
-      const data = await api.searchFoods(query, 1, 6);
+      const data = await api.searchFoods(query, 1, 12);
       const matches = (data.results || []).filter((food) => Number(food.calories) > 0);
       setResults(matches);
       if (matches.length) selectFood(matches[0]);
@@ -203,7 +203,7 @@ const LogFoodModal = ({ onClose, onSave }) => {
             <label>Food Name</label>
             <div className="auto-nutrition-search">
               <input
-                placeholder="e.g. dosa, poriyal, chutney, fish curry"
+                placeholder="e.g. dosa, chutney, allam pachadi, sambar"
                 value={form.food_name}
                 onChange={(event) => handleFoodNameChange(event.target.value)}
                 onKeyDown={(event) => {
@@ -250,7 +250,7 @@ const LogFoodModal = ({ onClose, onSave }) => {
           {results.length > 0 && (
             <div className="food-search-results compact-results">
               <p className="food-match-help">Choose the closest match:</p>
-              {results.slice(0, 4).map((result) => (
+              {results.slice(0, 12).map((result) => (
                 <button
                   key={`${result.code}-${result.name}`}
                   type="button"

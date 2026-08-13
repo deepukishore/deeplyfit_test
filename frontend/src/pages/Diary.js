@@ -226,7 +226,7 @@ const FoodSearchBox = ({ onSelect, compact = false }) => {
         {!compact && <span className="badge badge-blue">India first</span>}
       </div>
       <div className="food-search-row">
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try: pesarattu, poriyal, chutney, fish fry" />
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try: chutney, allam pachadi, tiffin sambar" />
         <input
           type="number"
           value={quantity}
@@ -244,7 +244,7 @@ const FoodSearchBox = ({ onSelect, compact = false }) => {
       </div>
       {results.length > 0 && (
         <div className="food-search-results">
-          {results.slice(0, compact ? 4 : 6).map((result) => (
+          {results.slice(0, compact ? 6 : 12).map((result) => (
             <button key={`${result.code}-${result.name}`} className="food-search-result" onClick={() => onSelect(result, selectedQuantity)}>
               <div style={{ flex: 1, textAlign: 'left' }}>
                 <p className="food-search-result-name">{result.name}</p>
