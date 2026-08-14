@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
+  BarChart3,
   BookOpenText,
+  Check,
   Droplets,
   Dumbbell,
   Flame,
@@ -12,6 +14,7 @@ import {
   Settings,
   Target,
   Utensils,
+  Users,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
@@ -304,8 +307,13 @@ const LogFoodModal = ({ onClose, onSave }) => {
   );
 };
 
-const LogWorkoutModal = ({ user, onClose, onSave }) => {
-  const [form, setForm] = useState({ workout_type: '', duration_minutes: '', notes: '' });
+const LogWorkoutModal = ({ user, preset, onClose, onSave }) => {
+  const presetDuration = String(preset?.detail || '').match(/\d+/)?.[0] || '';
+  const [form, setForm] = useState({
+    workout_type: preset?.name || '',
+    duration_minutes: presetDuration,
+    notes: preset ? 'Started from today\'s suggestion' : '',
+  });
   const [loading, setLoading] = useState(false);
   const today = formatDate(new Date());
 
@@ -467,6 +475,7 @@ const Home = () => {
   const [waterGoal, setWaterGoal] = useState(8);
   const [showHydrationModal, setShowHydrationModal] = useState(false);
   const [modal, setModal] = useState(null);
+  const [workoutPreset, setWorkoutPreset] = useState(null);
   const [showPlanner, setShowPlanner] = useState(false);
   const [suggestionsRefreshing, setSuggestionsRefreshing] = useState(false);
   const suggestionVariantRef = useRef(0);
@@ -547,6 +556,11 @@ const Home = () => {
     }
   };
 
+  const openWorkout = (preset = null) => {
+    setWorkoutPreset(preset);
+    setModal('workout');
+  };
+
   const remaining = (summary?.calories_target || 0) - (summary?.calories_consumed || 0) + (summary?.calories_burned || 0);
   const progress = Math.min(((summary?.calories_consumed || 0) / (summary?.calories_target || 2000)) * 100, 100);
   const hour = new Date().getHours();
@@ -568,6 +582,41 @@ const Home = () => {
     { name: 'Fat', value: summary?.fat || 0, target: user?.fat_target || 65, color: MACRO_COLORS[2] },
   ];
   const streakDays = Math.min(calorieStreak?.current_streak || 0, 7);
+
+  const hydrationMissionTarget = Math.max(1, Math.min(waterGoal, 4));
+  const dailyMissions = [
+    {
+      id: 'meal',
+      icon: Utensils,
+      label: 'Fuel your day',
+      detail: 'Log your first meal',
+      complete: (summary?.calories_consumed || 0) > 0,
+      action: () => setModal('food'),
+    },
+    {
+      id: 'movement',
+      icon: Dumbbell,
+      label: 'Move with purpose',
+      detail: 'Record any activity',
+      complete: (summary?.calories_burned || 0) > 0 || (summary?.workouts || []).length > 0,
+      action: () => openWorkout(),
+    },
+    {
+      id: 'water',
+      icon: Droplets,
+      label: 'Build hydration',
+      detail: `${Math.min(summary?.water_glasses || 0, hydrationMissionTarget)}/${hydrationMissionTarget} glasses`,
+      complete: (summary?.water_glasses || 0) >= hydrationMissionTarget,
+      action: handleAddGlass,
+    },
+  ];
+  const completedMissions = dailyMissions.filter((mission) => mission.complete).length;
+  const missionProgress = (completedMissions / dailyMissions.length) * 100;
+  const missionMessage = completedMissions === dailyMissions.length
+    ? 'Daily trio complete. Keep the good energy going.'
+    : completedMissions === 0
+      ? 'Three small wins are enough to build momentum.'
+      : `${completedMissions} down, ${dailyMissions.length - completedMissions} to go. You are building consistency.`;
 
   const suggestions = getWorkoutSuggestions(user?.fitness_goal, user?.activity_level);
   const initials = getInitials(user?.name, user?.email);
@@ -599,6 +648,50 @@ const Home = () => {
           <span className="quote-mark" aria-hidden="true">&ldquo;</span>
           <p className="quote-text">{getDailyQuote()}</p>
         </div>
+
+        <section className="daily-momentum-card animate-slide-up" aria-labelledby="daily-momentum-title">
+          <div className="daily-momentum-intro">
+            <span className="section-kicker">Daily momentum</span>
+            <div className="daily-momentum-title-row">
+              <div>
+                <h2 id="daily-momentum-title">Three wins for today</h2>
+                <p>{missionMessage}</p>
+              </div>
+              <strong aria-live="polite">{completedMissions}/3</strong>
+            </div>
+            <div
+              className="daily-momentum-progress"
+              role="progressbar"
+              aria-label="Daily momentum"
+              aria-valuemin="0"
+              aria-valuemax="3"
+              aria-valuenow={completedMissions}
+            >
+              <span style={{ width: `${missionProgress}%` }} />
+            </div>
+          </div>
+          <div className="daily-mission-list">
+            {dailyMissions.map((mission) => {
+              const Icon = mission.icon;
+              return (
+                <button
+                  key={mission.id}
+                  type="button"
+                  className={`daily-mission ${mission.complete ? 'complete' : ''}`}
+                  onClick={mission.action}
+                  disabled={mission.id === 'water' && (summary?.water_glasses || 0) >= waterGoal}
+                >
+                  <span className="daily-mission-icon">{mission.complete ? <Check size={20} /> : <Icon size={20} />}</span>
+                  <span className="daily-mission-copy">
+                    <strong>{mission.label}</strong>
+                    <small>{mission.complete ? 'Completed today' : mission.detail}</small>
+                  </span>
+                  <span className="daily-mission-action">{mission.complete ? 'Done' : 'Start'}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         <section className="calories-card calorie-command-card animate-slide-up">
           <div className="calorie-ring-wrap">
@@ -757,16 +850,22 @@ const Home = () => {
           <div className="section-header"><h2 className="section-title">Quick Actions</h2></div>
           <div className="quick-actions">
             {[
-              { icon: Utensils, label: 'Log Food', tone: 'lime', action: () => setModal('food') },
-              { icon: Dumbbell, label: 'Workout', tone: 'amber', action: () => setModal('workout') },
-              { icon: Scale, label: 'Weight', tone: 'blue', action: () => setModal('weight') },
-              { icon: BookOpenText, label: 'Planner', tone: 'purple', action: () => setShowPlanner(true) },
+              { icon: Utensils, label: 'Log Food', detail: 'Meals & sides', tone: 'lime', action: () => setModal('food') },
+              { icon: Dumbbell, label: 'Workout', detail: 'Track movement', tone: 'amber', action: () => openWorkout() },
+              { icon: Scale, label: 'Weight', detail: 'Update check-in', tone: 'blue', action: () => setModal('weight') },
+              { icon: BookOpenText, label: 'Planner', detail: 'Plan a session', tone: 'purple', action: () => setShowPlanner(true) },
+              { icon: BarChart3, label: 'Progress', detail: 'See your wins', tone: 'blue', action: () => navigate('/progress') },
+              { icon: Users, label: 'Community', detail: 'Get motivated', tone: 'lime', action: () => navigate('/community') },
             ].map((action) => {
               const Icon = action.icon;
               return (
                 <button key={action.label} className={`quick-action-btn quick-action-${action.tone} tap-feedback`} onClick={action.action}>
                   <span className="quick-action-icon"><Icon size={23} /></span>
-                  <span className="quick-action-label">{action.label}</span>
+                  <span className="quick-action-copy">
+                    <span className="quick-action-label">{action.label}</span>
+                    <small>{action.detail}</small>
+                  </span>
+                  <span className="quick-action-arrow" aria-hidden="true">&rarr;</span>
                 </button>
               );
             })}
@@ -787,7 +886,7 @@ const Home = () => {
                   <p className="workout-suggestion-detail">{suggestion.detail}</p>
                   <span className="workout-suggestion-cal">~{suggestion.calories} kcal</span>
                 </div>
-                <button type="button" className="workout-start-btn" onClick={() => setShowPlanner(true)} aria-label={`Start ${suggestion.name}`}>
+                <button type="button" className="workout-start-btn" onClick={() => openWorkout(suggestion)} aria-label={`Log ${suggestion.name}`}>
                   <Play size={14} fill="currentColor" /> Start
                 </button>
               </article>
@@ -825,7 +924,17 @@ const Home = () => {
 
       {/* Modals */}
       {modal === 'food' && <LogFoodModal onClose={() => setModal(null)} onSave={loadSummary} />}
-      {modal === 'workout' && <LogWorkoutModal user={user} onClose={() => setModal(null)} onSave={loadSummary} />}
+      {modal === 'workout' && (
+        <LogWorkoutModal
+          user={user}
+          preset={workoutPreset}
+          onClose={() => {
+            setModal(null);
+            setWorkoutPreset(null);
+          }}
+          onSave={loadSummary}
+        />
+      )}
       {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={loadSummary} />}
       {showPlanner && <WorkoutPlannerModal user={user} date={today} onClose={() => setShowPlanner(false)} onSuccess={loadSummary} />}
       {showHydrationModal && <HydrationGoalModal user={user} currentGoal={waterGoal} onClose={() => setShowHydrationModal(false)} onSave={setWaterGoal} />}
