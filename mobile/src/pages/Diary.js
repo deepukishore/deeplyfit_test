@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, TextInput, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, TextInput, RefreshControl, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
@@ -74,13 +74,15 @@ const emptyMealPlan = (weekStart) => ({
 
 const ModalSheet = ({ visible, title, onClose, children }) => (
   <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-    <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
-      <TouchableOpacity style={s.sheet} activeOpacity={1} onPress={() => {}}>
-        <View style={s.handle} />
-        <Text style={s.modalTitle}>{title}</Text>
-        <ScrollView keyboardShouldPersistTaps="handled">{children}</ScrollView>
+    <KeyboardAvoidingView style={s.keyboardAvoider} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
+        <TouchableOpacity style={s.sheet} activeOpacity={1} onPress={() => {}}>
+          <View style={s.handle} />
+          <Text style={s.modalTitle}>{title}</Text>
+          <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false}>{children}</ScrollView>
+        </TouchableOpacity>
       </TouchableOpacity>
-    </TouchableOpacity>
+    </KeyboardAvoidingView>
   </Modal>
 );
 
@@ -239,34 +241,94 @@ const SaveTemplateModal = ({ draft, visible, onClose, onSaved }) => {
 };
 
 const MealPlanEntryModal = ({ templates, weekStart, visible, onClose, onSaved }) => {
+  const [entryMode, setEntryMode] = useState(templates.length ? 'saved' : 'new');
   const [templateId, setTemplateId] = useState(templates[0]?.id || null);
+  const [draftTemplateId, setDraftTemplateId] = useState(null);
   const [plannedDate, setPlannedDate] = useState(weekStart);
   const [mealType, setMealType] = useState(templates[0]?.meal_type || 'dinner');
   const [servings, setServings] = useState('1');
   const [notes, setNotes] = useState('');
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
     const first = templates[0];
+    setEntryMode(first ? 'saved' : 'new');
     setTemplateId(first?.id || null);
+    setDraftTemplateId(null);
     setMealType(first?.meal_type || 'dinner');
     setPlannedDate(weekStart);
     setServings('1');
     setNotes('');
+    setForm(EMPTY_FORM);
+    setQuery('');
+    setResults([]);
   }, [templates, visible, weekStart]);
 
   const selectedTemplate = templates.find((template) => template.id === templateId);
 
+  const handleSearch = async () => {
+    if (query.trim().length < 2) {
+      Toast.show({ type: 'error', text1: 'Search for at least 2 characters' });
+      return;
+    }
+    setSearching(true);
+    try {
+      const data = await api.searchFoods(query.trim());
+      setResults(data.results || []);
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.message || 'Search failed' });
+    } finally {
+      setSearching(false);
+    }
+  };
+
   const handleSave = async () => {
-    if (!templateId) {
-      Toast.show({ type: 'error', text1: 'Save a meal template before planning it' });
+    if (entryMode === 'saved' && !templateId) {
+      Toast.show({ type: 'error', text1: 'Choose a saved meal' });
+      return;
+    }
+    const reusableTemplateId = entryMode === 'saved' ? templateId : draftTemplateId;
+    if (!reusableTemplateId && (!form.food_name.trim() || !form.calories)) {
+      Toast.show({ type: 'error', text1: 'Meal name and calories are required' });
       return;
     }
     setSaving(true);
     try {
+      let plannedTemplateId = reusableTemplateId;
+      if (!plannedTemplateId) {
+        const template = await api.createMealTemplate({
+          name: form.food_name.trim(),
+          meal_type: mealType,
+          template_type: 'meal',
+          servings: 1,
+          foods: [{
+            food_name: form.food_name.trim(),
+            calories: parseFloat(form.calories) || 0,
+            protein: parseFloat(form.protein) || 0,
+            carbs: parseFloat(form.carbs) || 0,
+            fat: parseFloat(form.fat) || 0,
+            fiber: parseFloat(form.fiber) || 0,
+            sugar: parseFloat(form.sugar) || 0,
+            sodium: parseFloat(form.sodium) || 0,
+            vitamin_c: parseFloat(form.vitamin_c) || 0,
+            vitamin_d: parseFloat(form.vitamin_d) || 0,
+            vitamin_b12: parseFloat(form.vitamin_b12) || 0,
+            iron: parseFloat(form.iron) || 0,
+            calcium: parseFloat(form.calcium) || 0,
+            potassium: parseFloat(form.potassium) || 0,
+            quantity: 1,
+          }],
+        });
+        plannedTemplateId = template.id;
+        setDraftTemplateId(template.id);
+      }
       await api.createMealPlanEntry({
-        template_id: templateId,
+        template_id: plannedTemplateId,
         planned_date: plannedDate,
         meal_type: mealType,
         servings: parseFloat(servings) || 1,
@@ -284,10 +346,121 @@ const MealPlanEntryModal = ({ templates, weekStart, visible, onClose, onSaved })
 
   return (
     <ModalSheet visible={visible} title="Plan Meals For The Week" onClose={onClose}>
-      {templates.length === 0 ? (
-        <View style={s.emptyPanel}>
-          <Text style={s.emptyPanelTitle}>No saved meals yet</Text>
-          <Text style={s.emptyPanelText}>Use Save on any logged meal, then add it to your weekly plan.</Text>
+      <View style={s.entryModeRow}>
+        <TouchableOpacity style={[s.entryModeBtn, entryMode === 'new' && s.entryModeBtnActive]} onPress={() => setEntryMode('new')}>
+          <Text style={[s.entryModeText, entryMode === 'new' && s.entryModeTextActive]}>New meal</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.entryModeBtn, entryMode === 'saved' && s.entryModeBtnActive, templates.length === 0 && s.entryModeBtnDisabled]}
+          onPress={() => {
+            if (!templates.length) return;
+            setEntryMode('saved');
+            setMealType(selectedTemplate?.meal_type || mealType);
+          }}
+          disabled={templates.length === 0}
+        >
+          <Text style={[s.entryModeText, entryMode === 'saved' && s.entryModeTextActive]}>Saved meals ({templates.length})</Text>
+        </TouchableOpacity>
+      </View>
+
+      {entryMode === 'new' ? (
+        <View>
+          {templates.length === 0 && (
+            <View style={s.plannerHint}>
+              <Text style={s.plannerHintTitle}>Plan your first meal</Text>
+              <Text style={s.plannerHintText}>Search for a food or enter its nutrition below. This meal will be saved for faster planning next time.</Text>
+            </View>
+          )}
+          <Text style={s.label}>Find a meal or food</Text>
+          <View style={s.searchRow}>
+            <TextInput
+              style={[s.input, { flex: 1, marginRight: 8 }]}
+              placeholder="e.g. masala dosa"
+              placeholderTextColor={colors.textMuted}
+              value={query}
+              onChangeText={setQuery}
+              onSubmitEditing={handleSearch}
+              returnKeyType="search"
+            />
+            <TouchableOpacity style={s.searchBtn} onPress={handleSearch} disabled={searching}>
+              {searching ? <ActivityIndicator size="small" color={colors.textInverse} /> : <Text style={s.searchBtnText}>Search</Text>}
+            </TouchableOpacity>
+          </View>
+          {results.slice(0, 8).map((result) => (
+            <TouchableOpacity
+              key={`${result.code}-${result.name}`}
+              style={s.resultRow}
+              onPress={() => {
+                setForm(fillForm(result));
+                setQuery(result.name || '');
+                setResults([]);
+              }}
+            >
+              <Text style={s.resultName}>{result.name}</Text>
+              <Text style={s.resultMeta}>{Math.round(result.calories || 0)} kcal</Text>
+            </TouchableOpacity>
+          ))}
+          <View style={s.inputGroup}>
+            <Text style={s.label}>Meal Name</Text>
+            <TextInput style={s.input} value={form.food_name} onChangeText={(value) => setForm((current) => ({ ...current, food_name: value }))} placeholder="Meal name" placeholderTextColor={colors.textMuted} />
+          </View>
+          <View style={s.row}>
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Text style={s.label}>Calories</Text>
+              <TextInput style={s.input} value={form.calories} onChangeText={(value) => setForm((current) => ({ ...current, calories: value }))} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.textMuted} />
+            </View>
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Text style={s.label}>Protein</Text>
+              <TextInput style={s.input} value={form.protein} onChangeText={(value) => setForm((current) => ({ ...current, protein: value }))} keyboardType="decimal-pad" placeholder="0g" placeholderTextColor={colors.textMuted} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.label}>Carbs</Text>
+              <TextInput style={s.input} value={form.carbs} onChangeText={(value) => setForm((current) => ({ ...current, carbs: value }))} keyboardType="decimal-pad" placeholder="0g" placeholderTextColor={colors.textMuted} />
+            </View>
+          </View>
+          <View style={s.inputGroup}>
+            <Text style={s.label}>Fat (g)</Text>
+            <TextInput style={s.input} value={form.fat} onChangeText={(value) => setForm((current) => ({ ...current, fat: value }))} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.textMuted} />
+          </View>
+
+          <Text style={s.label}>Planned Date</Text>
+          <View style={s.weekChoiceRow}>
+            {Array.from({ length: 7 }).map((_, index) => {
+              const value = addDays(weekStart, index);
+              const selected = plannedDate === value;
+              return (
+                <TouchableOpacity key={value} style={[s.dayChoice, selected && s.dayChoiceActive]} onPress={() => setPlannedDate(value)}>
+                  <Text style={[s.dayChoiceName, selected && s.dayChoiceTextActive]}>{new Date(value).toLocaleDateString('en-US', { weekday: 'narrow' })}</Text>
+                  <Text style={[s.dayChoiceDate, selected && s.dayChoiceTextActive]}>{new Date(value).getDate()}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={s.label}>Meal Type</Text>
+          <View style={s.mealChoiceRow}>
+            {MEALS.map((meal) => (
+              <TouchableOpacity key={meal} style={[s.mealChoice, mealType === meal && s.choiceChipActive]} onPress={() => setMealType(meal)}>
+                <Text style={[s.mealChoiceText, mealType === meal && s.choiceChipTextActive]}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={s.row}>
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Text style={s.label}>Servings</Text>
+              <TextInput style={s.input} value={servings} onChangeText={setServings} keyboardType="decimal-pad" placeholder="1" placeholderTextColor={colors.textMuted} />
+            </View>
+            <View style={{ flex: 2 }}>
+              <Text style={s.label}>Notes</Text>
+              <TextInput style={s.input} value={notes} onChangeText={setNotes} placeholder="Prep Sunday night" placeholderTextColor={colors.textMuted} />
+            </View>
+          </View>
+
+          <TouchableOpacity style={[s.btn, saving && s.btnDisabled]} onPress={handleSave} disabled={saving}>
+            {saving ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>Add planned meal</Text>}
+          </TouchableOpacity>
+          <View style={{ height: spacing.md }} />
         </View>
       ) : (
         <>
@@ -346,7 +519,7 @@ const MealPlanEntryModal = ({ templates, weekStart, visible, onClose, onSaved })
             </View>
           )}
           <TouchableOpacity style={[s.btn, saving && s.btnDisabled]} onPress={handleSave} disabled={saving}>
-            {saving ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>Add To Week</Text>}
+            {saving ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>Add planned meal</Text>}
           </TouchableOpacity>
         </>
       )}
@@ -604,7 +777,7 @@ const Diary = () => {
               {(mealPlan?.entries || []).length === 0 && (
                 <View style={s.emptyPanel}>
                   <Text style={s.emptyPanelTitle}>No meals planned yet</Text>
-                  <Text style={s.emptyPanelText}>Save a logged meal and add it here to build weekly macros and a shopping list.</Text>
+                  <Text style={s.emptyPanelText}>Add a new or saved meal to build weekly macros and generate your shopping list.</Text>
                 </View>
               )}
 
@@ -645,7 +818,13 @@ const Diary = () => {
       ))}
       {scanModal && <FoodScannerModal defaultMeal={scanModal} date={date} onClose={() => setScanModal(null)} onSuccess={loadData} />}
       <SaveTemplateModal draft={templateDraft} visible={Boolean(templateDraft)} onClose={() => setTemplateDraft(null)} onSaved={loadTemplates} />
-      <MealPlanEntryModal templates={templates} weekStart={weekStart} visible={showMealPlanner} onClose={() => setShowMealPlanner(false)} onSaved={loadMealPlan} />
+      <MealPlanEntryModal
+        templates={templates}
+        weekStart={weekStart}
+        visible={showMealPlanner}
+        onClose={() => setShowMealPlanner(false)}
+        onSaved={() => Promise.all([loadMealPlan(), loadTemplates()])}
+      />
     </View>
   );
 };
@@ -699,6 +878,7 @@ const s = createThemedStyles(() => ({
   foodCal: { color: colors.accentAmber, fontWeight: '700', fontSize: 13, marginRight: 6 },
   favBtn: { padding: 5, marginRight: 3 },
   delBtn: { padding: 5 },
+  keyboardAvoider: { flex: 1 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xl, maxHeight: '90%' },
   handle: { width: 36, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: 14 },
@@ -736,6 +916,15 @@ const s = createThemedStyles(() => ({
   emptyPanel: { backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: colors.border, marginBottom: 10 },
   emptyPanelTitle: { color: colors.textPrimary, fontSize: 12, fontWeight: '800', marginBottom: 5 },
   emptyPanelText: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
+  plannerHint: { backgroundColor: 'rgba(124,58,237,0.08)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: 'rgba(124,58,237,0.18)', marginBottom: 16 },
+  plannerHintTitle: { color: colors.textPrimary, fontSize: 13, fontWeight: '800', marginBottom: 5 },
+  plannerHintText: { color: colors.textSecondary, fontSize: 10, lineHeight: 15 },
+  entryModeRow: { flexDirection: 'row', padding: 3, marginBottom: 16, borderRadius: 12, backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
+  entryModeBtn: { flex: 1, minHeight: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 9, paddingHorizontal: 8 },
+  entryModeBtnActive: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: 'rgba(124,58,237,0.2)' },
+  entryModeBtnDisabled: { opacity: 0.45 },
+  entryModeText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  entryModeTextActive: { color: colors.accentPurple },
   plannerTotalsCard: { backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: colors.border, marginTop: 9 },
   plannerStatRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: colors.border },
   plannerStatLabel: { flex: 1, color: colors.textMuted, fontSize: 10, marginRight: 8 },
