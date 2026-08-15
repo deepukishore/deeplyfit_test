@@ -13,6 +13,7 @@ import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import WorkoutPlannerModal from '../components/WorkoutPlannerModal';
 import UserAvatar from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
+import AchievementsSection from '../components/AchievementsSection';
 import { AnimatedProgressFill, FloatingView, MotionPressable, MotionView } from '../components/Motion';
 
 const MACRO_COLORS = ['#4facfe', '#a855f7', '#f5a623'];
@@ -385,6 +386,7 @@ const Home = ({ navigation }) => {
   const [suggestionsData, setSuggestionsData] = useState(null);
   const [recentWorkoutHistory, setRecentWorkoutHistory] = useState([]);
   const [calorieStreak, setCalorieStreak] = useState(null);
+  const [achievements, setAchievements] = useState([]);
   const [waterGoal, setWaterGoal] = useState(8);
   const [refreshing, setRefreshing] = useState(false);
   const [suggestionsRefreshing, setSuggestionsRefreshing] = useState(false);
@@ -399,10 +401,11 @@ const Home = ({ navigation }) => {
       ? suggestionVariantRef.current + 1
       : suggestionVariantRef.current;
 
-    const [summaryResult, suggestionsResult, workoutsResult] = await Promise.allSettled([
+    const [summaryResult, suggestionsResult, workoutsResult, achievementsResult] = await Promise.allSettled([
       api.getDailySummary(today),
       api.getMealSuggestions(today, { variant }),
       api.getWorkoutHistory(3),
+      api.getAchievements(),
     ]);
     if (summaryResult.status === 'fulfilled') setSummary(summaryResult.value);
     if (suggestionsResult.status === 'fulfilled') {
@@ -410,6 +413,7 @@ const Home = ({ navigation }) => {
       setSuggestionsData(suggestionsResult.value);
     }
     if (workoutsResult.status === 'fulfilled') setRecentWorkoutHistory(workoutsResult.value);
+    if (achievementsResult.status === 'fulfilled') setAchievements(achievementsResult.value);
   }, [today]);
 
   const refreshHomeData = useCallback(async ({ rotateSuggestions = false } = {}) => {
@@ -612,6 +616,8 @@ const Home = ({ navigation }) => {
             </Text>
           </MotionView>
         )}
+
+        <AchievementsSection achievements={achievements} delay={150} />
 
         <MotionView depth accentColor={colors.glowBlue} style={s.card} delay={170}>
           <View style={s.rowBetweenCompact}>

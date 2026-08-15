@@ -13,7 +13,8 @@ import { colors, createThemedStyles, isDarkModeEnabled, radius, spacing } from '
 import PremiumUpgradeModal from '../components/PremiumUpgradeModal';
 import UserAvatar, { BUILT_IN_AVATARS } from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
-import { AnimatedProgressFill, FloatingView, MotionPressable, MotionView } from '../components/Motion';
+import AchievementsSection from '../components/AchievementsSection';
+import { FloatingView, MotionPressable, MotionView } from '../components/Motion';
 import { formatPremiumExpiry, getProExpiry, isPro } from '../utils/premium';
 
 const profileFormFromUser = (user) => ({
@@ -426,39 +427,7 @@ const Profile = ({ navigation }) => {
           </View>
         </MotionView>
 
-        {achievements.length > 0 ? (
-          <MotionView depth accentColor="rgba(245,166,35,0.14)" style={s.achievementsSection} delay={240}>
-            <View style={s.sectionHeader}>
-              <View>
-                <Text style={s.sectionEyebrow}>Milestones</Text>
-                <Text style={s.sectionTitle}>Achievements</Text>
-              </View>
-              <Text style={[s.badge, s.badgePurple]}>{achievements.filter((achievement) => achievement.unlocked).length} unlocked</Text>
-            </View>
-            <View style={s.achievementGrid}>
-              {achievements.map((achievement, index) => {
-                const current = Number(achievement.progress?.current || 0);
-                const target = Math.max(Number(achievement.progress?.target || 1), 1);
-                const pct = Math.min((current / target) * 100, 100);
-                return (
-                  <MotionView key={achievement.key} style={[s.achCard, achievement.unlocked && s.achUnlocked]} delay={280 + (index * 55)} variant="fade" layout>
-                    <View style={s.achievementTopRow}>
-                      <View style={[s.achievementIconWrap, achievement.unlocked && s.achievementIconWrapUnlocked]}>
-                        <Text style={s.achievementIcon}>{achievement.icon}</Text>
-                      </View>
-                      <Text style={[s.badge, achievement.unlocked ? s.badgeLime : s.badgeAmber]}>
-                        {achievement.unlocked ? 'Done' : `${current}/${target}`}
-                      </Text>
-                    </View>
-                    <Text style={s.achName}>{achievement.name}</Text>
-                    <Text style={s.achDesc} numberOfLines={3}>{achievement.description}</Text>
-                    <View style={s.progressBar}><AnimatedProgressFill progress={pct} style={s.progressFill} /></View>
-                  </MotionView>
-                );
-              })}
-            </View>
-          </MotionView>
-        ) : null}
+        <AchievementsSection achievements={achievements} delay={240} />
 
         <MotionPressable style={s.logoutBtn} onPress={handleLogout}>
           <Text style={s.logoutText}>Log Out</Text>
@@ -534,18 +503,6 @@ const s = createThemedStyles(() => ({
   btnSmallSec: { backgroundColor: colors.bgElevated, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: colors.border },
   btnSmallSecText: { color: colors.textPrimary, fontWeight: '700', fontSize: 12 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary },
-  achievementsSection: { backgroundColor: colors.bgCard, borderRadius: radius.xl, marginBottom: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden', shadowColor: '#48236f', shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 2 },
-  achievementGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, padding: spacing.md },
-  achCard: { width: '48%', minHeight: 154, backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: spacing.md, borderWidth: 1, borderColor: colors.border },
-  achUnlocked: { borderColor: colors.accentLime, backgroundColor: 'rgba(124,58,237,0.08)' },
-  achievementTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  achievementIconWrap: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgCard },
-  achievementIconWrapUnlocked: { backgroundColor: 'rgba(124,58,237,0.12)' },
-  achievementIcon: { fontSize: 21 },
-  achName: { color: colors.textPrimary, fontWeight: '800', fontSize: 12, lineHeight: 16 },
-  achDesc: { flex: 1, color: colors.textSecondary, fontSize: 9, lineHeight: 13, marginTop: 5, marginBottom: 9 },
-  progressBar: { height: 5, backgroundColor: colors.bgPrimary, borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 3, backgroundColor: colors.accentLime },
   logoutBtn: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: 15, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(248,113,113,0.3)', marginTop: 2 },
   logoutText: { color: colors.accentCoral, fontWeight: '700', fontSize: 15 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
