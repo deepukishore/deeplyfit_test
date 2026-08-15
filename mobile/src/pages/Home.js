@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
@@ -378,6 +379,7 @@ const LogWeightModal = ({ onClose, onSave }) => {
 
 const Home = ({ navigation }) => {
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const today = formatDate(new Date());
   const [summary, setSummary] = useState(() => createEmptySummary(today, { calories_target: user?.calorie_target || 2000 }));
   const [suggestionsData, setSuggestionsData] = useState(null);
@@ -513,7 +515,7 @@ const Home = ({ navigation }) => {
   return (
     <View style={s.page}>
       <AppBackdrop />
-      <View style={s.header}>
+      <View style={[s.header, { paddingTop: insets.top + spacing.sm }]}>
         <View>
           <Text style={s.greeting}>{getGreeting()}</Text>
           <Text style={s.name}>{user?.name || user?.email?.split('@')[0] || 'Athlete'} 👋</Text>
@@ -523,7 +525,12 @@ const Home = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={s.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accentLime} />}>
+      <ScrollView
+        style={s.scroll}
+        contentContainerStyle={[s.scrollContent, { paddingBottom: spacing.xl + insets.bottom }]}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accentLime} />}
+        showsVerticalScrollIndicator={false}
+      >
         <MotionView depth accentColor={colors.glowBlue} style={s.quoteCard} delay={20} variant="fade">
           <Text style={s.quoteText}>💬 "{getDailyQuote()}"</Text>
         </MotionView>
@@ -608,7 +615,7 @@ const Home = ({ navigation }) => {
 
         <MotionView depth accentColor={colors.glowBlue} style={s.card} delay={170}>
           <View style={s.rowBetweenCompact}>
-            <Text style={s.sectionTitle}>Macro balance</Text>
+            <Text style={[s.sectionTitle, s.sectionTitleFlush]}>Macro balance</Text>
             <Text style={s.sectionKicker}>Today</Text>
           </View>
           {macroRows.map((macro) => {
@@ -651,7 +658,7 @@ const Home = ({ navigation }) => {
         {suggestionsData && (
           <MotionView depth style={s.card} delay={270}>
             <View style={s.suggestionHeader}>
-              <Text style={s.sectionTitle}>AI Meal Suggestions</Text>
+              <Text style={[s.sectionTitle, s.sectionTitleFlush]}>AI Meal Suggestions</Text>
               <TouchableOpacity style={s.refreshBtn} onPress={refreshSuggestions} disabled={suggestionsRefreshing} accessibilityRole="button" accessibilityLabel="Refresh meal suggestions">
                 {suggestionsRefreshing
                   ? <ActivityIndicator size="small" color={colors.accentLime} />
@@ -663,13 +670,13 @@ const Home = ({ navigation }) => {
               <MotionView key={suggestion.name} style={s.suggestionTile} variant="fade" layout>
                 <View style={s.suggestionTop}>
                   <Text style={s.suggestionName}>{suggestion.name}</Text>
-                  <View style={s.suggestionBadges}>
-                    {suggestion.cuisine === 'south_indian' && <Text style={s.suggestionCuisine}>South Indian</Text>}
-                    <Text style={[s.suggestionDiet, suggestion.diet_type !== 'vegetarian' && s.suggestionDietNonVeg]}>
-                      {suggestion.diet_type === 'vegetarian' ? 'Veg' : 'Non-veg'}
-                    </Text>
-                    <Text style={s.suggestionCalories}>{Math.round(suggestion.calories)} kcal</Text>
-                  </View>
+                  <Text style={s.suggestionCalories}>{Math.round(suggestion.calories)} kcal</Text>
+                </View>
+                <View style={s.suggestionBadges}>
+                  {suggestion.cuisine === 'south_indian' && <Text style={s.suggestionCuisine}>South Indian</Text>}
+                  <Text style={[s.suggestionDiet, suggestion.diet_type !== 'vegetarian' && s.suggestionDietNonVeg]}>
+                    {suggestion.diet_type === 'vegetarian' ? 'Veg' : 'Non-veg'}
+                  </Text>
                 </View>
                 <Text style={s.suggestionPortion}>{suggestion.portion_hint}</Text>
                 <Text style={s.suggestionReason}>{suggestion.reason}</Text>
@@ -685,7 +692,7 @@ const Home = ({ navigation }) => {
 
         <MotionView depth accentColor="rgba(245,166,35,0.14)" style={s.card} delay={320}>
           <View style={s.rowBetweenCompact}>
-            <Text style={s.sectionTitle}>Quick Actions</Text>
+            <Text style={[s.sectionTitle, s.sectionTitleFlush]}>Quick Actions</Text>
             <Text style={s.sectionKicker}>One tap away</Text>
           </View>
           <View style={s.quickActions}>
@@ -712,7 +719,7 @@ const Home = ({ navigation }) => {
 
         <MotionView depth accentColor={colors.glowBlue} style={s.card} delay={370}>
           <View style={s.rowBetweenCompact}>
-            <Text style={s.sectionTitle}>Suggested Workouts</Text>
+            <Text style={[s.sectionTitle, s.sectionTitleFlush]}>Suggested Workouts</Text>
             <Text style={s.sectionKicker}>Tap to prefill</Text>
           </View>
           {suggestions.map((sg) => (
@@ -729,8 +736,6 @@ const Home = ({ navigation }) => {
             </MotionPressable>
           ))}
         </MotionView>
-
-        <View style={{ height: 20 }} />
       </ScrollView>
 
       {modal === 'food' && <LogFoodModal onClose={() => setModal(null)} onSave={refreshHomeData} />}
@@ -743,15 +748,16 @@ const Home = ({ navigation }) => {
 
 const s = createThemedStyles(() => ({
   page: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: { zIndex: 2, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: 56, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border, shadowColor: '#3b1c63', shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 5 },
+  header: { zIndex: 2, minHeight: 78, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingBottom: spacing.md, backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.border, shadowColor: '#3b1c63', shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 4 },
   greeting: { fontSize: 11, color: colors.textMuted, letterSpacing: 0.4, textTransform: 'uppercase' },
   name: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   avatar: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.accentPurple, alignItems: 'center', justifyContent: 'center', shadowColor: colors.accentPurple, shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 6 },
   avatarText: { color: '#fff', fontWeight: '800', fontSize: 14 },
-  scroll: { flex: 1, padding: spacing.lg },
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
   quoteCard: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: 'rgba(124,58,237,0.16)', shadowColor: '#4b2679', shadowOpacity: 0.08, shadowRadius: 15, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
   quoteText: { color: colors.textSecondary, fontSize: 13, fontStyle: 'italic', lineHeight: 20 },
-  card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#4b2679', shadowOpacity: 0.13, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 6 },
+  card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#4b2679', shadowOpacity: 0.09, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 3 },
   missionCard: { borderColor: 'rgba(245,166,35,0.22)' },
   missionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 7 },
   missionEyebrow: { color: colors.accentAmber, fontSize: 9, fontWeight: '800', letterSpacing: 1 },
@@ -786,8 +792,9 @@ const s = createThemedStyles(() => ({
   progressLabel: { fontSize: 11, color: colors.textMuted, marginTop: 4 },
   row: { flexDirection: 'row' },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  rowBetweenCompact: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionKicker: { color: colors.textMuted, fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
+  rowBetweenCompact: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionKicker: { color: colors.textMuted, fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  sectionTitleFlush: { marginBottom: 0 },
   streakHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   streakIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(245,166,35,0.13)', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   streakIconText: { color: colors.accentAmber, fontSize: 17, fontWeight: '900' },
@@ -817,33 +824,33 @@ const s = createThemedStyles(() => ({
   glassRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 10 },
   glass: { fontSize: 18, opacity: 0.3 },
   glassFilled: { opacity: 1 },
-  quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
-  quickBtn: { width: '48%', minHeight: 72, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 10, borderWidth: 1, borderColor: 'rgba(124,58,237,0.16)', shadowColor: '#4b2679', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
-  quickIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
-  quickIconText: { fontSize: 19 },
+  quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  quickBtn: { flexBasis: '47%', flexGrow: 1, minHeight: 66, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgElevated, borderRadius: radius.lg, paddingHorizontal: 11, paddingVertical: 10, borderWidth: 1, borderColor: 'rgba(124,58,237,0.16)', shadowColor: '#4b2679', shadowOpacity: 0.06, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
+  quickIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 9 },
+  quickIconText: { fontSize: 18 },
   quickCopy: { flex: 1 },
-  quickLabel: { color: colors.textPrimary, fontSize: 11, fontWeight: '800' },
-  quickDetail: { color: colors.textMuted, fontSize: 8.5, marginTop: 2 },
-  quickArrow: { color: colors.textMuted, fontSize: 19, marginLeft: 2 },
+  quickLabel: { color: colors.textPrimary, fontSize: 11.5, fontWeight: '800' },
+  quickDetail: { color: colors.textMuted, fontSize: 9, marginTop: 2 },
+  quickArrow: { color: colors.textMuted, fontSize: 18, marginLeft: 3 },
   workoutRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border },
   workoutName: { color: colors.textPrimary, fontWeight: '600', fontSize: 13 },
   workoutDetail: { color: colors.textMuted, fontSize: 11, marginTop: 1 },
   workoutCal: { color: colors.accentAmber, fontSize: 12, fontWeight: '600' },
   workoutCta: { alignItems: 'flex-end' },
   workoutStart: { color: colors.accentPurple, fontSize: 9, fontWeight: '800', marginTop: 3 },
-  suggestionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  refreshBtn: { minWidth: 62, height: 30, borderRadius: 9, paddingHorizontal: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border, marginBottom: 10 },
+  suggestionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  refreshBtn: { minWidth: 62, height: 30, borderRadius: 9, paddingHorizontal: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
   refreshBtnText: { color: colors.textPrimary, fontSize: 10, fontWeight: '700' },
   suggestionSummary: { color: colors.textSecondary, fontSize: 11, lineHeight: 17, marginBottom: 12 },
-  suggestionTile: { backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 13, borderWidth: 1, borderColor: colors.border, marginBottom: 9, shadowColor: '#48236f', shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 3 },
+  suggestionTile: { backgroundColor: colors.bgElevated, borderRadius: radius.lg, padding: 13, borderWidth: 1, borderColor: colors.border, marginBottom: 9 },
   suggestionTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  suggestionName: { flex: 1, color: colors.textPrimary, fontSize: 13, lineHeight: 18, fontWeight: '800', marginRight: 8 },
-  suggestionBadges: { alignItems: 'flex-end', gap: 4 },
+  suggestionName: { flex: 1, color: colors.textPrimary, fontSize: 13, lineHeight: 18, fontWeight: '800', marginRight: 10 },
+  suggestionBadges: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 7 },
   suggestionCuisine: { color: colors.accentPurple, fontSize: 9, fontWeight: '800', backgroundColor: 'rgba(168,85,247,0.12)', borderRadius: 10, overflow: 'hidden', paddingHorizontal: 7, paddingVertical: 3 },
   suggestionDiet: { color: colors.accentLime, fontSize: 9, fontWeight: '800', backgroundColor: 'rgba(200,241,53,0.12)', borderRadius: 10, overflow: 'hidden', paddingHorizontal: 7, paddingVertical: 3 },
   suggestionDietNonVeg: { color: colors.accentAmber, backgroundColor: 'rgba(245,166,35,0.12)' },
   suggestionCalories: { color: colors.accentLime, fontSize: 10, fontWeight: '800', backgroundColor: 'rgba(124,58,237,0.09)', borderRadius: 12, overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 4 },
-  suggestionPortion: { color: colors.textSecondary, fontSize: 10, lineHeight: 15, marginTop: 7 },
+  suggestionPortion: { color: colors.textSecondary, fontSize: 10, lineHeight: 15, marginTop: 9 },
   suggestionReason: { color: colors.textMuted, fontSize: 10, lineHeight: 15, marginTop: 5 },
   suggestionMacros: { flexDirection: 'row', marginTop: 9, gap: 14 },
   suggestionMacro: { color: colors.textMuted, fontSize: 10, fontWeight: '700' },
