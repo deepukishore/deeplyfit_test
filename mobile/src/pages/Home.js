@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Modal, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
 import { useRefreshRegistration } from '../context/RefreshContext';
@@ -34,13 +34,18 @@ const QUICK_ACTION_ICONS = {
 
 const LogModal = ({ title, onClose, children }) => (
   <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-    <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
-      <TouchableOpacity style={s.sheet} activeOpacity={1} onPress={() => {}}>
-        <View style={s.handle} />
-        <Text style={s.modalTitle}>{title}</Text>
-        {children}
+    <KeyboardAvoidingView
+      style={s.keyboardAvoider}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
+        <TouchableOpacity style={s.sheet} activeOpacity={1} onPress={() => {}}>
+          <View style={s.handle} />
+          <Text style={s.modalTitle}>{title}</Text>
+          {children}
+        </TouchableOpacity>
       </TouchableOpacity>
-    </TouchableOpacity>
+    </KeyboardAvoidingView>
   </Modal>
 );
 
@@ -137,7 +142,13 @@ const LogFoodModal = ({ onClose, onSave }) => {
   };
   return (
     <LogModal title="🍽️ Log Food" onClose={onClose}>
-      <ScrollView style={s.modalScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={s.modalScroll}
+        contentContainerStyle={s.modalScrollContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={s.inputGroup}><Text style={s.label}>Meal</Text>
           <View style={s.mealRow}>
             {['breakfast', 'lunch', 'dinner', 'snacks'].map((m) => (
@@ -836,11 +847,13 @@ const s = createThemedStyles(() => ({
   suggestionReason: { color: colors.textMuted, fontSize: 10, lineHeight: 15, marginTop: 5 },
   suggestionMacros: { flexDirection: 'row', marginTop: 9, gap: 14 },
   suggestionMacro: { color: colors.textMuted, fontSize: 10, fontWeight: '700' },
+  keyboardAvoider: { flex: 1 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing.xl, maxHeight: '90%', borderWidth: 1, borderColor: 'rgba(124,58,237,0.17)', shadowColor: '#24113f', shadowOpacity: 0.22, shadowRadius: 24, shadowOffset: { width: 0, height: -9 }, elevation: 22 },
   handle: { width: 42, height: 5, backgroundColor: colors.accentPurple, borderRadius: 3, alignSelf: 'center', marginBottom: 14 },
   modalTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 18 },
   modalScroll: { flexGrow: 0 },
+  modalScrollContent: { paddingBottom: spacing.sm },
   inputGroup: { marginBottom: 14 },
   label: { fontSize: 11, color: colors.textSecondary, marginBottom: 5, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase' },
   input: { backgroundColor: colors.bgElevated, borderRadius: 10, padding: 12, color: colors.textPrimary, fontSize: 14, borderWidth: 1, borderColor: colors.border },
