@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
+import AchievementsSection from '../components/AchievementsSection';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
 import { createEmptySummary, getCachedDiaryDate } from '../utils/diaryStorage';
@@ -472,6 +473,7 @@ const Home = () => {
   const [suggestionsData, setSuggestionsData] = useState(null);
   const [recentWorkoutHistory, setRecentWorkoutHistory] = useState([]);
   const [calorieStreak, setCalorieStreak] = useState(null);
+  const [achievements, setAchievements] = useState([]);
   const [waterGoal, setWaterGoal] = useState(8);
   const [showHydrationModal, setShowHydrationModal] = useState(false);
   const [modal, setModal] = useState(null);
@@ -503,10 +505,11 @@ const Home = () => {
     const variant = rotateSuggestions
       ? suggestionVariantRef.current + 1
       : suggestionVariantRef.current;
-    const [summaryResult, suggestionsResult, workoutResult] = await Promise.allSettled([
+    const [summaryResult, suggestionsResult, workoutResult, achievementsResult] = await Promise.allSettled([
       api.getDailySummary(today),
       api.getMealSuggestions(today, { variant }),
       api.getWorkoutHistory(3),
+      api.getAchievements(),
     ]);
 
     if (summaryResult.status === 'fulfilled') setSummary(summaryResult.value);
@@ -515,6 +518,7 @@ const Home = () => {
       setSuggestionsData(suggestionsResult.value);
     }
     if (workoutResult.status === 'fulfilled') setRecentWorkoutHistory(workoutResult.value);
+    if (achievementsResult.status === 'fulfilled') setAchievements(achievementsResult.value);
   }, [today]);
 
   useEffect(() => { loadSummary(); }, [loadSummary]);
@@ -746,6 +750,8 @@ const Home = () => {
             </p>
           </section>
         )}
+
+        <AchievementsSection achievements={achievements} dashboard />
 
         <section className="macros-card macro-bars-card animate-slide-up">
           <div className="section-header">

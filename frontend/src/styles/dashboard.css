@@ -785,6 +785,10 @@
   margin-bottom: 12px;
 }
 
+.food-search-row.without-quantity {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .food-search-results,
 .copy-day-list {
   display: flex;
@@ -1465,6 +1469,32 @@
   line-height: 1.5;
 }
 
+.achievements-section {
+  padding: 16px;
+}
+
+.achievements-section-header {
+  margin-bottom: 12px;
+}
+
+.achievements-section-header .section-title {
+  margin-top: 3px;
+}
+
+.achievement-progress {
+  margin-top: 12px;
+}
+
+@media (min-width: 900px) {
+  .dashboard-achievements {
+    grid-column: span 12;
+  }
+
+  .dashboard-achievements .achievement-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 /* Toggle */
 .toggle {
   width: 48px;
@@ -1593,6 +1623,78 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-md);
+}
+
+.planner-entry-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.planner-entry-tabs button {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.planner-entry-tabs button.active {
+  color: var(--accent-lime);
+  background: var(--bg-card);
+  border-color: var(--border-active);
+  box-shadow: var(--shadow-sm);
+}
+
+.planner-entry-tabs button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.planner-new-meal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.planner-empty-hint {
+  padding: 14px 16px;
+  border: 1px solid rgba(var(--accent-primary-rgb), 0.2);
+  border-radius: var(--radius-lg);
+  background: rgba(var(--accent-primary-rgb), 0.08);
+}
+
+.planner-empty-hint strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.planner-empty-hint p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.planner-nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 599px) {
+  .planner-nutrition-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .planner-calorie-preview {

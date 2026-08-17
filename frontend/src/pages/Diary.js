@@ -187,14 +187,14 @@ const buildLogPayload = (form, meal, date) => ({
   quantity: parseFloat(form.quantity) || 1,
 });
 
-const FoodSearchBox = ({ onSelect, compact = false }) => {
+const FoodSearchBox = ({ onSelect, compact = false, showQuantity = true, purpose = 'log' }) => {
   const [query, setQuery] = useState('');
   const [quantity, setQuantity] = useState('1');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  const selectedQuantity = Math.max(parseFloat(quantity) || 1, 0.1);
+  const selectedQuantity = showQuantity ? Math.max(parseFloat(quantity) || 1, 0.1) : 1;
 
   const handleSearch = async () => {
     const cleaned = query.trim();
@@ -221,23 +221,29 @@ const FoodSearchBox = ({ onSelect, compact = false }) => {
       <div className="food-search-head">
         <div>
           <p className="food-search-title">Search South Indian, veg, non-veg &amp; global foods</p>
-          <p className="food-search-copy">Mains and side dishes use familiar regional names. Choose a quantity, then tap to log.</p>
+          <p className="food-search-copy">
+            {purpose === 'plan'
+              ? 'Choose a result to fill the nutrition details for your planned meal.'
+              : 'Mains and side dishes use familiar regional names. Choose a quantity, then tap to log.'}
+          </p>
         </div>
         {!compact && <span className="badge badge-blue">India first</span>}
       </div>
-      <div className="food-search-row">
+      <div className={`food-search-row ${showQuantity ? '' : 'without-quantity'}`}>
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try: chutney, allam pachadi, tiffin sambar" />
-        <input
-          type="number"
-          value={quantity}
-          min="0.1"
-          step="0.5"
-          onChange={(event) => setQuantity(event.target.value)}
-          aria-label="Quantity"
-          title="Quantity"
-          placeholder="Qty"
-          style={{ maxWidth: 92 }}
-        />
+        {showQuantity && (
+          <input
+            type="number"
+            value={quantity}
+            min="0.1"
+            step="0.5"
+            onChange={(event) => setQuantity(event.target.value)}
+            aria-label="Quantity"
+            title="Quantity"
+            placeholder="Qty"
+            style={{ maxWidth: 92 }}
+          />
+        )}
         <button className="btn btn-secondary btn-sm" onClick={handleSearch} disabled={searching}>
           {searching ? 'Searching...' : 'Search'}
         </button>
@@ -758,6 +764,7 @@ const CopyMealsModal = ({ targetDate, onClose, onCopied }) => {
 };
 
 const MealPlanEntryModal = ({ templates, weekStart, onClose, onSaved }) => {
+  const [entryMode, setEntryMode] = useState(templates.length ? 'saved' : 'new');
   const [form, setForm] = useState({
     template_id: templates[0]?.id || '',
     planned_date: weekStart,
@@ -765,20 +772,54 @@ const MealPlanEntryModal = ({ templates, weekStart, onClose, onSaved }) => {
     servings: '1',
     notes: '',
   });
+  const [mealForm, setMealForm] = useState(EMPTY_FOOD_FORM);
+  const [draftTemplateId, setDraftTemplateId] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const selectedTemplate = templates.find((template) => template.id === Number(form.template_id));
 
   const handleSave = async () => {
-    if (!form.template_id) {
+    if (entryMode === 'saved' && !form.template_id) {
       toast.error('Pick a meal or recipe template');
+      return;
+    }
+    if (entryMode === 'new' && !draftTemplateId && (!mealForm.food_name.trim() || !mealForm.calories)) {
+      toast.error('Meal name and calories are required');
       return;
     }
 
     setSaving(true);
     try {
+      let plannedTemplateId = entryMode === 'saved' ? Number(form.template_id) : draftTemplateId;
+      if (!plannedTemplateId) {
+        const template = await api.createMealTemplate({
+          name: mealForm.food_name.trim(),
+          meal_type: form.meal_type,
+          template_type: 'meal',
+          servings: 1,
+          foods: [{
+            food_name: mealForm.food_name.trim(),
+            calories: parseFloat(mealForm.calories) || 0,
+            protein: parseFloat(mealForm.protein) || 0,
+            carbs: parseFloat(mealForm.carbs) || 0,
+            fat: parseFloat(mealForm.fat) || 0,
+            fiber: parseFloat(mealForm.fiber) || 0,
+            sugar: parseFloat(mealForm.sugar) || 0,
+            sodium: parseFloat(mealForm.sodium) || 0,
+            vitamin_c: parseFloat(mealForm.vitamin_c) || 0,
+            vitamin_d: parseFloat(mealForm.vitamin_d) || 0,
+            vitamin_b12: parseFloat(mealForm.vitamin_b12) || 0,
+            iron: parseFloat(mealForm.iron) || 0,
+            calcium: parseFloat(mealForm.calcium) || 0,
+            potassium: parseFloat(mealForm.potassium) || 0,
+            quantity: 1,
+          }],
+        });
+        plannedTemplateId = template.id;
+        setDraftTemplateId(template.id);
+      }
       await api.createMealPlanEntry({
-        template_id: Number(form.template_id),
+        template_id: plannedTemplateId,
         planned_date: form.planned_date,
         meal_type: form.meal_type,
         servings: parseFloat(form.servings) || 1,
@@ -800,24 +841,68 @@ const MealPlanEntryModal = ({ templates, weekStart, onClose, onSaved }) => {
         <div className="modal-handle" />
         <h3 className="modal-title">Plan Meals For The Week</h3>
         <div className="modal-form">
-          <div className="input-group">
-            <label>Template or Recipe</label>
-            <select
-              value={form.template_id}
-              onChange={(event) => {
-                const template = templates.find((entry) => entry.id === Number(event.target.value));
-                setForm((current) => ({
-                  ...current,
-                  template_id: event.target.value,
-                  meal_type: template?.meal_type || current.meal_type,
-                }));
+          <div className="planner-entry-tabs" role="tablist" aria-label="Planned meal source">
+            <button type="button" role="tab" aria-selected={entryMode === 'new'} className={entryMode === 'new' ? 'active' : ''} onClick={() => setEntryMode('new')}>New meal</button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={entryMode === 'saved'}
+              className={entryMode === 'saved' ? 'active' : ''}
+              onClick={() => {
+                setEntryMode('saved');
+                if (selectedTemplate) setForm((current) => ({ ...current, meal_type: selectedTemplate.meal_type || current.meal_type }));
               }}
+              disabled={!templates.length}
             >
-              {templates.map((template) => (
-                <option key={template.id} value={template.id}>{template.name} ({template.template_type || 'meal'})</option>
-              ))}
-            </select>
+              Saved meals ({templates.length})
+            </button>
           </div>
+
+          {entryMode === 'new' ? (
+            <div className="planner-new-meal">
+              {!templates.length && (
+                <div className="planner-empty-hint">
+                  <strong>Plan your first meal</strong>
+                  <p>Search for a food or enter its nutrition below. It will be saved for faster planning next time.</p>
+                </div>
+              )}
+              <FoodSearchBox
+                compact
+                showQuantity={false}
+                purpose="plan"
+                onSelect={(result) => setMealForm(fillFoodForm(result))}
+              />
+              <div className="input-group">
+                <label>Meal name</label>
+                <input value={mealForm.food_name} onChange={(event) => setMealForm((current) => ({ ...current, food_name: event.target.value }))} placeholder="e.g. Masala dosa with sambar" />
+              </div>
+              <div className="planner-nutrition-grid">
+                <div className="input-group"><label>Calories</label><input type="number" min="0" value={mealForm.calories} onChange={(event) => setMealForm((current) => ({ ...current, calories: event.target.value }))} placeholder="0" /></div>
+                <div className="input-group"><label>Protein (g)</label><input type="number" min="0" value={mealForm.protein} onChange={(event) => setMealForm((current) => ({ ...current, protein: event.target.value }))} placeholder="0" /></div>
+                <div className="input-group"><label>Carbs (g)</label><input type="number" min="0" value={mealForm.carbs} onChange={(event) => setMealForm((current) => ({ ...current, carbs: event.target.value }))} placeholder="0" /></div>
+                <div className="input-group"><label>Fat (g)</label><input type="number" min="0" value={mealForm.fat} onChange={(event) => setMealForm((current) => ({ ...current, fat: event.target.value }))} placeholder="0" /></div>
+              </div>
+            </div>
+          ) : (
+            <div className="input-group">
+              <label>Template or Recipe</label>
+              <select
+                value={form.template_id}
+                onChange={(event) => {
+                  const template = templates.find((entry) => entry.id === Number(event.target.value));
+                  setForm((current) => ({
+                    ...current,
+                    template_id: event.target.value,
+                    meal_type: template?.meal_type || current.meal_type,
+                  }));
+                }}
+              >
+                {templates.map((template) => (
+                  <option key={template.id} value={template.id}>{template.name} ({template.template_type || 'meal'})</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="planner-grid">
             <div className="input-group"><label>Planned Date</label><input type="date" value={form.planned_date} onChange={(event) => setForm((current) => ({ ...current, planned_date: event.target.value }))} /></div>
             <div className="input-group"><label>Meal Type</label><select value={form.meal_type} onChange={(event) => setForm((current) => ({ ...current, meal_type: event.target.value }))}>{MEALS.map((meal) => <option key={meal} value={meal}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</option>)}</select></div>
@@ -826,7 +911,7 @@ const MealPlanEntryModal = ({ templates, weekStart, onClose, onSaved }) => {
             <div className="input-group"><label>Servings</label><input type="number" value={form.servings} onChange={(event) => setForm((current) => ({ ...current, servings: event.target.value }))} min="0.5" step="0.5" /></div>
             <div className="input-group"><label>Notes</label><input value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} placeholder="Prep Sunday night" /></div>
           </div>
-          {selectedTemplate && (
+          {entryMode === 'saved' && selectedTemplate && (
             <div className="planner-hero">
               <p className="planner-eyebrow">Selected</p>
               <h4>{selectedTemplate.name}</h4>
@@ -834,7 +919,7 @@ const MealPlanEntryModal = ({ templates, weekStart, onClose, onSaved }) => {
             </div>
           )}
           <button className="btn btn-primary btn-full" onClick={handleSave} disabled={saving}>
-            {saving ? <><span className="spinner" /> Saving...</> : 'Add To Week'}
+            {saving ? <><span className="spinner" /> Saving...</> : 'Add planned meal'}
           </button>
         </div>
       </div>
@@ -1305,6 +1390,7 @@ const Diary = () => {
         <div className="planner-hero" style={{ marginBottom: 12 }}>
           <p className="planner-eyebrow">Week of</p>
           <h4>{formatWeekLabel(weekStart)}</h4>
+          <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowMealPlanner(true)}>+ Add planned meal</button>
           <p>{mealPlan?.entries?.length || 0} planned meals · {Math.round(mealPlan?.totals?.calories || 0)} kcal total · P {Math.round(mealPlan?.totals?.protein || 0)}g</p>
         </div>
         {mealPlanLoading ? (
@@ -1330,7 +1416,7 @@ const Diary = () => {
               {(mealPlan?.entries || []).length === 0 && (
                 <div className="template-card">
                   <h3 className="template-card-title">No meals planned yet</h3>
-                  <p className="template-card-meta">Add your saved meals and recipes to build a week of prep, weekly macros, and a shopping list.</p>
+                  <p className="template-card-meta">Add a new or saved meal to build weekly macros and generate your shopping list.</p>
                 </div>
               )}
             </div>
@@ -1395,7 +1481,7 @@ const Diary = () => {
       {quickAddModal && <QuickAddModal meal={quickAddModal} date={date} onClose={() => setQuickAddModal(null)} onSave={loadData} />}
       {showCopyMeals && <CopyMealsModal targetDate={date} onClose={() => setShowCopyMeals(false)} onCopied={loadData} />}
       {showRecipeBuilder && <RecipeBuilderModal onClose={() => setShowRecipeBuilder(false)} onSaved={async () => { await Promise.all([loadTemplates(), loadMealPlan()]); }} />}
-      {showMealPlanner && <MealPlanEntryModal templates={templates} weekStart={weekStart} onClose={() => setShowMealPlanner(false)} onSaved={loadMealPlan} />}
+      {showMealPlanner && <MealPlanEntryModal templates={templates} weekStart={weekStart} onClose={() => setShowMealPlanner(false)} onSaved={async () => { await Promise.all([loadMealPlan(), loadTemplates()]); }} />}
     </div>
   );
 };

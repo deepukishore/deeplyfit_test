@@ -21,6 +21,7 @@ import { compressImageFile } from '../utils/image';
 import { getInitials } from '../utils/fitness';
 import { isPro } from '../utils/premium';
 import UserAvatar, { BUILT_IN_AVATARS } from '../components/UserAvatar';
+import AchievementsSection from '../components/AchievementsSection';
 import '../styles/dashboard.css';
 import '../styles/animations.css';
 
@@ -393,34 +394,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {achievements.length > 0 && (
-          <div className="settings-section animate-slide-up" style={{ marginBottom: 16, padding: 16 }}>
-            <div className="section-header" style={{ marginBottom: 12 }}>
-              <h2 className="section-title">Achievements</h2>
-              <span className="badge badge-lime">{achievements.filter((item) => item.unlocked).length} unlocked</span>
-            </div>
-            <div className="achievement-grid">
-              {achievements.map((achievement) => {
-                const progressPercent = Math.min((achievement.progress.current / achievement.progress.target) * 100, 100);
-                return (
-                  <div key={achievement.key} className={`achievement-card ${achievement.unlocked ? 'unlocked' : ''}`}>
-                    <div className="achievement-card-head">
-                      <span className="achievement-icon">{achievement.icon}</span>
-                      <span className={`badge ${achievement.unlocked ? 'badge-lime' : 'badge-amber'}`}>
-                        {achievement.unlocked ? 'Unlocked' : `${achievement.progress.current}/${achievement.progress.target}`}
-                      </span>
-                    </div>
-                    <h3>{achievement.name}</h3>
-                    <p>{achievement.description}</p>
-                    <div className="progress-bar" style={{ marginTop: 12 }}>
-                      <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <AchievementsSection achievements={achievements} />
 
         <button className="btn btn-secondary btn-full profile-logout-btn" onClick={handleLogout}>
           <LogOut size={17} /> Log Out
