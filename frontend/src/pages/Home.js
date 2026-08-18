@@ -554,6 +554,7 @@ const Home = () => {
     try {
       await api.addGlass();
       setSummary(s => ({ ...s, water_glasses: (s?.water_glasses || 0) + 1 }));
+      api.getAchievements().then(setAchievements).catch(() => {});
       toast.success('Hydration tracked! 💧');
     } catch (err) {
       toast.error('Failed to log water');

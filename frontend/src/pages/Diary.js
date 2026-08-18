@@ -1390,8 +1390,8 @@ const Diary = () => {
         <div className="planner-hero" style={{ marginBottom: 12 }}>
           <p className="planner-eyebrow">Week of</p>
           <h4>{formatWeekLabel(weekStart)}</h4>
-          <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowMealPlanner(true)}>+ Add planned meal</button>
           <p>{mealPlan?.entries?.length || 0} planned meals · {Math.round(mealPlan?.totals?.calories || 0)} kcal total · P {Math.round(mealPlan?.totals?.protein || 0)}g</p>
+          <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowMealPlanner(true)}>+ Add planned meal</button>
         </div>
         {mealPlanLoading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
