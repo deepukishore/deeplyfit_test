@@ -19,6 +19,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
 import AchievementsSection from '../components/AchievementsSection';
+import NoSearchResults from '../components/NoSearchResults';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
 import { createEmptySummary, getCachedDiaryDate } from '../utils/diaryStorage';
@@ -274,7 +275,7 @@ const LogFoodModal = ({ onClose, onSave }) => {
           )}
 
           {searched && !searching && results.length === 0 && (
-            <p className="nutrition-message">No nutrition match was found. Try a simpler food name.</p>
+            <NoSearchResults query={form.food_name} onClear={() => { setResults([]); setSearched(false); }} compact />
           )}
 
           {calculation.error && <p className="nutrition-message error">{calculation.error}</p>}

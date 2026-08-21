@@ -11,6 +11,7 @@ import {
 } from '../utils/diaryStorage';
 import { addDays, formatDate, formatDisplayDate, getMealIcon } from '../utils/fitness';
 import FoodScannerModal from '../components/FoodScannerModal';
+import NoSearchResults from '../components/NoSearchResults';
 import '../styles/dashboard.css';
 import '../styles/scanner.css';
 import '../styles/animations.css';
@@ -262,7 +263,7 @@ const FoodSearchBox = ({ onSelect, compact = false, showQuantity = true, purpose
         </div>
       )}
       {searched && !searching && results.length === 0 && (
-        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>No close matches found. You can still enter nutrition manually.</p>
+        <NoSearchResults query={query} onClear={() => { setQuery(''); setSearched(false); }} compact />
       )}
     </div>
   );

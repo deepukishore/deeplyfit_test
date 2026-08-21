@@ -707,6 +707,19 @@
   }
 }
 
+.auth-policy-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 5px;
+  font-size: 10px;
+}
+
+.auth-policy-links a { color: var(--accent-purple); font-weight: 700; text-decoration: none; }
+.auth-policy-links span { color: var(--text-muted); }
+
 /* ===== 2026 PREMIUM AUTH + ONBOARDING ===== */
 .auth-page {
   min-height: 100dvh;

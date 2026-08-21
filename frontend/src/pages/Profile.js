@@ -5,11 +5,14 @@ import {
   ChevronRight,
   Camera,
   Check,
+  CircleHelp,
   Download as DownloadIcon,
   Info,
+  LifeBuoy,
   LogOut,
   Moon,
   Pencil,
+  ScrollText,
   Sun,
   Trash2,
   UsersRound,
@@ -312,6 +315,7 @@ const Profile = () => {
           <div className="pro-active-banner">
             <span>💎 PRO Active</span>
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Unlimited AI · All features unlocked</span>
+            <button className="btn btn-secondary btn-sm" type="button" onClick={() => navigate('/downgrade')} style={{ marginTop: 10 }}>Manage PRO</button>
           </div>
         )}
       </div>
@@ -356,6 +360,27 @@ const Profile = () => {
             <div className="settings-item-left">
               <div className="settings-item-icon"><Info size={18} /></div>
               <span className="settings-item-label">About Deeply Fit</span>
+            </div>
+            <ChevronRight size={18} className="settings-chevron" />
+          </button>
+          <button className="settings-item settings-item-button" type="button" onClick={() => navigate('/help')}>
+            <div className="settings-item-left">
+              <div className="settings-item-icon"><CircleHelp size={18} /></div>
+              <span className="settings-item-label">Help Center</span>
+            </div>
+            <ChevronRight size={18} className="settings-chevron" />
+          </button>
+          <button className="settings-item settings-item-button" type="button" onClick={() => navigate('/support')}>
+            <div className="settings-item-left">
+              <div className="settings-item-icon"><LifeBuoy size={18} /></div>
+              <span className="settings-item-label">Support</span>
+            </div>
+            <ChevronRight size={18} className="settings-chevron" />
+          </button>
+          <button className="settings-item settings-item-button" type="button" onClick={() => navigate('/legal')}>
+            <div className="settings-item-left">
+              <div className="settings-item-icon"><ScrollText size={18} /></div>
+              <span className="settings-item-label">Legal &amp; policies</span>
             </div>
             <ChevronRight size={18} className="settings-chevron" />
           </button>

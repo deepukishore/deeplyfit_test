@@ -12,6 +12,27 @@ import BrandLogo from './components/BrandLogo';
 import OfflineBanner from './components/OfflineBanner';
 import PullToRefreshShell from './components/PullToRefreshShell';
 import Upgrade from './pages/Upgrade';
+import {
+  CookiePreferences,
+  HelpCenter,
+  LegalCenter,
+  POLICY_DOCUMENTS,
+  PolicyPage,
+  Support,
+} from './pages/LegalPages';
+import {
+  GeneralStatePage,
+  LoadingState,
+  NoSearchResultsPage,
+  ServiceStatePage,
+} from './pages/StatePages';
+import {
+  CancelSubscription,
+  Downgrade,
+  PaymentFailed,
+  PaymentPending,
+  PaymentSuccess,
+} from './pages/SubscriptionPages';
 
 import './styles/global.css';
 import './styles/animations.css';
@@ -104,6 +125,10 @@ const AppRoutes = () => {
     );
   }
 
+  const infoPage = (page) => user
+    ? <AppLayout>{page}</AppLayout>
+    : <div className="app-container public-info-container">{page}</div>;
+
   return (
     <Suspense fallback={<RouteSkeleton />}>
       <Routes>
@@ -175,6 +200,26 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="/downgrade"
+          element={<ProtectedRoute><AppLayout><Downgrade /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/cancel-subscription"
+          element={<ProtectedRoute><AppLayout><CancelSubscription /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/payment/success"
+          element={<ProtectedRoute><AppLayout><PaymentSuccess /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/payment/failed"
+          element={<ProtectedRoute><AppLayout><PaymentFailed /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/payment/pending"
+          element={<ProtectedRoute><AppLayout><PaymentPending /></AppLayout></ProtectedRoute>}
+        />
+        <Route
           path="/about"
           element={user ? <AppLayout><About /></AppLayout> : <About />}
         />
@@ -183,8 +228,25 @@ const AppRoutes = () => {
           element={user ? <AppLayout><Download /></AppLayout> : <Download />}
         />
         <Route path="/u/:slug" element={<div className="app-container"><PublicProfile /></div>} />
+        {Object.entries(POLICY_DOCUMENTS).map(([documentKey, document]) => (
+          <Route key={document.path} path={document.path} element={infoPage(<PolicyPage documentKey={documentKey} />)} />
+        ))}
+        <Route path="/legal" element={infoPage(<LegalCenter />)} />
+        <Route path="/cookie-preferences" element={infoPage(<CookiePreferences />)} />
+        <Route path="/help" element={infoPage(<HelpCenter />)} />
+        <Route path="/support" element={infoPage(<Support />)} />
+        <Route path="/maintenance" element={infoPage(<ServiceStatePage kind="maintenance" />)} />
+        <Route path="/offline" element={infoPage(<ServiceStatePage kind="offline" />)} />
+        <Route path="/session-expired" element={infoPage(<ServiceStatePage kind="session" />)} />
+        <Route path="/no-search-results" element={infoPage(<NoSearchResultsPage />)} />
+        <Route path="/403" element={infoPage(<GeneralStatePage kind="forbidden" />)} />
+        <Route path="/500" element={infoPage(<GeneralStatePage kind="serverError" />)} />
+        <Route path="/states/empty" element={infoPage(<GeneralStatePage kind="empty" />)} />
+        <Route path="/states/loading" element={infoPage(<LoadingState />)} />
+        <Route path="/states/error" element={infoPage(<GeneralStatePage kind="error" />)} />
+        <Route path="/states/success" element={infoPage(<GeneralStatePage kind="success" />)} />
         <Route path="/" element={<Landing />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={infoPage(<GeneralStatePage kind="notFound" />)} />
       </Routes>
     </Suspense>
   );

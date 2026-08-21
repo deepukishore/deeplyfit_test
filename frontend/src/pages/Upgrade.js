@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   BadgeCheck,
   Bot,
@@ -19,12 +18,14 @@ const PLANS = [
     id: 'monthly',
     label: '1 Month',
     price: '₹199',
+    amount: 199,
     total: '₹199 billed monthly',
   },
   {
     id: 'quarterly',
     label: '3 Months',
     price: '₹499',
+    amount: 499,
     total: 'About ₹166/month',
     saving: 'Save ₹98',
   },
@@ -32,6 +33,7 @@ const PLANS = [
     id: 'half_year',
     label: '6 Months',
     price: '₹999',
+    amount: 999,
     total: 'About ₹167/month',
     saving: 'Popular',
   },
@@ -39,6 +41,7 @@ const PLANS = [
     id: 'annual',
     label: '1 Year',
     price: '₹1,799',
+    amount: 1799,
     total: 'About ₹150/month',
     saving: 'Best value',
   },
@@ -75,8 +78,10 @@ const loadRazorpay = () => new Promise((resolve, reject) => {
 
 const Upgrade = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, refreshUser } = useAuth();
-  const [selected, setSelected] = useState('quarterly');
+  const requestedPlan = PLANS.some((plan) => plan.id === location.state?.selectedPlan) ? location.state.selectedPlan : 'quarterly';
+  const [selected, setSelected] = useState(requestedPlan);
   const [loading, setLoading] = useState(false);
   const selectedPlan = PLANS.find((plan) => plan.id === selected);
 
@@ -105,11 +110,18 @@ const Upgrade = () => {
               razorpay_signature: response.razorpay_signature,
             });
             await refreshUser();
-            toast.success('Welcome to Deeply Fit PRO!');
-            navigate('/home', { replace: true });
+            navigate('/payment/success', { replace: true, state: {
+              plan: selected,
+              amount: selectedPlan.amount,
+              paymentId: response.razorpay_payment_id,
+            } });
           } catch (error) {
             setLoading(false);
-            toast.error(error.message || 'Payment verification failed. Contact support.');
+            navigate('/payment/pending', { state: {
+              plan: selected,
+              amount: selectedPlan.amount,
+              message: 'Your payment was received and is waiting for final confirmation. Do not pay again.',
+            } });
           }
         },
         modal: {
@@ -117,14 +129,22 @@ const Upgrade = () => {
         },
       });
 
-      checkout.on('payment.failed', () => {
+      checkout.on('payment.failed', (response) => {
         setLoading(false);
-        toast.error('Payment failed. Please try again.');
+        navigate('/payment/failed', { state: {
+          plan: selected,
+          amount: selectedPlan.amount,
+          message: response?.error?.description || 'Payment failed. Please try again.',
+        } });
       });
       checkout.open();
     } catch (error) {
       setLoading(false);
-      toast.error(error.message || 'Failed to start payment');
+      navigate('/payment/failed', { state: {
+        plan: selected,
+        amount: selectedPlan.amount,
+        message: error.message || 'Failed to start payment',
+      } });
     }
   };
 

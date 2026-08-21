@@ -197,7 +197,13 @@ const Login = () => {
         </section>
 
         <p className="auth-motivation">Join 10,000+ people transforming their lives with Deeplyfit.</p>
-        <p className="auth-legal">By continuing, you agree to our Terms &amp; Privacy Policy.</p>
+        <p className="auth-legal">By continuing, you agree to our policies.</p>
+        <nav className="auth-policy-links" aria-label="Policies and support">
+          <Link to="/terms">Terms</Link><span>·</span>
+          <Link to="/privacy-policy">Privacy</Link><span>·</span>
+          <Link to="/cookie-preferences">Cookies</Link><span>·</span>
+          <Link to="/support">Support</Link>
+        </nav>
         <nav className="auth-about-link" aria-label="Public pages">
           <Link to="/about">About Deeplyfit</Link>
           <span aria-hidden="true"> / </span>

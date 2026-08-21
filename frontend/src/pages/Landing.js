@@ -165,8 +165,11 @@ const Landing = () => {
         <nav className="landing-footer-links" aria-label="Footer navigation">
           <Link to="/about">About</Link>
           <Link to="/download">Download</Link>
-          <Link to="/about#privacy">Privacy</Link>
-          <a href="mailto:deepu004.dk@gmail.com">Contact</a>
+          <Link to="/privacy-policy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/help">Help</Link>
+          <Link to="/support">Support</Link>
+          <Link to="/legal">Legal</Link>
         </nav>
         <div className="landing-footer-meta">
           <p>Built by Deepthi, Co-Founder &amp; CEO, and Deepu, Co-Founder &amp; CTO.</p>

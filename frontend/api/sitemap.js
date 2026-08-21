@@ -1,4 +1,16 @@
 module.exports = (req, res) => {
+  const publicPages = [
+    '/privacy-policy', '/terms', '/cookie-policy', '/cookie-preferences',
+    '/cancellation-policy', '/disclaimer', '/accessibility',
+    '/data-processing-agreement', '/acceptable-use-policy', '/security',
+    '/responsible-disclosure', '/community-guidelines', '/help', '/support', '/legal',
+  ];
+  const publicPageUrls = publicPages.map((path) => `  <url>
+    <loc>https://deeplyfit.vercel.app${path}</loc>
+    <lastmod>2026-08-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>`).join('\n');
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -25,6 +37,7 @@ module.exports = (req, res) => {
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+${publicPageUrls}
 </urlset>`;
 
   res.setHeader('Content-Type', 'application/xml');

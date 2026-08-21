@@ -24,4 +24,19 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+  <url><loc>https://deeplyfit.vercel.app/privacy-policy</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/terms</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/cookie-policy</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/cookie-preferences</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/cancellation-policy</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/disclaimer</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/accessibility</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/data-processing-agreement</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/acceptable-use-policy</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/security</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/responsible-disclosure</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/community-guidelines</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/help</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/support</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://deeplyfit.vercel.app/legal</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
 </urlset>
