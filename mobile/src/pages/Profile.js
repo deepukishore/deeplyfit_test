@@ -392,6 +392,18 @@ const Profile = ({ navigation }) => {
             <Text style={s.settingsLabel}>About Deeply Fit</Text>
             <Text style={s.settingsArrow}>{'>'}</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={s.settingsItem} onPress={() => navigation.navigate('HelpCenter')}>
+            <Text style={s.settingsLabel}>Help Center</Text>
+            <Text style={s.settingsArrow}>{'>'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.settingsItem} onPress={() => navigation.navigate('Support')}>
+            <Text style={s.settingsLabel}>Support</Text>
+            <Text style={s.settingsArrow}>{'>'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.settingsItem} onPress={() => navigation.navigate('LegalCenter')}>
+            <Text style={s.settingsLabel}>Legal & policies</Text>
+            <Text style={s.settingsArrow}>{'>'}</Text>
+          </TouchableOpacity>
         </MotionView>
 
         <MotionView depth style={s.settingsSection} delay={190}>

@@ -7,6 +7,7 @@ import { addDays, formatDate, formatDisplayDate, getMealIcon } from '../utils/fi
 import { createEmptySummary, getCachedDiaryDate, getFavorites, setFavorites as saveFavorites } from '../utils/storage';
 import FoodScannerModal from '../components/FoodScannerModal';
 import AppBackdrop from '../components/AppBackdrop';
+import NoSearchResults from '../components/NoSearchResults';
 import { AnimatedProgressFill, MotionPressable, MotionView } from '../components/Motion';
 import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 
@@ -92,11 +93,13 @@ const AddFoodModal = ({ meal, date, visible, onClose, onSave }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [searched, setSearched] = useState(false);
   const [showMicros, setShowMicros] = useState(false);
 
   const handleSearch = async () => {
     if (query.trim().length < 2) { Toast.show({ type: 'error', text1: 'Search for at least 2 characters' }); return; }
     setSearching(true);
+    setSearched(true);
     try { const data = await api.searchFoods(query.trim()); setResults(data.results || []); }
     catch (err) { Toast.show({ type: 'error', text1: err.message || 'Search failed' }); }
     finally { setSearching(false); }
@@ -116,17 +119,20 @@ const AddFoodModal = ({ meal, date, visible, onClose, onSave }) => {
   return (
     <ModalSheet visible={visible} title={`${getMealIcon(meal)} Add to ${meal.charAt(0).toUpperCase() + meal.slice(1)}`} onClose={onClose}>
       <View style={s.searchRow}>
-        <TextInput style={[s.input, { flex: 1, marginRight: 8 }]} placeholder="Try chutney, allam pachadi, sambar..." placeholderTextColor={colors.textMuted} value={query} onChangeText={setQuery} />
+        <TextInput style={[s.input, { flex: 1, marginRight: 8 }]} placeholder="Try chutney, allam pachadi, sambar..." placeholderTextColor={colors.textMuted} value={query} onChangeText={(value) => { setQuery(value); setSearched(false); }} />
         <TouchableOpacity style={s.searchBtn} onPress={handleSearch} disabled={searching}>
           <Text style={s.searchBtnText}>{searching ? '...' : 'Search'}</Text>
         </TouchableOpacity>
       </View>
       {results.slice(0, 12).map((r) => (
-        <TouchableOpacity key={r.code} style={s.resultRow} onPress={() => { setForm(fillForm(r)); setResults([]); Toast.show({ type: 'success', text1: 'Nutrition details filled' }); }}>
+        <TouchableOpacity key={r.code} style={s.resultRow} onPress={() => { setForm(fillForm(r)); setResults([]); setSearched(false); Toast.show({ type: 'success', text1: 'Nutrition details filled' }); }}>
           <Text style={s.resultName}>{r.name}</Text>
           <Text style={s.resultMeta}>{Math.round(r.calories || 0)} kcal</Text>
         </TouchableOpacity>
       ))}
+      {searched && !searching && results.length === 0 ? (
+        <NoSearchResults query={query} onClear={() => { setQuery(''); setSearched(false); }} compact />
+      ) : null}
       <View style={s.inputGroup}><Text style={s.label}>Food Name</Text><TextInput style={s.input} placeholder="e.g. idli with sambar" placeholderTextColor={colors.textMuted} value={form.food_name} onChangeText={(v) => setForm((f) => ({ ...f, food_name: v }))} /></View>
       <View style={s.row}>
         <View style={{ flex: 1, marginRight: 8 }}><Text style={s.label}>Calories</Text><TextInput style={s.input} placeholder="0" placeholderTextColor={colors.textMuted} value={form.calories} onChangeText={(v) => setForm((f) => ({ ...f, calories: v }))} keyboardType="numeric" /></View>
@@ -252,6 +258,7 @@ const MealPlanEntryModal = ({ templates, weekStart, visible, onClose, onSaved })
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [searched, setSearched] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -267,6 +274,7 @@ const MealPlanEntryModal = ({ templates, weekStart, visible, onClose, onSaved })
     setForm(EMPTY_FORM);
     setQuery('');
     setResults([]);
+    setSearched(false);
   }, [templates, visible, weekStart]);
 
   const selectedTemplate = templates.find((template) => template.id === templateId);
@@ -277,6 +285,7 @@ const MealPlanEntryModal = ({ templates, weekStart, visible, onClose, onSaved })
       return;
     }
     setSearching(true);
+    setSearched(true);
     try {
       const data = await api.searchFoods(query.trim());
       setResults(data.results || []);
@@ -378,7 +387,7 @@ const MealPlanEntryModal = ({ templates, weekStart, visible, onClose, onSaved })
               placeholder="e.g. masala dosa"
               placeholderTextColor={colors.textMuted}
               value={query}
-              onChangeText={setQuery}
+              onChangeText={(value) => { setQuery(value); setSearched(false); }}
               onSubmitEditing={handleSearch}
               returnKeyType="search"
             />
@@ -394,12 +403,16 @@ const MealPlanEntryModal = ({ templates, weekStart, visible, onClose, onSaved })
                 setForm(fillForm(result));
                 setQuery(result.name || '');
                 setResults([]);
+                setSearched(false);
               }}
             >
               <Text style={s.resultName}>{result.name}</Text>
               <Text style={s.resultMeta}>{Math.round(result.calories || 0)} kcal</Text>
             </TouchableOpacity>
           ))}
+          {searched && !searching && results.length === 0 ? (
+            <NoSearchResults query={query} onClear={() => { setQuery(''); setSearched(false); }} compact />
+          ) : null}
           <View style={s.inputGroup}>
             <Text style={s.label}>Meal Name</Text>
             <TextInput style={s.input} value={form.food_name} onChangeText={(value) => setForm((current) => ({ ...current, food_name: value }))} placeholder="Meal name" placeholderTextColor={colors.textMuted} />

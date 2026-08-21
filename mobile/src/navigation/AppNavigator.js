@@ -20,6 +20,22 @@ import ForgotPassword from '../pages/ForgotPassword';
 import ResetPassword from '../pages/ResetPassword';
 import PublicProfile from '../pages/PublicProfile';
 import About from '../pages/About';
+import LegalDocument, { LEGAL_DOCUMENTS } from '../pages/LegalDocument';
+import CookiePreferences from '../pages/CookiePreferences';
+import { HelpCenter, LegalCenter, Support } from '../pages/HelpLegalCenter';
+import {
+  EmptyState,
+  ErrorState,
+  Forbidden,
+  LoadingState,
+  Maintenance,
+  NoSearchResultsPage,
+  NotFound,
+  Offline,
+  ServerError,
+  SessionExpired,
+  SuccessState,
+} from '../pages/StatePages';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -49,6 +65,7 @@ const AnimatedCommunity = withScreenTransition(Community);
 const AnimatedCoach = withScreenTransition(AIAssistant);
 const AnimatedProgress = withScreenTransition(Progress);
 const AnimatedProfile = withScreenTransition(Profile);
+const LEGAL_ROUTES = Object.keys(LEGAL_DOCUMENTS);
 
 const MainTabs = () => {
   const insets = useSafeAreaInsets();
@@ -124,6 +141,22 @@ const AppNavigator = () => {
           <Stack.Screen name="About" component={About} />
         </>
       )}
+      <Stack.Screen name="HelpCenter" component={HelpCenter} />
+      <Stack.Screen name="Support" component={Support} />
+      <Stack.Screen name="LegalCenter" component={LegalCenter} />
+      <Stack.Screen name="CookiePreferences" component={CookiePreferences} />
+      {LEGAL_ROUTES.map((name) => <Stack.Screen key={name} name={name} component={LegalDocument} />)}
+      <Stack.Screen name="Maintenance" component={Maintenance} />
+      <Stack.Screen name="Offline" component={Offline} />
+      <Stack.Screen name="NoSearchResults" component={NoSearchResultsPage} />
+      <Stack.Screen name="SessionExpired" component={SessionExpired} />
+      <Stack.Screen name="404" component={NotFound} />
+      <Stack.Screen name="403" component={Forbidden} />
+      <Stack.Screen name="500" component={ServerError} />
+      <Stack.Screen name="EmptyState" component={EmptyState} />
+      <Stack.Screen name="LoadingState" component={LoadingState} />
+      <Stack.Screen name="ErrorState" component={ErrorState} />
+      <Stack.Screen name="SuccessState" component={SuccessState} />
     </Stack.Navigator>
   );
 };

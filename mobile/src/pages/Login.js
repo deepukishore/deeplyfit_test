@@ -89,7 +89,16 @@ const Login = ({ navigation }) => {
         </View>
       </MotionView>
 
-      <Text style={s.terms}>By continuing, you agree to our Terms & Privacy Policy</Text>
+      <Text style={s.terms}>By continuing, you agree to our policies</Text>
+      <View style={s.policyLinks}>
+        <TouchableOpacity onPress={() => navigation.navigate('TermsOfService')}><Text style={s.policyLink}>Terms</Text></TouchableOpacity>
+        <Text style={s.policyDot}>•</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy')}><Text style={s.policyLink}>Privacy</Text></TouchableOpacity>
+        <Text style={s.policyDot}>•</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('CookiePreferences')}><Text style={s.policyLink}>Cookies</Text></TouchableOpacity>
+        <Text style={s.policyDot}>•</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Support')}><Text style={s.policyLink}>Support</Text></TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
@@ -114,6 +123,9 @@ const s = createThemedStyles(() => ({
   switchText: { color: colors.textSecondary, fontSize: 13 },
   switchLink: { color: colors.accentLime, fontSize: 13, fontWeight: '700' },
   terms: { textAlign: 'center', color: colors.textMuted, fontSize: 11, marginTop: 20 },
+  policyLinks: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', marginTop: 7 },
+  policyLink: { color: colors.accentPurple, fontSize: 11, fontWeight: '700', paddingHorizontal: 5, paddingVertical: 4 },
+  policyDot: { color: colors.textMuted, fontSize: 10 },
 }));
 
 export default Login;

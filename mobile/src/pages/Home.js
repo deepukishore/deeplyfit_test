@@ -13,6 +13,7 @@ import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import WorkoutPlannerModal from '../components/WorkoutPlannerModal';
 import UserAvatar from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
+import NoSearchResults from '../components/NoSearchResults';
 import AchievementsSection from '../components/AchievementsSection';
 import { AnimatedProgressFill, FloatingView, MotionPressable, MotionView } from '../components/Motion';
 
@@ -232,7 +233,7 @@ const LogFoodModal = ({ onClose, onSave }) => {
         )}
 
         {searched && !searching && results.length === 0 && (
-          <Text style={s.nutritionMessage}>No nutrition match was found. Try a simpler food name.</Text>
+          <NoSearchResults query={form.food_name} onClear={() => { setResults([]); setSearched(false); }} compact />
         )}
 
         {calculation.error && <Text style={[s.nutritionMessage, s.nutritionError]}>{calculation.error}</Text>}
