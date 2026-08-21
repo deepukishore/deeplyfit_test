@@ -4578,14 +4578,15 @@ textarea {
   .quick-actions { grid-template-columns: repeat(6, minmax(0,1fr)); }
 
   .quick-action-btn {
-    min-height: 116px;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    align-content: center;
+    min-height: 88px;
+    align-items: center;
+    flex-wrap: nowrap;
+    align-content: normal;
+    padding: 14px;
   }
 
-  .quick-action-copy { flex-basis: calc(100% - 58px); }
-  .quick-action-arrow { margin-left: auto; }
+  .quick-action-copy { flex-basis: auto; }
+  .quick-action-arrow { flex: 0 0 auto; margin-left: auto; }
 }
 
 @media (hover: hover) and (min-width: 900px) {
