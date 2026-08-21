@@ -10,7 +10,6 @@ import { api } from '../utils/api';
 import { compressImageUri } from '../utils/image';
 import { getInitials } from '../utils/fitness';
 import { colors, createThemedStyles, isDarkModeEnabled, radius, spacing } from '../utils/theme';
-import PremiumUpgradeModal from '../components/PremiumUpgradeModal';
 import UserAvatar, { BUILT_IN_AVATARS } from '../components/UserAvatar';
 import AppBackdrop from '../components/AppBackdrop';
 import AchievementsSection from '../components/AchievementsSection';
@@ -253,7 +252,6 @@ const Profile = ({ navigation }) => {
   const { user, logout, refreshUser, updateUser, toggleDarkMode } = useAuth();
   const insets = useSafeAreaInsets();
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [achievements, setAchievements] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -350,7 +348,7 @@ const Profile = ({ navigation }) => {
               : 'Unlock unlimited scans, AI coaching, advanced analytics, and premium reports.'}
           </Text>
           {user.bio ? <Text style={s.profileBio}>{user.bio}</Text> : null}
-          <MotionPressable style={s.proBtn} onPress={() => setShowPremiumModal(true)}>
+          <MotionPressable style={s.proBtn} onPress={() => navigation.navigate(isPremiumActive ? 'Downgrade' : 'Upgrade')}>
             <Text style={s.proBtnText}>{isPremiumActive ? 'Manage PRO' : 'Get Premium'}</Text>
           </MotionPressable>
         </MotionView>
@@ -451,12 +449,6 @@ const Profile = ({ navigation }) => {
         user={user}
         onClose={() => setShowEditModal(false)}
         onSave={updateUser}
-      />
-      <PremiumUpgradeModal
-        visible={showPremiumModal}
-        onClose={() => setShowPremiumModal(false)}
-        onActivated={updateUser}
-        currentUser={user}
       />
     </View>
   );

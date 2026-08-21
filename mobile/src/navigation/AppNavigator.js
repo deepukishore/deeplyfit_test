@@ -36,6 +36,14 @@ import {
   SessionExpired,
   SuccessState,
 } from '../pages/StatePages';
+import {
+  CancelSubscription,
+  Downgrade,
+  PaymentFailed,
+  PaymentPending,
+  PaymentSuccess,
+  Upgrade,
+} from '../pages/SubscriptionPages';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -139,6 +147,12 @@ const AppNavigator = () => {
           <Stack.Screen name="Main" component={MainTabs} />
           <Stack.Screen name="PublicProfile" component={PublicProfile} />
           <Stack.Screen name="About" component={About} />
+          <Stack.Screen name="Upgrade" component={Upgrade} />
+          <Stack.Screen name="Downgrade" component={Downgrade} />
+          <Stack.Screen name="CancelSubscription" component={CancelSubscription} />
+          <Stack.Screen name="PaymentSuccess" component={PaymentSuccess} />
+          <Stack.Screen name="PaymentFailed" component={PaymentFailed} />
+          <Stack.Screen name="PaymentPending" component={PaymentPending} />
         </>
       )}
       <Stack.Screen name="HelpCenter" component={HelpCenter} />
