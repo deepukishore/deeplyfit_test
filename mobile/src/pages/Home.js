@@ -16,6 +16,7 @@ import AppBackdrop from '../components/AppBackdrop';
 import NoSearchResults from '../components/NoSearchResults';
 import AchievementsSection from '../components/AchievementsSection';
 import { AnimatedProgressFill, FloatingView, MotionPressable, MotionView } from '../components/Motion';
+import BannerAdComponent from '../components/BannerAdComponent';
 
 const MACRO_COLORS = ['#4facfe', '#a855f7', '#f5a623'];
 const QUICK_ACTION_META = {
@@ -750,6 +751,11 @@ const Home = ({ navigation }) => {
       {modal === 'workout' && <LogWorkoutModal user={user} preset={workoutPreset} onClose={() => { setModal(null); setWorkoutPreset(null); }} onSave={refreshHomeData} />}
       {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={refreshHomeData} />}
       {showPlanner && <WorkoutPlannerModal visible={showPlanner} user={user} date={today} onClose={() => setShowPlanner(false)} onSuccess={refreshHomeData} />}
+      {!user?.is_pro && (
+        <BannerAdComponent
+          style={{ marginBottom: 72 }}
+        />
+      )}
     </View>
   );
 };

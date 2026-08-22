@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { registerRootComponent } from 'expo';
+import mobileAds from 'react-native-google-mobile-ads';
 import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -55,6 +56,17 @@ const ThemedApplication = () => {
 };
 
 export default function App() {
+  useEffect(() => {
+    mobileAds()
+      .initialize()
+      .then((adapterStatuses) => {
+        console.log('✅ AdMob initialized:', adapterStatuses);
+      })
+      .catch((err) => {
+        console.log('❌ AdMob init failed:', err);
+      });
+  }, []);
+
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,

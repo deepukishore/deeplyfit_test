@@ -8,6 +8,7 @@ import { isPro } from '../utils/premium';
 import { api } from '../utils/api';
 import { compressImageUri } from '../utils/image';
 import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
+import useRewardedAd from '../hooks/useRewardedAd';
 
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snacks'];
 
@@ -25,7 +26,16 @@ const FoodScannerModal = ({ visible, onClose, onSuccess, defaultMeal = 'breakfas
   const [barcodeResult, setBarcodeResult] = useState(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
+  const [extraScansToday, setExtraScansToday] = useState(0);
   const cameraRef = useRef(null);
+
+  const { showAd, loaded: rewardedLoaded } = useRewardedAd(
+    (reward) => {
+      // User watched full ad -> give 1 extra scan
+      setExtraScansToday((prev) => prev + 1);
+      Toast.show({ type: 'success', text1: '🎁 You earned 1 extra AI scan!' });
+    }
+  );
 
   useEffect(() => {
     if (!visible) { setImageUri(null); setImageBase64(null); setResult(null); setBarcodeResult(null); setCameraActive(false); }
@@ -162,6 +172,30 @@ const FoodScannerModal = ({ visible, onClose, onSuccess, defaultMeal = 'breakfas
               ) : (
                 <TouchableOpacity style={s.btn} onPress={() => { if (onSuccess) onSuccess(result); onClose(); }}>
                   <Text style={s.btnText}>Done ✓</Text>
+                </TouchableOpacity>
+              )}
+
+              {!user?.is_pro && (
+                <TouchableOpacity
+                  onPress={showAd}
+                  disabled={!rewardedLoaded}
+                  style={{
+                    backgroundColor: '#c8f135',
+                    padding: 14,
+                    borderRadius: 100,
+                    alignItems: 'center',
+                    marginTop: 12,
+                  }}
+                >
+                  <Text style={{
+                    color: '#0a0a0f',
+                    fontWeight: '700',
+                    fontSize: 15,
+                  }}>
+                    {rewardedLoaded
+                      ? '📺 Watch Ad for 1 Free Scan'
+                      : '⏳ Loading ad...'}
+                  </Text>
                 </TouchableOpacity>
               )}
             </>
