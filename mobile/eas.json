@@ -10,7 +10,8 @@
         "gradleCommand": ":app:assembleRelease"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://deeplyfit-backend.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://deeplyfit-backend.onrender.com",
+        "EXPO_PUBLIC_USE_TEST_ADS": "true"
       }
     },
     "production": {
@@ -18,7 +19,8 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://deeplyfit-backend.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://deeplyfit-backend.onrender.com",
+        "EXPO_PUBLIC_USE_TEST_ADS": "false"
       }
     }
   },

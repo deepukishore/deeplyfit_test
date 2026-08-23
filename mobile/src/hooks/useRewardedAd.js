@@ -4,60 +4,85 @@ import {
   RewardedAdEventType,
   AdEventType,
 } from 'react-native-google-mobile-ads';
-import { AD_UNIT_IDS } from '../utils/ads';
+import { AD_UNIT_IDS, initializeMobileAds } from '../utils/ads';
 
 const useRewardedAd = (onRewardEarned) => {
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(null);
+  const [reloadToken, setReloadToken] = useState(0);
   const rewardedRef = useRef(null);
+  const rewardCallbackRef = useRef(onRewardEarned);
 
   useEffect(() => {
-    loadAd();
-  }, []);
+    rewardCallbackRef.current = onRewardEarned;
+  }, [onRewardEarned]);
 
-  const loadAd = () => {
-    const ad = RewardedAd.createForAdRequest(
-      AD_UNIT_IDS.rewarded,
-      {
-        requestNonPersonalizedAdsOnly: false,
-      }
-    );
+  useEffect(() => {
+    let active = true;
+    let unsubscribers = [];
+    setLoaded(false);
+    setError(null);
 
-    ad.addAdEventListener(AdEventType.LOADED, () => {
-      console.log('✅ Rewarded ad loaded');
-      setLoaded(true);
-    });
+    initializeMobileAds()
+      .then(() => {
+        if (!active) return;
+        const ad = RewardedAd.createForAdRequest(AD_UNIT_IDS.rewarded, {
+          requestNonPersonalizedAdsOnly: false,
+        });
+        rewardedRef.current = ad;
 
-    ad.addAdEventListener(
-      RewardedAdEventType.EARNED_REWARD,
-      (reward) => {
-        console.log('🎁 User earned reward:', reward);
-        if (onRewardEarned) onRewardEarned(reward);
-      }
-    );
+        unsubscribers = [
+          ad.addAdEventListener(RewardedAdEventType.LOADED, () => {
+            console.log('✅ Rewarded ad loaded');
+            setLoaded(true);
+          }),
+          ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, (reward) => {
+            console.log('🎁 User earned reward:', reward);
+            rewardCallbackRef.current?.(reward);
+          }),
+          ad.addAdEventListener(AdEventType.CLOSED, () => {
+            setLoaded(false);
+            setReloadToken((current) => current + 1);
+          }),
+          ad.addAdEventListener(AdEventType.ERROR, (adError) => {
+            console.warn('Rewarded ad error:', adError);
+            setLoaded(false);
+            setError(adError);
+          }),
+        ];
 
-    ad.addAdEventListener(AdEventType.CLOSED, () => {
-      setLoaded(false);
-      loadAd(); // preload next ad
-    });
+        ad.load();
+      })
+      .catch((initializationError) => {
+        if (active) setError(initializationError);
+      });
 
-    ad.addAdEventListener(AdEventType.ERROR, (error) => {
-      console.log('❌ Rewarded ad error:', error);
-      setLoaded(false);
-    });
+    return () => {
+      active = false;
+      unsubscribers.forEach((unsubscribe) => unsubscribe());
+      rewardedRef.current = null;
+    };
+  }, [reloadToken]);
 
-    ad.load();
-    rewardedRef.current = ad;
-  };
+  const retry = () => setReloadToken((current) => current + 1);
 
-  const showAd = () => {
+  const showAd = async () => {
     if (loaded && rewardedRef.current) {
-      rewardedRef.current.show();
-    } else {
-      console.log('Ad not ready yet');
+      try {
+        await rewardedRef.current.show();
+        return true;
+      } catch (showError) {
+        console.warn('Could not show rewarded ad:', showError);
+        setLoaded(false);
+        setError(showError);
+        return false;
+      }
     }
+    if (error) retry();
+    return false;
   };
 
-  return { showAd, loaded };
+  return { showAd, loaded, error, retry };
 };
 
 export default useRewardedAd;

@@ -19,8 +19,10 @@ const QUICK_SUGGESTIONS = [
   'Motivate me! ⚡',
 ];
 
+const FREE_MESSAGE_LIMIT = 10;
+
 const AIAssistant = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [messages, setMessages] = useState([
     { role: 'assistant', content: `Hey ${user?.name || 'there'}! 👋 I’m your Deeply Fit AI coach. Ask me anything about your nutrition, workouts, or goals! 💪` },
   ]);
@@ -29,6 +31,13 @@ const AIAssistant = () => {
   const [coachMode, setCoachMode] = useState('live');
   const scrollRef = useRef(null);
   const initials = getInitials(user?.name, user?.email);
+  const proUser = isPro(user);
+  const today = new Date().toISOString().slice(0, 10);
+  const messagesUsedToday = user?.free_ai_messages_reset_on === today
+    ? Number(user?.free_ai_messages_used || 0)
+    : 0;
+  const messagesRemaining = Math.max(FREE_MESSAGE_LIMIT - messagesUsedToday, 0);
+  const dailyLimitReached = !proUser && messagesRemaining === 0;
 
   useEffect(() => {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
@@ -47,7 +56,9 @@ const AIAssistant = () => {
       const response = await api.chat({ message: msg, history });
       setCoachMode(response.mode === 'limited' ? 'limited' : 'live');
       setMessages((prev) => [...prev, { role: 'assistant', content: response.response }]);
+      if (!proUser) await refreshUser();
     } catch (err) {
+      if (!proUser && err?.status === 402) await refreshUser();
       Toast.show({ type: 'error', text1: err.message || 'Could not reach AI coach' });
       setInput(msg);
     } finally {
@@ -56,7 +67,7 @@ const AIAssistant = () => {
   };
 
   return (
-    <KeyboardAvoidingView style={s.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={s.page} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <AppBackdrop />
       <View style={s.header}>
         <FloatingView distance={3} duration={1450}><Text style={s.headerIcon}>🤖</Text></FloatingView>
@@ -78,13 +89,19 @@ const AIAssistant = () => {
 
       <View style={s.planBanner}>
         <Text style={s.planBannerText}>
-          {isPro(user)
+          {proUser
             ? 'PRO • Unlimited messages + 30-day memory'
-            : 'FREE • 10 AI coach messages/day'}
+            : `FREE • ${messagesRemaining} of ${FREE_MESSAGE_LIMIT} AI coach messages left today`}
         </Text>
       </View>
 
-      <ScrollView ref={scrollRef} style={s.messages} contentContainerStyle={{ padding: spacing.md }}>
+      <ScrollView
+        ref={scrollRef}
+        style={s.messages}
+        contentContainerStyle={s.messagesContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+      >
         {messages.map((msg, index) => (
           <MotionView key={`${msg.role}-${index}`} style={[s.msgRow, msg.role === 'user' ? s.msgRowUser : s.msgRowAssistant]} delay={Math.min(index * 45, 260)} variant={msg.role === 'assistant' ? 'left' : 'rise'} layout>
             {msg.role === 'assistant' && <Text style={s.botAvatar}>🤖</Text>}
@@ -114,15 +131,20 @@ const AIAssistant = () => {
 
       <View style={s.inputArea}>
         <TextInput
-          style={s.input}
-          placeholder="Ask your AI coach anything..."
+          style={[s.input, dailyLimitReached && s.inputDisabled]}
+          placeholder={dailyLimitReached ? 'Daily message limit reached' : 'Ask your AI coach anything...'}
           placeholderTextColor={colors.textMuted}
           value={input}
           onChangeText={setInput}
+          editable={!dailyLimitReached}
           multiline
           maxHeight={100}
         />
-        <MotionPressable style={s.sendBtn} onPress={() => sendMessage()} disabled={!input.trim() || loading}>
+        <MotionPressable
+          style={[s.sendBtn, dailyLimitReached && s.sendBtnDisabled]}
+          onPress={() => sendMessage()}
+          disabled={dailyLimitReached || !input.trim() || loading}
+        >
           {loading ? <ActivityIndicator size="small" color={colors.textInverse} /> : <Text style={s.sendBtnText}>↑</Text>}
         </MotionPressable>
       </View>
@@ -158,6 +180,7 @@ const s = createThemedStyles(() => ({
   planBanner: { paddingHorizontal: spacing.lg, paddingTop: 8, paddingBottom: 4 },
   planBannerText: { color: colors.textSecondary, fontSize: 11, fontWeight: '600' },
   messages: { flex: 1 },
+  messagesContent: { padding: spacing.md, paddingBottom: spacing.sm },
   msgRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 10 },
   msgRowUser: { justifyContent: 'flex-end' },
   msgRowAssistant: { justifyContent: 'flex-start' },
@@ -174,6 +197,7 @@ const s = createThemedStyles(() => ({
   suggestionText: { color: colors.textSecondary, fontSize: 12 },
   inputArea: { flexDirection: 'row', alignItems: 'flex-end', padding: spacing.md, backgroundColor: colors.bgCard, borderTopWidth: 1, borderTopColor: colors.border },
   input: { flex: 1, backgroundColor: colors.bgElevated, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9, color: colors.textPrimary, fontSize: 14, borderWidth: 1, borderColor: colors.border, marginRight: 8 },
+  inputDisabled: { opacity: 0.7 },
   sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accentLime, alignItems: 'center', justifyContent: 'center' },
   sendBtnDisabled: { opacity: 0.4 },
   sendBtnText: { color: colors.textInverse, fontWeight: '800', fontSize: 18 },

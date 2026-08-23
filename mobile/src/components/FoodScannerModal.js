@@ -29,7 +29,7 @@ const FoodScannerModal = ({ visible, onClose, onSuccess, defaultMeal = 'breakfas
   const [extraScansToday, setExtraScansToday] = useState(0);
   const cameraRef = useRef(null);
 
-  const { showAd, loaded: rewardedLoaded } = useRewardedAd(
+  const { showAd, loaded: rewardedLoaded, error: rewardedError, retry: retryRewardedAd } = useRewardedAd(
     (reward) => {
       // User watched full ad -> give 1 extra scan
       setExtraScansToday((prev) => prev + 1);
@@ -175,10 +175,10 @@ const FoodScannerModal = ({ visible, onClose, onSuccess, defaultMeal = 'breakfas
                 </TouchableOpacity>
               )}
 
-              {!user?.is_pro && (
+              {!isPro(user) && (
                 <TouchableOpacity
-                  onPress={showAd}
-                  disabled={!rewardedLoaded}
+                  onPress={rewardedError ? retryRewardedAd : showAd}
+                  disabled={!rewardedLoaded && !rewardedError}
                   style={{
                     backgroundColor: '#c8f135',
                     padding: 14,
@@ -194,7 +194,9 @@ const FoodScannerModal = ({ visible, onClose, onSuccess, defaultMeal = 'breakfas
                   }}>
                     {rewardedLoaded
                       ? '📺 Watch Ad for 1 Free Scan'
-                      : '⏳ Loading ad...'}
+                      : rewardedError
+                        ? '🔄 Retry rewarded ad'
+                        : '⏳ Loading ad...'}
                   </Text>
                 </TouchableOpacity>
               )}

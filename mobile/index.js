@@ -1,7 +1,6 @@
 import 'react-native-gesture-handler';
 import React, { useEffect } from 'react';
 import { registerRootComponent } from 'expo';
-import mobileAds from 'react-native-google-mobile-ads';
 import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -16,6 +15,7 @@ import { Inter_800ExtraBold } from '@expo-google-fonts/inter/800ExtraBold';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { NetworkProvider } from './src/context/NetworkContext';
 import AppNavigator from './src/navigation/AppNavigator';
+import { initializeMobileAds } from './src/utils/ads';
 import { colors, getThemeColors, isDarkModeEnabled, setThemeMode, typography } from './src/utils/theme';
 
 const defaultTextStyle = { fontFamily: typography.fontFamily.regular };
@@ -57,8 +57,7 @@ const ThemedApplication = () => {
 
 export default function App() {
   useEffect(() => {
-    mobileAds()
-      .initialize()
+    initializeMobileAds()
       .then((adapterStatuses) => {
         console.log('✅ AdMob initialized:', adapterStatuses);
       })

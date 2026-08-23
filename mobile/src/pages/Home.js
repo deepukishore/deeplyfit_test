@@ -9,6 +9,7 @@ import { createEmptySummary, getCachedDiaryDate } from '../utils/storage';
 import { getGreeting, getDailyQuote, formatDate, getWorkoutSuggestions, getInitials } from '../utils/fitness';
 import { formatFoodAmount, scaleNutrition } from '../utils/nutrition';
 import { estimateWorkoutCalories } from '../utils/workoutCalories';
+import { isPro } from '../utils/premium';
 import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import WorkoutPlannerModal from '../components/WorkoutPlannerModal';
 import UserAvatar from '../components/UserAvatar';
@@ -714,14 +715,21 @@ const Home = ({ navigation }) => {
               { icon: '\u{1F4C8}', label: 'Progress', action: () => navigation.navigate('Progress') },
               { icon: '\u{1F91D}', label: 'Community', action: () => navigation.navigate('Community') },
             ]).map((a) => (
-              <MotionPressable key={a.label} style={s.quickBtn} onPress={a.action} accessibilityLabel={`${a.label}. ${QUICK_ACTION_META[a.label]?.detail || 'Open action'}`}>
+              <TouchableOpacity
+                key={a.label}
+                style={s.quickBtn}
+                onPress={a.action}
+                activeOpacity={0.72}
+                accessibilityRole="button"
+                accessibilityLabel={`${a.label}. ${QUICK_ACTION_META[a.label]?.detail || 'Open action'}`}
+              >
                 <View style={[s.quickIcon, { backgroundColor: QUICK_ACTION_META[a.label]?.tone || colors.glowPurple }]}><Text style={s.quickIconText}>{QUICK_ACTION_ICONS[a.label] || a.icon}</Text></View>
                 <View style={s.quickCopy}>
                   <Text style={s.quickLabel}>{a.label}</Text>
                   <Text style={s.quickDetail}>{QUICK_ACTION_META[a.label]?.detail || 'Open'}</Text>
                 </View>
                 <Text style={s.quickArrow}>›</Text>
-              </MotionPressable>
+              </TouchableOpacity>
             ))}
           </View>
         </MotionView>
@@ -745,17 +753,14 @@ const Home = ({ navigation }) => {
             </MotionPressable>
           ))}
         </MotionView>
+
+        {!isPro(user) && <BannerAdComponent style={s.bannerAd} />}
       </ScrollView>
 
       {modal === 'food' && <LogFoodModal onClose={() => setModal(null)} onSave={refreshHomeData} />}
       {modal === 'workout' && <LogWorkoutModal user={user} preset={workoutPreset} onClose={() => { setModal(null); setWorkoutPreset(null); }} onSave={refreshHomeData} />}
       {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={refreshHomeData} />}
       {showPlanner && <WorkoutPlannerModal visible={showPlanner} user={user} date={today} onClose={() => setShowPlanner(false)} onSuccess={refreshHomeData} />}
-      {!user?.is_pro && (
-        <BannerAdComponent
-          style={{ marginBottom: 72 }}
-        />
-      )}
     </View>
   );
 };
@@ -769,6 +774,7 @@ const s = createThemedStyles(() => ({
   avatarText: { color: '#fff', fontWeight: '800', fontSize: 14 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
+  bannerAd: { marginBottom: spacing.md },
   quoteCard: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: 'rgba(124,58,237,0.16)', shadowColor: '#4b2679', shadowOpacity: 0.08, shadowRadius: 15, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
   quoteText: { color: colors.textSecondary, fontSize: 13, fontStyle: 'italic', lineHeight: 20 },
   card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: '#4b2679', shadowOpacity: 0.09, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 3 },

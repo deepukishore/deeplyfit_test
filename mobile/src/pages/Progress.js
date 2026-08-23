@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, TextInput, RefreshControl, Dimensions } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import Svg, { Circle, Line as SvgLine, Path, Polyline } from 'react-native-svg';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
@@ -167,6 +168,11 @@ const Progress = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showWeightModal, setShowWeightModal] = useState(false);
+  const scrollRef = useRef(null);
+
+  useFocusEffect(useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, []));
 
   const loadData = useCallback(async () => {
     try {
@@ -245,7 +251,12 @@ const Progress = () => {
         </Text>
       </View>
 
-      <ScrollView style={s.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accentLime} />}>
+      <ScrollView
+        ref={scrollRef}
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accentLime} />}
+      >
         {loading ? (
           <ActivityIndicator color={colors.accentLime} style={{ marginTop: 40 }} />
         ) : (
@@ -422,7 +433,8 @@ const s = createThemedStyles(() => ({
   addBtnText: { color: colors.textInverse, fontWeight: '700', fontSize: 12 },
   proBanner: { paddingHorizontal: spacing.lg, paddingTop: 8, paddingBottom: 2 },
   proBannerText: { color: colors.textSecondary, fontSize: 11, fontWeight: '600' },
-  scroll: { flex: 1, padding: spacing.lg },
+  scroll: { flex: 1 },
+  scrollContent: { padding: spacing.lg, paddingBottom: spacing.xl },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.md },
   statCard: {
     flex: 1,
