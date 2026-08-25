@@ -305,7 +305,7 @@ const shared = infoPageStyles;
 const s = createThemedStyles(() => ({
   planGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: spacing.lg },
   planCard: { width: '48%', minHeight: 116, padding: spacing.lg, borderRadius: radius.lg, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
-  planCardSelected: { borderColor: colors.accentPurple, backgroundColor: colors.glowPurple },
+  planCardSelected: { borderColor: colors.accentPurple, backgroundColor: 'rgba(139,92,246,0.1)' },
   planName: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
   price: { color: colors.textPrimary, fontSize: 24, fontWeight: '900', marginTop: 6 },
   planDetail: { color: colors.textMuted, fontSize: 10, marginTop: 5 },

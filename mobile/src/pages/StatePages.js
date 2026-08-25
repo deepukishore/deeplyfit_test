@@ -233,7 +233,7 @@ const s = createThemedStyles(() => ({
   stateCard: { alignItems: 'center', padding: spacing.xl, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl },
   mark: { width: 72, height: 72, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border, marginBottom: 20 },
   markText: { color: colors.accentPurple, fontSize: 20, fontWeight: '900', letterSpacing: 1 },
-  mark_purple: { backgroundColor: colors.glowPurple, borderColor: colors.border },
+  mark_purple: { backgroundColor: 'rgba(139,92,246,0.12)', borderColor: 'rgba(139,92,246,0.28)' },
   mark_amber: { backgroundColor: 'rgba(245,166,35,0.12)', borderColor: 'rgba(245,166,35,0.28)' },
   mark_coral: { backgroundColor: 'rgba(248,113,113,0.12)', borderColor: 'rgba(248,113,113,0.28)' },
   mark_lime: { backgroundColor: 'rgba(200,241,53,0.12)', borderColor: 'rgba(200,241,53,0.28)' },

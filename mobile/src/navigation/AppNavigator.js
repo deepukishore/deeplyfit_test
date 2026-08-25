@@ -179,10 +179,10 @@ const styles = createThemedStyles(() => ({
   loading: { flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' },
   loadingLogo: { width: 76, height: 76, borderRadius: 20, marginBottom: 18 },
   loadingText: { color: colors.textSecondary, marginTop: 14, fontSize: 14 },
-  tabBar: { marginHorizontal: 9, marginBottom: 6, paddingTop: 6, backgroundColor: colors.bgCard, borderWidth: 1, borderTopWidth: 1, borderColor: colors.border, borderRadius: 26, shadowColor: '#000000', shadowOpacity: 0.28, shadowRadius: 22, shadowOffset: { width: 0, height: -8 }, elevation: 20, overflow: 'visible' },
+  tabBar: { marginHorizontal: 9, marginBottom: 6, paddingTop: 6, backgroundColor: colors.bgCard, borderWidth: 1, borderTopWidth: 1, borderColor: colors.border, borderRadius: 23, shadowColor: '#311a57', shadowOpacity: 0.2, shadowRadius: 22, shadowOffset: { width: 0, height: -8 }, elevation: 20, overflow: 'visible' },
   tabItem: { marginHorizontal: 1, borderRadius: 16 },
   tabIcon: { width: 36, height: 31, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
-  tabIconActive: { backgroundColor: colors.glowPurple, borderWidth: 1, borderColor: colors.border, shadowColor: colors.accentBlue, shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  tabIconActive: { backgroundColor: colors.glowPurple, borderWidth: 1, borderColor: 'rgba(124,58,237,0.2)', shadowColor: colors.accentPurple, shadowOpacity: 0.22, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   tabIconText: { fontSize: 19 },
   tabIndicator: { position: 'absolute', width: 13, height: 2.5, borderRadius: 2, bottom: 1, backgroundColor: colors.accentLime },
 }));
