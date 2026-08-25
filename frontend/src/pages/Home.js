@@ -473,7 +473,6 @@ const Home = () => {
   const [summary, setSummary] = useState(() => getInitialHomeSummary(today, user));
   const [suggestionsData, setSuggestionsData] = useState(null);
   const [recentWorkoutHistory, setRecentWorkoutHistory] = useState([]);
-  const [calorieStreak, setCalorieStreak] = useState(null);
   const [achievements, setAchievements] = useState([]);
   const [waterGoal, setWaterGoal] = useState(8);
   const [showHydrationModal, setShowHydrationModal] = useState(false);
@@ -525,18 +524,15 @@ const Home = () => {
   useEffect(() => { loadSummary(); }, [loadSummary]);
 
   useEffect(() => {
-    api.getCalorieStreak().then(setCalorieStreak).catch(() => {});
     api.getWaterGoal().then(d => setWaterGoal(d.water_goal || 8)).catch(() => {});
   }, []);
 
   useRefreshRegistration(async () => {
-    const [, streak, water] = await Promise.all([
+    const [, water] = await Promise.all([
       loadSummary({ rotateSuggestions: true }),
-      api.getCalorieStreak().catch(() => null),
       api.getWaterGoal().catch(() => null),
     ]);
 
-    if (streak) setCalorieStreak(streak);
     if (water) setWaterGoal(water.water_goal || 8);
   });
 
@@ -587,7 +583,8 @@ const Home = () => {
     { name: 'Carbs', value: summary?.carbs || 0, target: user?.carbs_target || 200, color: MACRO_COLORS[1] },
     { name: 'Fat', value: summary?.fat || 0, target: user?.fat_target || 65, color: MACRO_COLORS[2] },
   ];
-  const streakDays = Math.min(calorieStreak?.current_streak || 0, 7);
+  const streakAchievement = achievements.find((achievement) => achievement.key === 'streak_7');
+  const streakDays = Math.min(Number(streakAchievement?.progress?.current || 0), 7);
 
   const hydrationMissionTarget = Math.max(1, Math.min(waterGoal, 4));
   const dailyMissions = [
@@ -635,8 +632,8 @@ const Home = () => {
             <p className="greeting-text">{getGreeting()}</p>
             <h1 className="greeting-name">{user?.name || user?.email?.split('@')[0] || 'Athlete'}</h1>
             <p className="home-streak-subtitle">
-              {calorieStreak?.current_streak
-                ? `You're ${calorieStreak.current_streak} days into your streak.`
+              {streakDays
+                ? `Best activity run: ${streakDays} days.`
                 : 'Make today count.'}
             </p>
           </div>
@@ -729,13 +726,13 @@ const Home = () => {
           </div>
         </section>
 
-        {calorieStreak && (
+        {streakAchievement && (
           <section className="streak-command-card animate-slide-up">
             <div className="streak-command-head">
-              <span className={`streak-fire ${calorieStreak.current_streak >= 3 ? 'is-hot' : ''}`}><Flame size={30} fill="currentColor" /></span>
+              <span className={`streak-fire ${streakDays >= 3 ? 'is-hot' : ''}`}><Flame size={30} fill="currentColor" /></span>
               <div>
-                <h2>{calorieStreak.current_streak}-Day Streak</h2>
-                <p>Best run: {calorieStreak.best_streak} days</p>
+                <h2>Consistency streak</h2>
+                <p>Best activity run: {streakDays} days</p>
               </div>
               <strong>{streakDays}/7</strong>
             </div>
@@ -748,7 +745,7 @@ const Home = () => {
               ))}
             </div>
             <p className="streak-nudge">
-              {streakDays === 7 ? 'Week Warrior unlocked.' : `Keep going. ${7 - streakDays} more ${7 - streakDays === 1 ? 'day' : 'days'} to unlock Week Warrior.`}
+              {streakDays === 7 ? 'Week Warrior unlocked.' : `Keep logging. ${7 - streakDays} more consecutive ${7 - streakDays === 1 ? 'day' : 'days'} to unlock Week Warrior.`}
             </p>
           </section>
         )}

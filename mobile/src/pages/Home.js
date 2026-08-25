@@ -388,7 +388,6 @@ const Home = ({ navigation }) => {
   const [summary, setSummary] = useState(() => createEmptySummary(today, { calories_target: user?.calorie_target || 2000 }));
   const [suggestionsData, setSuggestionsData] = useState(null);
   const [recentWorkoutHistory, setRecentWorkoutHistory] = useState([]);
-  const [calorieStreak, setCalorieStreak] = useState(null);
   const [achievements, setAchievements] = useState([]);
   const [waterGoal, setWaterGoal] = useState(8);
   const [refreshing, setRefreshing] = useState(false);
@@ -420,12 +419,10 @@ const Home = ({ navigation }) => {
   }, [today]);
 
   const refreshHomeData = useCallback(async ({ rotateSuggestions = false } = {}) => {
-    const [, streak, water] = await Promise.all([
+    const [, water] = await Promise.all([
       loadSummary({ rotateSuggestions }),
-      api.getCalorieStreak().catch(() => null),
       api.getWaterGoal().catch(() => null),
     ]);
-    if (streak) setCalorieStreak(streak);
     if (water) setWaterGoal(water.water_goal || 8);
   }, [loadSummary]);
 
@@ -479,7 +476,8 @@ const Home = ({ navigation }) => {
   const progress = Math.min(((summary?.calories_consumed || 0) / (summary?.calories_target || 2000)) * 100, 100);
   const suggestions = getWorkoutSuggestions(user?.fitness_goal);
   const initials = getInitials(user?.name, user?.email);
-  const streakDays = Math.min(calorieStreak?.current_streak || 0, 7);
+  const streakAchievement = achievements.find((achievement) => achievement.key === 'streak_7');
+  const streakDays = Math.min(Number(streakAchievement?.progress?.current || 0), 7);
   const macroRows = [
     { name: 'Protein', value: summary?.protein || 0, target: user?.protein_target || 140, color: MACRO_COLORS[0] },
     { name: 'Carbs', value: summary?.carbs || 0, target: user?.carbs_target || 200, color: MACRO_COLORS[1] },
@@ -594,13 +592,13 @@ const Home = ({ navigation }) => {
           <Text style={s.progressLabel}>{Math.round(progress)}% of goal</Text>
         </MotionView>
 
-        {calorieStreak && (
-          <MotionView depth accentColor="rgba(245,166,35,0.16)" style={s.card} delay={120}>
+        {streakAchievement && (
+          <MotionView depth accentColor="rgba(245,166,35,0.16)" style={[s.card, s.streakCard]} delay={120}>
             <View style={s.streakHead}>
               <View style={s.streakIcon}><Text style={s.streakIconText}>F</Text></View>
               <View style={{ flex: 1 }}>
-                <Text style={s.streakTitle}>{calorieStreak.current_streak}-Day Streak</Text>
-                <Text style={s.streakSubtitle}>Best run: {calorieStreak.best_streak} days</Text>
+                <Text style={s.streakTitle}>Consistency streak</Text>
+                <Text style={s.streakSubtitle}>Best activity run: {streakDays} days</Text>
               </View>
               <Text style={s.streakCount}>{streakDays}/7</Text>
             </View>
@@ -616,7 +614,7 @@ const Home = ({ navigation }) => {
               ))}
             </View>
             <Text style={s.streakNudge}>
-              {streakDays === 7 ? 'Week Warrior unlocked.' : `Keep going. ${7 - streakDays} more ${7 - streakDays === 1 ? 'day' : 'days'} to unlock Week Warrior.`}
+              {streakDays === 7 ? 'Week Warrior unlocked.' : `Keep logging. ${7 - streakDays} more consecutive ${7 - streakDays === 1 ? 'day' : 'days'} to unlock Week Warrior.`}
             </Text>
           </MotionView>
         )}
@@ -816,6 +814,7 @@ const s = createThemedStyles(() => ({
   sectionKicker: { color: colors.textMuted, fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
   sectionTitleFlush: { marginBottom: 0 },
   streakHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  streakCard: { flexGrow: 0, minHeight: 0 },
   streakIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(245,166,35,0.13)', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   streakIconText: { color: colors.accentAmber, fontSize: 17, fontWeight: '900' },
   streakTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: '800' },

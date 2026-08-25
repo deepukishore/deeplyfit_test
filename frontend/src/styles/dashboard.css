@@ -2787,6 +2787,8 @@
 }
 
 .streak-command-card {
+  align-self: start;
+  min-height: 0;
   background: linear-gradient(145deg, rgba(245,166,35,0.08), transparent 58%), var(--bg-card);
 }
 
