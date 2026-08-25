@@ -491,7 +491,7 @@ const s = createThemedStyles(() => ({
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, fontSize: 11, fontWeight: '700', overflow: 'hidden' },
   badgeLime: { backgroundColor: 'rgba(200,241,53,0.12)', color: colors.accentLime },
   badgeAmber: { backgroundColor: 'rgba(245,166,35,0.12)', color: colors.accentAmber },
-  badgePurple: { backgroundColor: 'rgba(124,58,237,0.1)', color: colors.accentPurple },
+  badgePurple: { backgroundColor: colors.glowPurple, color: colors.accentPurple },
   publicProfileBody: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
   publicHandleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
   publicLinkIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(37,99,235,0.1)', marginRight: 11 },

@@ -493,10 +493,10 @@
 /* Premium translucent navigation surface */
 .bottom-nav {
   background:
-    linear-gradient(110deg, rgba(var(--accent-primary-rgb), 0.08), rgba(79, 172, 254, 0.035)),
-    rgba(16, 16, 26, 0.88);
+    linear-gradient(110deg, rgba(var(--accent-primary-rgb), 0.055), rgba(127, 207, 255, 0.025)),
+    rgba(31, 33, 35, 0.94);
   border-color: color-mix(in srgb, var(--accent-lime) 14%, var(--border));
-  box-shadow: 0 -12px 40px rgba(18, 10, 34, 0.2);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(30px) saturate(1.2);
   -webkit-backdrop-filter: blur(30px) saturate(1.2);
 }
@@ -504,30 +504,30 @@
 .light .bottom-nav {
   background:
     radial-gradient(circle at 12% 0%, rgba(var(--accent-primary-rgb), 0.13), transparent 28%),
-    linear-gradient(110deg, rgba(var(--accent-primary-rgb), 0.09), rgba(79, 172, 254, 0.055)),
+    linear-gradient(110deg, rgba(var(--accent-primary-rgb), 0.07), rgba(127, 207, 255, 0.04)),
     rgba(255, 255, 255, 0.88);
-  border-color: rgba(112,72,173,0.16);
-  box-shadow: 0 -14px 42px rgba(45, 28, 72, 0.15), inset 0 1px 0 rgba(255,255,255,0.95);
+  border-color: rgba(38, 57, 77, 0.14);
+  box-shadow: 0 -14px 42px rgba(31, 52, 71, 0.12), inset 0 1px 0 rgba(255,255,255,0.95);
 }
 
 .light .nav-item.active .nav-icon-bg {
-  background: linear-gradient(135deg, rgba(168,85,247,0.22), rgba(79,172,254,0.13));
-  border: 1px solid rgba(124,58,237,0.12);
-  box-shadow: 0 8px 20px rgba(124,58,237,0.16), inset 0 1px 0 rgba(255,255,255,0.74);
+  background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.2), rgba(127,207,255,0.12));
+  border: 1px solid rgba(var(--accent-primary-rgb), 0.14);
+  box-shadow: 0 8px 20px rgba(var(--accent-primary-rgb), 0.14), inset 0 1px 0 rgba(255,255,255,0.74);
 }
 
 .nav-item.active .nav-icon-bg {
-  background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.19), rgba(79, 172, 254, 0.1));
+  background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.19), rgba(127, 207, 255, 0.1));
   box-shadow: 0 7px 20px rgba(var(--accent-primary-rgb), 0.15);
 }
 
 @media (min-width: 900px) {
   .bottom-nav,
   .light .bottom-nav {
-    box-shadow: 18px 0 52px rgba(32, 18, 58, 0.11);
+    box-shadow: 18px 0 52px rgba(17, 27, 36, 0.12);
   }
 
   .nav-item.active {
-    background: linear-gradient(90deg, rgba(var(--accent-primary-rgb), 0.12), rgba(79, 172, 254, 0.04), transparent);
+    background: linear-gradient(90deg, rgba(var(--accent-primary-rgb), 0.12), rgba(127, 207, 255, 0.04), transparent);
   }
 }

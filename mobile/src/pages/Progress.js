@@ -484,7 +484,7 @@ const s = createThemedStyles(() => ({
   achievementHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   achievementGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   achievementCard: { width: '48%', minHeight: 94, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderRadius: radius.md, padding: 9, borderWidth: 1, borderColor: colors.border, opacity: 0.62 },
-  achievementUnlocked: { opacity: 1, borderColor: colors.accentPurple, backgroundColor: 'rgba(124,58,237,0.09)' },
+  achievementUnlocked: { opacity: 1, borderColor: colors.accentPurple, backgroundColor: colors.glowPurple },
   achievementIcon: { fontSize: 20, marginBottom: 6 },
   achievementName: { color: colors.textSecondary, fontSize: 9, fontWeight: '700', textAlign: 'center' },
   achievementProgress: { color: colors.textMuted, fontSize: 8, marginTop: 5 },

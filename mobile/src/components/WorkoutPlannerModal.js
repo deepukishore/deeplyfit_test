@@ -187,10 +187,10 @@ const WorkoutPlannerModal = ({ visible = true, user, date, onClose, onSuccess })
 
 const s = createThemedStyles(() => ({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing.xl, maxHeight: '92%', borderWidth: 1, borderColor: 'rgba(124,58,237,0.18)', shadowColor: '#24113f', shadowOpacity: 0.24, shadowRadius: 26, shadowOffset: { width: 0, height: -10 }, elevation: 24 },
+  sheet: { backgroundColor: colors.bgCard, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing.xl, maxHeight: '92%', borderWidth: 1, borderColor: colors.border, shadowColor: '#000000', shadowOpacity: 0.3, shadowRadius: 26, shadowOffset: { width: 0, height: -10 }, elevation: 24 },
   handle: { width: 44, height: 5, backgroundColor: colors.accentPurple, borderRadius: 3, alignSelf: 'center', marginBottom: 16 },
   modalTitle: { fontSize: 20, fontWeight: '800', color: colors.textPrimary, marginBottom: 20 },
-  heroCard: { minHeight: 142, justifyContent: 'center', backgroundColor: 'rgba(237,228,255,0.94)', borderRadius: radius.xl, padding: spacing.lg, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(124,58,237,0.2)', shadowColor: '#5d2d93', shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  heroCard: { minHeight: 142, justifyContent: 'center', backgroundColor: colors.bgElevated, borderRadius: radius.xl, padding: spacing.lg, marginBottom: 16, borderWidth: 1, borderColor: colors.border, shadowColor: '#000000', shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
   heroEyebrow: { fontSize: 11, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
   heroTitle: { fontSize: 18, fontWeight: '800', color: colors.textPrimary, marginBottom: 4 },
   heroDesc: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
@@ -211,7 +211,7 @@ const s = createThemedStyles(() => ({
   caloriePreviewBasis: { color: colors.textMuted, fontSize: 10, lineHeight: 14, marginTop: 2 },
   caloriePreviewValue: { color: colors.accentAmber, fontSize: 18, fontWeight: '800', marginLeft: 8 },
   caloriePreviewDisclaimer: { color: colors.textMuted, fontSize: 9, lineHeight: 13 },
-  exerciseCard: { backgroundColor: 'rgba(248,245,255,0.92)', borderRadius: radius.xl, padding: spacing.md, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(91,57,143,0.13)', shadowColor: '#4b2679', shadowOpacity: 0.07, shadowRadius: 13, shadowOffset: { width: 0, height: 6 }, elevation: 2 },
+  exerciseCard: { backgroundColor: colors.bgElevated, borderRadius: radius.xl, padding: spacing.md, marginBottom: 14, borderWidth: 1, borderColor: colors.border, shadowColor: '#000000', shadowOpacity: 0.1, shadowRadius: 13, shadowOffset: { width: 0, height: 6 }, elevation: 2 },
   exerciseHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   exerciseName: { color: colors.textPrimary, fontWeight: '700', fontSize: 15 },
   exerciseDetail: { color: colors.textMuted, fontSize: 12, marginTop: 2 },

@@ -95,7 +95,7 @@ export const MotionPressable = ({
   onPressOut,
   accessibilityRole = 'button',
   accessibilityState,
-  android_ripple = { color: 'rgba(124,58,237,0.1)', borderless: false },
+  android_ripple = { color: colors.glowPurple, borderless: false },
   hitSlop = 4,
   ...props
 }) => {
