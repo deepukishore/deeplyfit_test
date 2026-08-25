@@ -18,6 +18,8 @@ import NoSearchResults from '../components/NoSearchResults';
 import AchievementsSection from '../components/AchievementsSection';
 import { AnimatedProgressFill, FloatingView, MotionPressable, MotionView } from '../components/Motion';
 import BannerAdComponent from '../components/BannerAdComponent';
+import HealthDashboardCard from '../components/HealthDashboardCard';
+import useStepCounter from '../hooks/useStepCounter';
 
 const MACRO_COLORS = ['#4facfe', '#a855f7', '#f5a623'];
 const QUICK_ACTION_META = {
@@ -383,6 +385,7 @@ const LogWeightModal = ({ onClose, onSave }) => {
 
 const Home = ({ navigation }) => {
   const { user } = useAuth();
+  const stepCounter = useStepCounter(user?.id);
   const insets = useSafeAreaInsets();
   const today = formatDate(new Date());
   const [summary, setSummary] = useState(() => createEmptySummary(today, { calories_target: user?.calorie_target || 2000 }));
@@ -497,8 +500,8 @@ const Home = ({ navigation }) => {
       key: 'move',
       icon: '\u{1F3C3}',
       title: 'Move your body',
-      detail: 'Complete one activity',
-      complete: Number(summary?.calories_burned || 0) > 0 || Boolean(summary?.workouts?.length),
+      detail: stepCounter.isConnected ? `${Math.min(stepCounter.steps, 2000).toLocaleString()}/2,000 steps` : 'Complete one activity',
+      complete: stepCounter.steps >= 2000 || Number(summary?.calories_burned || 0) > 0 || Boolean(summary?.workouts?.length),
       action: () => openWorkout(),
     },
     {
@@ -540,6 +543,13 @@ const Home = ({ navigation }) => {
         <MotionView depth accentColor={colors.glowBlue} style={s.quoteCard} delay={20} variant="fade">
           <Text style={s.quoteText}>💬 "{getDailyQuote()}"</Text>
         </MotionView>
+
+        <HealthDashboardCard
+          counter={stepCounter}
+          summary={summary}
+          user={user}
+          onOpenProgress={() => navigation.navigate('Progress')}
+        />
 
         <MotionView depth accentColor="rgba(245,166,35,0.18)" style={[s.card, s.missionCard]} delay={50}>
           <View style={s.missionHeader}>

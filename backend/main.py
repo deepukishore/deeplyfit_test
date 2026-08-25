@@ -6,7 +6,7 @@ import os
 
 from database import engine, Base, get_db
 import models
-from routes import auth, users, food_logs, workouts, water_logs, weight_logs, meal_templates, achievements, ai_chat, meal_plans, community, payments
+from routes import activity, auth, users, food_logs, workouts, water_logs, weight_logs, meal_templates, achievements, ai_chat, meal_plans, community, payments
 from routes.auth import get_current_user
 from schemas import FoodScanRequest, FoodLogCreate
 from ai.gemini_food import analyze_food_image
@@ -97,6 +97,7 @@ app.include_router(food_logs.router)
 app.include_router(workouts.router)
 app.include_router(water_logs.router)
 app.include_router(weight_logs.router)
+app.include_router(activity.router)
 app.include_router(meal_templates.router)
 app.include_router(achievements.router)
 app.include_router(ai_chat.router)

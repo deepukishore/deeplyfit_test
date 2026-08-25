@@ -56,6 +56,7 @@ class User(Base):
     workouts = relationship("Workout", back_populates="user")
     water_logs = relationship("WaterLog", back_populates="user")
     weight_logs = relationship("WeightLog", back_populates="user")
+    step_logs = relationship("StepLog", back_populates="user")
     meal_templates = relationship("MealTemplate", back_populates="user")
     meal_plan_entries = relationship("MealPlanEntry", back_populates="user")
     community_posts = relationship("CommunityPost", back_populates="user")
@@ -129,6 +130,22 @@ class WeightLog(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="weight_logs")
+
+
+class StepLog(Base):
+    __tablename__ = "step_logs"
+    __table_args__ = (
+        UniqueConstraint("user_id", "date", name="uq_step_log_user_date"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    date = Column(Date, nullable=False, index=True)
+    steps = Column(Integer, nullable=False, default=0)
+    source = Column(String(40), nullable=False, default="device")
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    user = relationship("User", back_populates="step_logs")
 
 
 class PasswordResetToken(Base):

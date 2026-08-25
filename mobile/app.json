@@ -28,7 +28,9 @@
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.INTERNET",
-        "android.permission.ACCESS_NETWORK_STATE"
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.health.READ_STEPS"
       ]
     },
     "plugins": [
@@ -42,9 +44,26 @@
       "expo-status-bar",
       "expo-font",
       [
+        "expo-sensors",
+        {
+          "motionPermission": "Allow Deeply Fit to count your steps and show daily activity progress."
+        }
+      ],
+      "react-native-health-connect",
+      [
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-8055905329359163~3070566170"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "minSdkVersion": 26
+          }
         }
       ]
     ],

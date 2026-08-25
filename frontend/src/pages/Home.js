@@ -19,6 +19,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
 import AchievementsSection from '../components/AchievementsSection';
+import HealthOverview from '../components/HealthOverview';
 import NoSearchResults from '../components/NoSearchResults';
 import { useRefreshRegistration } from '../context/RefreshContext';
 import { api } from '../utils/api';
@@ -474,6 +475,8 @@ const Home = () => {
   const [suggestionsData, setSuggestionsData] = useState(null);
   const [recentWorkoutHistory, setRecentWorkoutHistory] = useState([]);
   const [achievements, setAchievements] = useState([]);
+  const [stepLog, setStepLog] = useState(null);
+  const [stepHistory, setStepHistory] = useState([]);
   const [waterGoal, setWaterGoal] = useState(8);
   const [showHydrationModal, setShowHydrationModal] = useState(false);
   const [modal, setModal] = useState(null);
@@ -505,11 +508,13 @@ const Home = () => {
     const variant = rotateSuggestions
       ? suggestionVariantRef.current + 1
       : suggestionVariantRef.current;
-    const [summaryResult, suggestionsResult, workoutResult, achievementsResult] = await Promise.allSettled([
+    const [summaryResult, suggestionsResult, workoutResult, achievementsResult, stepsResult, stepHistoryResult] = await Promise.allSettled([
       api.getDailySummary(today),
       api.getMealSuggestions(today, { variant }),
       api.getWorkoutHistory(3),
       api.getAchievements(),
+      api.getSteps(today),
+      api.getStepHistory(7),
     ]);
 
     if (summaryResult.status === 'fulfilled') setSummary(summaryResult.value);
@@ -519,6 +524,8 @@ const Home = () => {
     }
     if (workoutResult.status === 'fulfilled') setRecentWorkoutHistory(workoutResult.value);
     if (achievementsResult.status === 'fulfilled') setAchievements(achievementsResult.value);
+    if (stepsResult.status === 'fulfilled') setStepLog(stepsResult.value);
+    if (stepHistoryResult.status === 'fulfilled') setStepHistory(stepHistoryResult.value);
   }, [today]);
 
   useEffect(() => { loadSummary(); }, [loadSummary]);
@@ -600,8 +607,8 @@ const Home = () => {
       id: 'movement',
       icon: Dumbbell,
       label: 'Move with purpose',
-      detail: 'Record any activity',
-      complete: (summary?.calories_burned || 0) > 0 || (summary?.workouts || []).length > 0,
+      detail: stepLog?.steps ? `${Math.min(stepLog.steps, 2000).toLocaleString()}/2,000 steps` : 'Record any activity',
+      complete: (stepLog?.steps || 0) >= 2000 || (summary?.calories_burned || 0) > 0 || (summary?.workouts || []).length > 0,
       action: () => openWorkout(),
     },
     {
@@ -651,6 +658,14 @@ const Home = () => {
           <span className="quote-mark" aria-hidden="true">&ldquo;</span>
           <p className="quote-text">{getDailyQuote()}</p>
         </div>
+
+        <HealthOverview
+          user={user}
+          summary={summary}
+          stepLog={stepLog}
+          history={stepHistory}
+          onOpenProgress={() => navigate('/progress')}
+        />
 
         <section className="daily-momentum-card animate-slide-up" aria-labelledby="daily-momentum-title">
           <div className="daily-momentum-intro">

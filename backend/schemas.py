@@ -429,6 +429,23 @@ class WaterLogResponse(BaseModel):
         from_attributes = True
 
 
+# Daily activity
+class StepLogCreate(BaseModel):
+    date: date
+    steps: int = Field(ge=0, le=200_000)
+    source: str = Field(default="device", min_length=1, max_length=40)
+
+
+class StepLogResponse(BaseModel):
+    id: int
+    date: date
+    steps: int
+    source: str
+
+    class Config:
+        from_attributes = True
+
+
 # Weight Logs
 class WeightLogCreate(BaseModel):
     date: date

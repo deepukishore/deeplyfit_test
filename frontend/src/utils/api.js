@@ -483,6 +483,10 @@ export const api = {
   getWeightLogs: (limit = 30) => request('GET', `/weight/logs?limit=${limit}`),
   getBMIHistory: (limit = 30) => request('GET', `/weight/bmi-history?limit=${limit}`),
 
+  // Daily activity synced by the mobile app
+  getSteps: (date) => request('GET', `/activity/steps/${date}`),
+  getStepHistory: (limit = 7) => request('GET', `/activity/steps?limit=${limit}`),
+
   // Achievements
   getAchievements: () => request('GET', '/users/achievements'),
 
