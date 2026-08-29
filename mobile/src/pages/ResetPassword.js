@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { api } from '../utils/api';
 import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
+import PasswordInput from '../components/PasswordInput';
 
 const ResetPassword = ({ route, navigation }) => {
   const token = route?.params?.token || '';
@@ -12,7 +13,7 @@ const ResetPassword = ({ route, navigation }) => {
   const [done, setDone] = useState(false);
 
   const handleSubmit = async () => {
-    if (!token) { Toast.show({ type: 'error', text1: 'Invalid reset link' }); return; }
+    if (!token) { Toast.show({ type: 'error', text1: 'Invalid password reset request' }); return; }
     if (password.length < 6) { Toast.show({ type: 'error', text1: 'Password must be at least 6 characters' }); return; }
     if (password !== confirm) { Toast.show({ type: 'error', text1: 'Passwords do not match' }); return; }
     setLoading(true);
@@ -45,11 +46,11 @@ const ResetPassword = ({ route, navigation }) => {
             <Text style={s.subtitle}>Choose a strong password for your account.</Text>
             <View style={s.inputGroup}>
               <Text style={s.label}>New Password</Text>
-              <TextInput style={s.input} placeholder="••••••••" placeholderTextColor={colors.textMuted} value={password} onChangeText={setPassword} secureTextEntry />
+              <PasswordInput style={s.input} placeholder="••••••••" placeholderTextColor={colors.textMuted} value={password} onChangeText={setPassword} autoComplete="new-password" />
             </View>
             <View style={s.inputGroup}>
               <Text style={s.label}>Confirm Password</Text>
-              <TextInput style={s.input} placeholder="••••••••" placeholderTextColor={colors.textMuted} value={confirm} onChangeText={setConfirm} secureTextEntry />
+              <PasswordInput style={s.input} placeholder="••••••••" placeholderTextColor={colors.textMuted} value={confirm} onChangeText={setConfirm} autoComplete="new-password" />
             </View>
             <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={handleSubmit} disabled={loading}>
               {loading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>→ Update Password</Text>}

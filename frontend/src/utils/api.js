@@ -361,6 +361,7 @@ export const api = {
   login: (data) => request('POST', '/auth/login', data),
   me: () => request('GET', '/auth/me', null, { timeoutMs: 20000 }),
   forgotPassword: (data) => request('POST', '/auth/forgot-password', data),
+  verifyResetOtp: (data) => request('POST', '/auth/verify-reset-otp', data),
   resetPassword: (data) => request('POST', '/auth/reset-password', data),
 
   // Onboarding

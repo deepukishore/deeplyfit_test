@@ -7,30 +7,56 @@ import '../styles/auth.css';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [devResetUrl, setDevResetUrl] = useState('');
+  const [step, setStep] = useState('email');
+  const [developmentOtp, setDevelopmentOtp] = useState('');
   const navigate = useNavigate();
+  const normalizedEmail = email.trim().toLowerCase();
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!email) {
+  const sendOtp = async (event) => {
+    event?.preventDefault();
+    if (!normalizedEmail) {
       toast.error('Please enter your email');
       return;
     }
 
     setLoading(true);
     try {
-      const response = await api.forgotPassword({ email });
-      setDevResetUrl(response.reset_url || '');
-      setSent(true);
-      toast.success(response.reset_url ? 'Development reset link created.' : 'Reset link sent! Check your inbox.');
+      const response = await api.forgotPassword({ email: normalizedEmail });
+      setDevelopmentOtp(response.development_otp || '');
+      setStep('otp');
+      toast.success('Verification code sent. Check your email.');
     } catch (err) {
-      toast.error(err.message || 'Something went wrong');
+      toast.error(err.message || 'Could not send verification code');
     } finally {
       setLoading(false);
     }
+  };
+
+  const verifyOtp = async (event) => {
+    event.preventDefault();
+    if (!/^\d{6}$/.test(otp)) {
+      toast.error('Enter the 6-digit verification code');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.verifyResetOtp({ email: normalizedEmail, otp });
+      toast.success('Email confirmed. Set your new password.');
+      navigate(`/reset-password?token=${encodeURIComponent(response.reset_token)}`);
+    } catch (err) {
+      toast.error(err.message || 'Invalid verification code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const changeEmail = () => {
+    setStep('email');
+    setOtp('');
+    setDevelopmentOtp('');
   };
 
   return (
@@ -44,31 +70,52 @@ const ForgotPassword = () => {
         </div>
 
         <div className="auth-card animate-scale-in">
-          {sent ? (
+          {step === 'otp' ? (
             <>
-              <h2>Check your email</h2>
-              <p className="subtitle" style={{ marginBottom: 24 }}>
-                {devResetUrl
-                  ? 'Email sending is not configured locally. Use the development reset link below.'
-                  : <>We sent a password reset link to <strong>{email}</strong>. It expires in 1 hour.</>}
+              <h2>Enter verification code</h2>
+              <p className="subtitle">
+                Enter the 6-digit code sent to <strong>{normalizedEmail}</strong>. It expires in 10 minutes.
               </p>
-              {devResetUrl && (
-                <button className="btn btn-secondary btn-full" style={{ marginBottom: 12 }} onClick={() => window.location.assign(devResetUrl)}>
-                  Open Reset Link
+              {developmentOtp && <p className="auth-development-code">Development code: {developmentOtp}</p>}
+              <form className="auth-form" onSubmit={verifyOtp}>
+                <div className="input-group">
+                  <label htmlFor="reset-otp">Verification Code</label>
+                  <input
+                    id="reset-otp"
+                    className="auth-otp-input"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]{6}"
+                    maxLength="6"
+                    placeholder="000000"
+                    value={otp}
+                    onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                    autoComplete="one-time-code"
+                    autoFocus
+                    required
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary btn-full" disabled={loading} style={{ marginTop: 8 }}>
+                  {loading ? <><span className="spinner" /> Confirming...</> : 'Confirm Code'}
                 </button>
-              )}
-              <button className="btn btn-primary btn-full" onClick={() => navigate('/login')}>
-                ← Back to Sign In
-              </button>
+              </form>
+              <div className="auth-otp-actions">
+                <button type="button" onClick={() => sendOtp()} disabled={loading}>Resend code</button>
+                <button type="button" onClick={changeEmail} disabled={loading}>Change email</button>
+              </div>
+              <div className="auth-switch">
+                <button type="button" onClick={() => navigate('/login')}>Back to Sign In</button>
+              </div>
             </>
           ) : (
             <>
               <h2>Forgot password?</h2>
-              <p className="subtitle">Enter your email and we'll send you a reset link.</p>
-              <form className="auth-form" onSubmit={handleSubmit}>
+              <p className="subtitle">Confirm your email and we'll send you a 6-digit verification code.</p>
+              <form className="auth-form" onSubmit={sendOtp}>
                 <div className="input-group">
-                  <label>Email</label>
+                  <label htmlFor="reset-email">Email</label>
                   <input
+                    id="reset-email"
                     type="email"
                     placeholder="alex@example.com"
                     value={email}
@@ -78,12 +125,12 @@ const ForgotPassword = () => {
                   />
                 </div>
                 <button type="submit" className="btn btn-primary btn-full" disabled={loading} style={{ marginTop: 8 }}>
-                  {loading ? <><span className="spinner" /> Sending...</> : '→ Send Reset Link'}
+                  {loading ? <><span className="spinner" /> Sending...</> : 'Send Verification Code'}
                 </button>
               </form>
               <div className="auth-switch">
                 Remember your password?
-                <button onClick={() => navigate('/login')}>Sign in</button>
+                <button type="button" onClick={() => navigate('/login')}>Sign in</button>
               </div>
             </>
           )}

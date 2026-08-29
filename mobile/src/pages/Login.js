@@ -4,6 +4,7 @@ import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
 import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 import AppBackdrop from '../components/AppBackdrop';
+import PasswordInput from '../components/PasswordInput';
 import { FloatingView, MotionPressable, MotionView } from '../components/Motion';
 
 const Login = ({ navigation }) => {
@@ -69,7 +70,7 @@ const Login = ({ navigation }) => {
 
         <View style={s.inputGroup}>
           <Text style={s.label}>Password</Text>
-          <TextInput style={s.input} placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'} placeholderTextColor={colors.textMuted} value={password} onChangeText={setPassword} secureTextEntry autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+          <PasswordInput style={s.input} placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'} placeholderTextColor={colors.textMuted} value={password} onChangeText={setPassword} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
           {mode === 'login' && (
             <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={{ alignSelf: 'flex-end', marginTop: 6 }}>
               <Text style={{ color: colors.accentLime, fontSize: 13 }}>Forgot password?</Text>

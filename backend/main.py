@@ -67,8 +67,21 @@ def ensure_user_default_values():
         connection.execute(text("UPDATE users SET free_ai_messages_used = 0 WHERE free_ai_messages_used IS NULL"))
 
 
+def ensure_password_reset_columns():
+    inspector = inspect(engine)
+    if "password_reset_tokens" not in inspector.get_table_names():
+        return
+    existing_columns = {column["name"] for column in inspector.get_columns("password_reset_tokens")}
+    if "attempts" not in existing_columns:
+        with engine.begin() as connection:
+            connection.execute(text(
+                "ALTER TABLE password_reset_tokens ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0"
+            ))
+
+
 ensure_user_premium_columns()
 ensure_user_default_values()
+ensure_password_reset_columns()
 
 app = FastAPI(title="Deeply Fit API", version="1.0.0")
 

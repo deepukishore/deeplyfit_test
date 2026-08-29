@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Eye, EyeOff } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
 import { api } from '../utils/api';
 import '../styles/auth.css';
@@ -8,6 +9,8 @@ import '../styles/auth.css';
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [searchParams] = useSearchParams();
@@ -18,7 +21,7 @@ const ResetPassword = () => {
     event.preventDefault();
 
     if (!token) {
-      toast.error('Invalid reset link');
+      toast.error('Invalid password reset request');
       return;
     }
 
@@ -71,26 +74,38 @@ const ResetPassword = () => {
               <p className="subtitle">Choose a strong password for your account.</p>
               <form className="auth-form" onSubmit={handleSubmit}>
                 <div className="input-group">
-                  <label>New Password</label>
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    autoComplete="new-password"
-                    required
-                  />
+                  <label htmlFor="new-password">New Password</label>
+                  <div className="auth-password-field">
+                    <input
+                      id="new-password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      autoComplete="new-password"
+                      required
+                    />
+                    <button type="button" className="auth-password-toggle" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                      {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="input-group">
-                  <label>Confirm Password</label>
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirm}
-                    onChange={(event) => setConfirm(event.target.value)}
-                    autoComplete="new-password"
-                    required
-                  />
+                  <label htmlFor="confirm-password">Confirm Password</label>
+                  <div className="auth-password-field">
+                    <input
+                      id="confirm-password"
+                      type={showConfirm ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={confirm}
+                      onChange={(event) => setConfirm(event.target.value)}
+                      autoComplete="new-password"
+                      required
+                    />
+                    <button type="button" className="auth-password-toggle" onClick={() => setShowConfirm((visible) => !visible)} aria-label={showConfirm ? 'Hide password' : 'Show password'}>
+                      {showConfirm ? <EyeOff size={19} /> : <Eye size={19} />}
+                    </button>
+                  </div>
                 </div>
                 <button type="submit" className="btn btn-primary btn-full" disabled={loading} style={{ marginTop: 8 }}>
                   {loading ? <><span className="spinner" /> Updating...</> : '→ Update Password'}

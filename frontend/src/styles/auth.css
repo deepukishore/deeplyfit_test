@@ -936,6 +936,43 @@
   outline-offset: 2px;
 }
 
+.auth-otp-input {
+  text-align: center;
+  letter-spacing: 0.7em;
+  padding-left: calc(1rem + 0.7em);
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.auth-development-code {
+  margin: -10px 0 18px;
+  color: var(--accent-amber);
+  text-align: center;
+  font-weight: 700;
+}
+
+.auth-otp-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.auth-otp-actions button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--accent-lime);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-otp-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .auth-forgot-link {
   display: block;
   margin-top: 8px;

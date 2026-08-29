@@ -97,6 +97,11 @@ migrations = [
         "sql": "ALTER TABLE users ADD COLUMN allergens_json TEXT NULL",
         "label": "Add users.allergens_json",
     },
+    {
+        "check": "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='password_reset_tokens' AND column_name='attempts'",
+        "sql": "ALTER TABLE password_reset_tokens ADD COLUMN attempts INT NOT NULL DEFAULT 0",
+        "label": "Add password_reset_tokens.attempts",
+    },
 ]
 
 Base.metadata.create_all(bind=engine)

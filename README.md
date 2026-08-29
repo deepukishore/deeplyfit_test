@@ -41,7 +41,7 @@
 | Backend      | Python FastAPI 0.115                                    |
 | ORM          | SQLAlchemy 2.0                                          |
 | Database     | MySQL 8.0                                               |
-| Auth         | JWT (python-jose + bcrypt), SMTP password reset         |
+| Auth         | JWT (python-jose + bcrypt), SMTP password-reset OTP     |
 | AI           | Google Gemini 2.5 Flash                                 |
 | Nutrition    | Open Food Facts API integration                         |
 
@@ -184,14 +184,14 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_gmail@gmail.com
 SMTP_PASS=your_gmail_app_password
-FRONTEND_URL=https://deeplyfit.vercel.app
 PREMIUM_ADMIN_EMAIL=deeplyfitai@gmail.com
 PREMIUM_ADMIN_KEY=choose_a_private_admin_key
 ```
 
 > **Get a free Gemini API key:** https://makersuite.google.com/app/apikey
 > Without a Gemini key, AI chat and food scanning return a clear configuration error instead of mock data.
-> For SMTP (password reset emails), generate a Gmail App Password at: https://myaccount.google.com/apppasswords
+> For SMTP (password-reset OTP emails), generate a Gmail App Password at: https://myaccount.google.com/apppasswords
+> Password-reset codes expire after 10 minutes and can be entered in either the website or mobile app.
 
 ---
 
@@ -286,7 +286,8 @@ setup.bat
 | POST   | `/auth/register`        | Register new user         |
 | POST   | `/auth/login`           | Login & get JWT           |
 | GET    | `/auth/me`              | Get current user          |
-| POST   | `/auth/forgot-password` | Send reset email          |
+| POST   | `/auth/forgot-password` | Email a 6-digit reset OTP |
+| POST   | `/auth/verify-reset-otp` | Verify OTP and get a reset token |
 | POST   | `/auth/reset-password`  | Reset password with token |
 
 ### Users & Allergens

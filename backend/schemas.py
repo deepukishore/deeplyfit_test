@@ -706,12 +706,32 @@ class PublicProfileResponse(BaseModel):
 
 # Daily Summary
 class ForgotPasswordRequest(BaseModel):
-    email: str
+    email: EmailStr
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value):
+        return str(value).strip().casefold()
+
+
+class VerifyPasswordResetOtpRequest(BaseModel):
+    email: EmailStr
+    otp: str = Field(pattern=r"^\d{6}$")
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value):
+        return str(value).strip().casefold()
+
+    @field_validator("otp", mode="before")
+    @classmethod
+    def normalize_otp(cls, value):
+        return str(value).strip()
 
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    new_password: str
+    new_password: str = Field(min_length=6, max_length=128)
 
 
 class DailySummary(BaseModel):
