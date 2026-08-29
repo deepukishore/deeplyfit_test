@@ -19,8 +19,7 @@ from utils.time import is_past, utc_now
 import secrets
 import hashlib
 import hmac
-import smtplib
-from email.mime.text import MIMEText
+import requests
 from datetime import timedelta
 import os
 
@@ -31,15 +30,12 @@ RESET_TOKEN_LIFETIME_MINUTES = 15
 MAX_OTP_ATTEMPTS = 5
 
 
-def is_smtp_configured(smtp_user: str, smtp_pass: str) -> bool:
+def is_email_configured(api_key: str) -> bool:
     placeholder_values = {
         "",
-        "your_gmail@gmail.com",
-        "your_app_password",
-        "your-email@gmail.com",
-        "your-password",
+        "your_brevo_api_key",
     }
-    return smtp_user.strip() not in placeholder_values and smtp_pass.strip() not in placeholder_values
+    return api_key.strip() not in placeholder_values
 
 
 def is_production_environment() -> bool:
@@ -47,41 +43,17 @@ def is_production_environment() -> bool:
     return bool(os.getenv("RENDER")) or environment in {"production", "prod"}
 
 
-def first_configured_value(*values: str) -> str:
-    placeholder_values = {
-        "",
-        "your_gmail@gmail.com",
-        "your_app_password",
-        "your-email@gmail.com",
-        "your-password",
-    }
-    for value in values:
-        normalized = (value or "").strip()
-        if normalized and normalized not in placeholder_values:
-            return normalized
-    return ""
-
-
-def get_smtp_settings() -> tuple[str, int, str, str, str]:
-    smtp_host = (os.getenv("SMTP_HOST", "smtp.gmail.com") or "").strip()
-    try:
-        smtp_port = int(os.getenv("SMTP_PORT", "587"))
-    except ValueError as exc:
-        raise HTTPException(status_code=500, detail="SMTP_PORT must be a valid number") from exc
-    smtp_user = first_configured_value(
-        os.getenv("SMTP_USER", ""),
-        os.getenv("MAIL_USERNAME", ""),
-    )
-    smtp_pass = first_configured_value(
-        os.getenv("SMTP_PASS", ""),
-        os.getenv("MAIL_PASSWORD", ""),
-    )
-    smtp_sender = first_configured_value(
-        os.getenv("SMTP_SENDER", ""),
-        os.getenv("MAIL_DEFAULT_SENDER", ""),
-        smtp_user,
-    )
-    return smtp_host, smtp_port, smtp_user, smtp_pass, smtp_sender
+def get_email_settings() -> tuple[str, str, str]:
+    """Brevo (HTTPS API) settings. Replaces the old SMTP settings, since
+    Render's free tier blocks outbound SMTP ports (25/465/587)."""
+    api_key = (os.getenv("BREVO_API_KEY", "") or "").strip()
+    sender_email = (
+        os.getenv("SMTP_SENDER", "")
+        or os.getenv("EMAIL_SENDER", "")
+        or "deeplyfitai@gmail.com"
+    ).strip()
+    sender_name = (os.getenv("EMAIL_SENDER_NAME", "") or "Deeply Fit").strip()
+    return api_key, sender_email, sender_name
 
 
 def find_user_by_email(db: Session, email: str):
@@ -194,36 +166,40 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     db.add(reset_token)
     db.commit()
 
-    smtp_host, smtp_port, smtp_user, smtp_pass, smtp_sender = get_smtp_settings()
+    api_key, sender_email, sender_name = get_email_settings()
 
-    if is_smtp_configured(smtp_user, smtp_pass):
+    if is_email_configured(api_key):
         try:
-            body = f"""Hi {user.name or 'there'},
+            body_html = f"""<p>Hi {user.name or 'there'},</p>
+<p>You requested a password reset for your Deeply Fit account.</p>
+<p>Your verification code is: <strong>{otp}</strong></p>
+<p>Enter this code in the Deeply Fit website or mobile app. It is valid for {OTP_LIFETIME_MINUTES} minutes.</p>
+<p>If you didn't request this, ignore this email.</p>
+<p>-- Deeply Fit Team</p>"""
 
-You requested a password reset for your Deeply Fit account.
-
-Your verification code is: {otp}
-
-Enter this code in the Deeply Fit website or mobile app. It is valid for {OTP_LIFETIME_MINUTES} minutes.
-
-If you didn't request this, ignore this email.
-
--- Deeply Fit Team"""
-            msg = MIMEText(body)
-            msg["Subject"] = f"{otp} is your Deeply Fit verification code"
-            msg["From"] = smtp_sender
-            msg["To"] = user.email
-            with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
-                server.starttls()
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_sender, user.email, msg.as_string())
+            response = requests.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={
+                    "api-key": api_key,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                json={
+                    "sender": {"name": sender_name, "email": sender_email},
+                    "to": [{"email": user.email}],
+                    "subject": f"{otp} is your Deeply Fit verification code",
+                    "htmlContent": body_html,
+                },
+                timeout=15,
+            )
+            response.raise_for_status()
         except Exception as e:
-            print(f"[SMTP] Password reset email failed for {user.email}: {e}")
+            print(f"[Brevo] Password reset email failed for {user.email}: {e}")
             reset_token.used = 1
             db.commit()
             raise HTTPException(
                 status_code=500,
-                detail="Could not send the verification email. Check the server SMTP email settings.",
+                detail="Could not send the verification email. Check the server email settings.",
             )
     else:
         if is_production_environment():
@@ -235,7 +211,7 @@ If you didn't request this, ignore this email.
             )
         print(f"[DEV] Password reset OTP for {user.email}: {otp}")
         return {
-            "message": "SMTP is not configured. Use this development verification code.",
+            "message": "Email is not configured. Use this development verification code.",
             "development_otp": otp,
         }
 

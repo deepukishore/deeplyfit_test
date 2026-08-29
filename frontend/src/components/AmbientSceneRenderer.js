@@ -43,7 +43,7 @@ export const startAmbientScene = (canvas) => {
   camera.position.set(0, 0, 7.5);
 
   const trailOne = createMotionTrail(0, 0xa855f7, 0.2);
-  const trailTwo = createMotionTrail(Math.PI, 0x4facfe, 0.14);
+  const trailTwo = createMotionTrail(Math.PI, 0xc084fc, 0.14);
   const trailThree = createMotionTrail(Math.PI / 2, 0xf5a623, 0.1);
   trailTwo.rotation.z = Math.PI;
   trailThree.scale.setScalar(0.78);
@@ -67,11 +67,11 @@ export const startAmbientScene = (canvas) => {
   halo.rotation.set(0.7, 0.2, 0.4);
   group.add(halo);
 
-  const blueHaloMaterial = new THREE.MeshBasicMaterial({ color: 0x4facfe, transparent: true, opacity: 0.09 });
-  const blueHalo = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.018, 4, 40), blueHaloMaterial);
-  blueHalo.position.set(2.35, -1.5, -0.8);
-  blueHalo.rotation.set(1.1, -0.4, 0.2);
-  group.add(blueHalo);
+  const secondaryHaloMaterial = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.1 });
+  const secondaryHalo = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.018, 4, 40), secondaryHaloMaterial);
+  secondaryHalo.position.set(2.35, -1.5, -0.8);
+  secondaryHalo.rotation.set(1.1, -0.4, 0.2);
+  group.add(secondaryHalo);
 
   const energyOrbGeometry = new THREE.IcosahedronGeometry(0.07, 1);
   const energyOrbMaterial = new THREE.MeshBasicMaterial({ color: 0xf5a623, transparent: true, opacity: 0.24 });
@@ -101,7 +101,7 @@ export const startAmbientScene = (canvas) => {
   const particleGeometry = new THREE.BufferGeometry();
   particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
   const particleMaterial = new THREE.PointsMaterial({
-    color: 0x4facfe,
+    color: 0xd8b4fe,
     size: 0.025,
     transparent: true,
     opacity: 0.22,
@@ -122,7 +122,7 @@ export const startAmbientScene = (canvas) => {
     trailThree.material.opacity = lightMode ? 0.08 : 0.1;
     nodeMaterial.opacity = lightMode ? 0.09 : 0.13;
     haloMaterial.opacity = lightMode ? 0.1 : 0.14;
-    blueHaloMaterial.opacity = lightMode ? 0.07 : 0.1;
+    secondaryHaloMaterial.opacity = lightMode ? 0.07 : 0.1;
     energyOrbMaterial.opacity = lightMode ? 0.18 : 0.26;
     particleMaterial.opacity = lightMode ? 0.14 : 0.22;
     if (reduceMotion) render();
@@ -157,8 +157,8 @@ export const startAmbientScene = (canvas) => {
     node.rotation.y = elapsed * 0.11;
     halo.rotation.x = 0.7 + (elapsed * 0.04);
     halo.rotation.z = 0.4 + (elapsed * -0.06);
-    blueHalo.rotation.y = -0.4 + (elapsed * 0.07);
-    blueHalo.rotation.z = 0.2 + (elapsed * 0.035);
+    secondaryHalo.rotation.y = -0.4 + (elapsed * 0.07);
+    secondaryHalo.rotation.z = 0.2 + (elapsed * 0.035);
     energyOrbs.rotation.z = elapsed * 0.035;
     energyOrbs.children.forEach((orb, index) => {
       orb.position.y = orb.userData.baseY + (Math.sin((elapsed * 0.7) + index) * 0.07);

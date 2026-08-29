@@ -4624,8 +4624,8 @@ textarea {
   border: 1px solid color-mix(in srgb, var(--accent-lime) 18%, var(--border));
   border-radius: var(--radius-xl);
   background:
-    radial-gradient(circle at 96% 2%, rgba(79,172,254,0.1), transparent 28%),
-    linear-gradient(145deg, rgba(var(--accent-primary-rgb),0.08), transparent 48%),
+    radial-gradient(circle at 96% 2%, rgba(192,132,252,0.14), transparent 28%),
+    linear-gradient(145deg, rgba(var(--accent-primary-rgb),0.12), transparent 48%),
     var(--bg-card);
   box-shadow: var(--shadow-md), inset 0 1px 0 var(--surface-highlight);
   overflow: hidden;
@@ -4653,7 +4653,7 @@ textarea {
 .health-step-percent strong { font-family: var(--font-display); font-size: 20px; }
 .health-step-percent span { color: var(--text-muted); font-size: 10px; }
 .health-step-track { height: 9px; margin: 14px 0 16px; border-radius: var(--radius-full); background: var(--bg-elevated); overflow: hidden; }
-.health-step-track > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,var(--accent-lime),var(--accent-blue)); box-shadow: var(--shadow-lime); transition: width 500ms ease; }
+.health-step-track > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,var(--accent-lime),var(--accent-purple)); box-shadow: var(--shadow-lime); transition: width 500ms ease; }
 
 .health-metric-grid,
 .health-focus-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
