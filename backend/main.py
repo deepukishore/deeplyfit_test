@@ -30,6 +30,7 @@ def ensure_user_premium_columns():
     profile_picture_type = "LONGTEXT" if engine.dialect.name == "mysql" else "TEXT"
     column_statements = {
         "profile_picture": f"ALTER TABLE users ADD COLUMN profile_picture {profile_picture_type} NULL",
+        "step_goal": "ALTER TABLE users ADD COLUMN step_goal INTEGER DEFAULT 10000",
         "premium_status": "ALTER TABLE users ADD COLUMN premium_status VARCHAR(20) DEFAULT 'free'",
         "premium_plan": "ALTER TABLE users ADD COLUMN premium_plan VARCHAR(20) NULL",
         "premium_activated_at": f"ALTER TABLE users ADD COLUMN premium_activated_at {datetime_type} NULL",
@@ -57,6 +58,7 @@ def ensure_user_premium_columns():
 def ensure_user_default_values():
     with engine.begin() as connection:
         connection.execute(text("UPDATE users SET water_goal = 8 WHERE water_goal IS NULL"))
+        connection.execute(text("UPDATE users SET step_goal = 10000 WHERE step_goal IS NULL"))
         connection.execute(text("UPDATE users SET onboarding_complete = 0 WHERE onboarding_complete IS NULL"))
         connection.execute(text("UPDATE users SET dark_mode = 0 WHERE dark_mode IS NULL"))
         connection.execute(text("UPDATE users SET share_achievements = 1 WHERE share_achievements IS NULL"))

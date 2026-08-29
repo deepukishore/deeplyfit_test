@@ -100,6 +100,64 @@ const HydrationGoalModal = ({ user, currentGoal, onClose, onSave }) => {
   );
 };
 
+const StepGoalModal = ({ currentGoal, onClose, onSave }) => {
+  const [goal, setGoal] = useState(String(currentGoal || 10000));
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    const parsedGoal = Math.round(Number(goal));
+    if (!Number.isFinite(parsedGoal) || parsedGoal < 500 || parsedGoal > 100000) {
+      toast.error('Choose a step goal between 500 and 100,000');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const updatedUser = await api.updateProfile({ step_goal: parsedGoal });
+      onSave(updatedUser);
+      toast.success(`Daily step goal set to ${parsedGoal.toLocaleString()}`);
+      onClose();
+    } catch (err) {
+      toast.error(err.message || 'Could not update your step goal');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-sheet" onClick={event => event.stopPropagation()}>
+        <div className="modal-handle" />
+        <h3 className="modal-title">Daily Step Goal</h3>
+        <div className="modal-form">
+          <div className="input-group">
+            <label htmlFor="daily-step-goal">Target steps per day</label>
+            <input
+              id="daily-step-goal"
+              type="number"
+              min="500"
+              max="100000"
+              step="500"
+              value={goal}
+              onChange={event => setGoal(event.target.value)}
+            />
+          </div>
+          <div className="step-goal-presets" aria-label="Suggested step goals">
+            {[5000, 8000, 10000].map((preset) => (
+              <button key={preset} type="button" className="btn btn-ghost btn-sm" onClick={() => setGoal(String(preset))}>
+                {preset.toLocaleString()}
+              </button>
+            ))}
+          </div>
+          <button className="btn btn-primary btn-full" type="button" onClick={handleSave} disabled={loading}>
+            {loading ? <><span className="spinner" /> Saving...</> : 'Save Step Goal'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const LogFoodModal = ({ onClose, onSave }) => {
   const [form, setForm] = useState({
     food_name: '',
@@ -468,7 +526,7 @@ const LogWeightModal = ({ onClose, onSave }) => {
 };
 
 const Home = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const today = formatDate(new Date());
   const [summary, setSummary] = useState(() => getInitialHomeSummary(today, user));
@@ -479,6 +537,7 @@ const Home = () => {
   const [stepHistory, setStepHistory] = useState([]);
   const [waterGoal, setWaterGoal] = useState(8);
   const [showHydrationModal, setShowHydrationModal] = useState(false);
+  const [showStepGoalModal, setShowStepGoalModal] = useState(false);
   const [modal, setModal] = useState(null);
   const [workoutPreset, setWorkoutPreset] = useState(null);
   const [showPlanner, setShowPlanner] = useState(false);
@@ -664,6 +723,8 @@ const Home = () => {
           summary={summary}
           stepLog={stepLog}
           history={stepHistory}
+          goal={user?.step_goal}
+          onEditGoal={() => setShowStepGoalModal(true)}
           onOpenProgress={() => navigate('/progress')}
         />
 
@@ -958,6 +1019,7 @@ const Home = () => {
       {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={loadSummary} />}
       {showPlanner && <WorkoutPlannerModal user={user} date={today} onClose={() => setShowPlanner(false)} onSuccess={loadSummary} />}
       {showHydrationModal && <HydrationGoalModal user={user} currentGoal={waterGoal} onClose={() => setShowHydrationModal(false)} onSave={setWaterGoal} />}
+      {showStepGoalModal && <StepGoalModal currentGoal={user?.step_goal} onClose={() => setShowStepGoalModal(false)} onSave={updateUser} />}
     </div>
   );
 };

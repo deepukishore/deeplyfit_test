@@ -254,6 +254,8 @@ def update_profile(
             current_user.dark_mode = data.dark_mode
         if data.water_goal is not None:
             current_user.water_goal = max(1, min(data.water_goal, 30))
+        if data.step_goal is not None:
+            current_user.step_goal = max(500, min(data.step_goal, 100_000))
         if data.bio is not None:
             current_user.bio = data.bio
         if data.profile_picture is not None:

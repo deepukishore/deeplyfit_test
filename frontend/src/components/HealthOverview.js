@@ -2,14 +2,14 @@ import React from 'react';
 import { Activity, Droplets, Flame, Footprints, HeartPulse, MapPin, Scale, Utensils } from 'lucide-react';
 
 
-const HealthOverview = ({ user, summary, stepLog, history = [], onOpenProgress }) => {
+const HealthOverview = ({ user, summary, stepLog, history = [], goal = 10000, onEditGoal, onOpenProgress }) => {
   const steps = Number(stepLog?.steps || 0);
-  const goal = 10000;
-  const progress = Math.min((steps / goal) * 100, 100);
+  const dailyGoal = Math.max(500, Math.min(Math.round(Number(goal) || 10000), 100000));
+  const progress = Math.min((steps / dailyGoal) * 100, 100);
   const heightM = Number(user?.height || 0) / 100;
   const weight = Number(user?.current_weight || 0);
   const bmi = heightM > 0 && weight > 0 ? (weight / (heightM * heightM)).toFixed(1) : null;
-  const maxHistory = Math.max(...history.map((entry) => Number(entry.steps || 0)), goal);
+  const maxHistory = Math.max(...history.map((entry) => Number(entry.steps || 0)), dailyGoal);
   const source = stepLog?.source === 'health_connect'
     ? 'Health Connect'
     : stepLog?.source === 'apple_motion'
@@ -40,11 +40,14 @@ const HealthOverview = ({ user, summary, stepLog, history = [], onOpenProgress }
         <div>
           <span>Steps</span>
           <strong>{steps.toLocaleString()}</strong>
-          <small>of {goal.toLocaleString()} daily goal</small>
+          <div className="health-step-goal-row">
+            <small>of {dailyGoal.toLocaleString()} daily goal</small>
+            <button type="button" onClick={onEditGoal}>Edit goal</button>
+          </div>
         </div>
         <div className="health-step-percent"><strong>{Math.round(progress)}%</strong><span>complete</span></div>
       </div>
-      <div className="health-step-track" role="progressbar" aria-label="Daily step goal" aria-valuemin="0" aria-valuemax={goal} aria-valuenow={steps}>
+      <div className="health-step-track" role="progressbar" aria-label="Daily step goal" aria-valuemin="0" aria-valuemax={dailyGoal} aria-valuenow={Math.min(steps, dailyGoal)}>
         <span style={{ width: `${progress}%` }} />
       </div>
 

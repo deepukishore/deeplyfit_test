@@ -84,6 +84,7 @@ class UserUpdate(BaseModel):
     fitness_goal: Optional[str] = None
     dark_mode: Optional[int] = None
     water_goal: Optional[int] = None
+    step_goal: Optional[int] = Field(default=None, ge=500, le=100_000)
     bio: Optional[str] = None
     profile_picture: Optional[str] = None
     public_profile_slug: Optional[str] = None
@@ -138,6 +139,7 @@ class UserResponse(BaseModel):
     onboarding_complete: int
     dark_mode: int
     water_goal: int = 8
+    step_goal: int = 10_000
     bio: Optional[str] = None
     profile_picture: Optional[str] = None
     public_profile_slug: Optional[str] = None
@@ -178,6 +180,11 @@ class UserResponse(BaseModel):
     @classmethod
     def default_water_goal(cls, value):
         return 8 if value is None else value
+
+    @field_validator("step_goal", mode="before")
+    @classmethod
+    def default_step_goal(cls, value):
+        return 10_000 if value is None else value
 
     @field_validator("profile_visibility", mode="before")
     @classmethod

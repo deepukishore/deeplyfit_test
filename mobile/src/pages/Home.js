@@ -383,9 +383,61 @@ const LogWeightModal = ({ onClose, onSave }) => {
   );
 };
 
+const StepGoalModal = ({ currentGoal, onClose, onSave }) => {
+  const [goal, setGoal] = useState(String(currentGoal || 10000));
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    const parsedGoal = Math.round(Number(goal));
+    if (!Number.isFinite(parsedGoal) || parsedGoal < 500 || parsedGoal > 100000) {
+      Toast.show({ type: 'error', text1: 'Choose a step goal between 500 and 100,000' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const updatedUser = await api.updateProfile({ step_goal: parsedGoal });
+      onSave(updatedUser);
+      Toast.show({ type: 'success', text1: `Daily step goal set to ${parsedGoal.toLocaleString()}` });
+      onClose();
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.message || 'Could not update your step goal' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <LogModal title="Daily Step Goal" onClose={onClose}>
+      <View style={s.inputGroup}>
+        <Text style={s.label}>Target steps per day</Text>
+        <TextInput
+          style={s.input}
+          value={goal}
+          onChangeText={setGoal}
+          keyboardType="number-pad"
+          placeholder="10000"
+          placeholderTextColor={colors.textMuted}
+          accessibilityLabel="Daily step target"
+        />
+      </View>
+      <View style={s.goalPresetRow}>
+        {[5000, 8000, 10000].map((preset) => (
+          <TouchableOpacity key={preset} style={s.goalPreset} onPress={() => setGoal(String(preset))}>
+            <Text style={s.goalPresetText}>{preset.toLocaleString()}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={handleSave} disabled={loading}>
+        {loading ? <ActivityIndicator color={colors.textInverse} /> : <Text style={s.btnText}>Save Step Goal</Text>}
+      </TouchableOpacity>
+    </LogModal>
+  );
+};
+
 const Home = ({ navigation }) => {
-  const { user } = useAuth();
-  const stepCounter = useStepCounter(user?.id);
+  const { user, updateUser } = useAuth();
+  const stepCounter = useStepCounter(user?.id, user?.step_goal);
   const insets = useSafeAreaInsets();
   const today = formatDate(new Date());
   const [summary, setSummary] = useState(() => createEmptySummary(today, { calories_target: user?.calorie_target || 2000 }));
@@ -548,6 +600,7 @@ const Home = ({ navigation }) => {
           counter={stepCounter}
           summary={summary}
           user={user}
+          onEditGoal={() => setModal('stepGoal')}
           onOpenProgress={() => navigation.navigate('Progress')}
         />
 
@@ -768,6 +821,7 @@ const Home = ({ navigation }) => {
       {modal === 'food' && <LogFoodModal onClose={() => setModal(null)} onSave={refreshHomeData} />}
       {modal === 'workout' && <LogWorkoutModal user={user} preset={workoutPreset} onClose={() => { setModal(null); setWorkoutPreset(null); }} onSave={refreshHomeData} />}
       {modal === 'weight' && <LogWeightModal onClose={() => setModal(null)} onSave={refreshHomeData} />}
+      {modal === 'stepGoal' && <StepGoalModal currentGoal={stepCounter.goal} onClose={() => setModal(null)} onSave={updateUser} />}
       {showPlanner && <WorkoutPlannerModal visible={showPlanner} user={user} date={today} onClose={() => setShowPlanner(false)} onSuccess={refreshHomeData} />}
     </View>
   );
@@ -893,6 +947,9 @@ const s = createThemedStyles(() => ({
   inputGroup: { marginBottom: 14 },
   label: { fontSize: 11, color: colors.textSecondary, marginBottom: 5, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase' },
   input: { backgroundColor: colors.bgElevated, borderRadius: 10, padding: 12, color: colors.textPrimary, fontSize: 14, borderWidth: 1, borderColor: colors.border },
+  goalPresetRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+  goalPreset: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 10, backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
+  goalPresetText: { color: colors.accentPurple, fontSize: 12, fontWeight: '800' },
   calculateBtn: { minHeight: 42, marginTop: 8, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.border },
   calculateBtnText: { color: colors.textPrimary, fontSize: 13, fontWeight: '700' },
   mealRow: { flexDirection: 'row', gap: 6 },

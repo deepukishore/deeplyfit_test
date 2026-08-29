@@ -28,6 +28,7 @@ class User(Base):
     onboarding_complete = Column(Integer, default=0)
     dark_mode = Column(Integer, default=0)
     water_goal = Column(Integer, default=8)
+    step_goal = Column(Integer, default=10000)
     bio = Column(Text, nullable=True)
     profile_picture = Column(Text().with_variant(LONGTEXT(), "mysql"), nullable=True)
     public_profile_slug = Column(String(120), unique=True, index=True, nullable=True)

@@ -34,7 +34,7 @@ const hasStepPermission = (permissions = []) => permissions.some(
   (permission) => permission.accessType === 'read' && permission.recordType === 'Steps',
 );
 
-export const useStepCounter = (userId) => {
+export const useStepCounter = (userId, dailyGoal = STEP_GOAL) => {
   const [steps, setSteps] = useState(0);
   const [status, setStatus] = useState('checking');
   const [source, setSource] = useState('not_connected');
@@ -243,11 +243,12 @@ export const useStepCounter = (userId) => {
 
   const distanceKm = Number((steps * 0.00076).toFixed(1));
   const calories = Math.round(steps * 0.04);
+  const goal = Math.max(500, Math.min(Math.round(Number(dailyGoal) || STEP_GOAL), 100_000));
 
   return {
     steps,
-    goal: STEP_GOAL,
-    progress: Math.min((steps / STEP_GOAL) * 100, 100),
+    goal,
+    progress: Math.min((steps / goal) * 100, 100),
     distanceKm,
     calories,
     status,

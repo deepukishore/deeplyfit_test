@@ -5,7 +5,7 @@ import { AnimatedProgressFill, MotionPressable, MotionView } from './Motion';
 import { colors, createThemedStyles, radius, spacing } from '../utils/theme';
 
 
-const HealthDashboardCard = ({ counter, summary, user, onOpenProgress }) => {
+const HealthDashboardCard = ({ counter, summary, user, onEditGoal, onOpenProgress }) => {
   const water = Number(summary?.water_glasses || 0);
   const workouts = summary?.workouts?.length || 0;
   const caloriesConsumed = Math.round(summary?.calories_consumed || 0);
@@ -44,7 +44,12 @@ const HealthDashboardCard = ({ counter, summary, user, onOpenProgress }) => {
         <View style={s.stepCopy}>
           <Text style={s.stepLabel}>Steps</Text>
           <Text style={s.stepValue}>{counter.steps.toLocaleString()}</Text>
-          <Text style={s.stepGoal}>of {counter.goal.toLocaleString()} daily goal</Text>
+          <View style={s.stepGoalRow}>
+            <Text style={s.stepGoal}>of {counter.goal.toLocaleString()} daily goal</Text>
+            <MotionPressable onPress={onEditGoal} accessibilityLabel="Change daily step goal">
+              <Text style={s.stepGoalEdit}>Edit goal</Text>
+            </MotionPressable>
+          </View>
         </View>
         <View style={s.progressCopy}>
           <Text style={s.progressValue}>{Math.round(counter.progress)}%</Text>
@@ -133,6 +138,8 @@ const s = createThemedStyles(() => ({
   stepLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
   stepValue: { color: colors.accentLime, fontSize: 38, lineHeight: 43, fontWeight: '800', letterSpacing: -1 },
   stepGoal: { color: colors.textMuted, fontSize: 11 },
+  stepGoalRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
+  stepGoalEdit: { color: colors.accentPurple, fontSize: 11, fontWeight: '800' },
   progressCopy: { alignItems: 'flex-end', paddingBottom: 3 },
   progressValue: { color: colors.textPrimary, fontSize: 20, fontWeight: '800' },
   progressLabel: { color: colors.textMuted, fontSize: 10 },

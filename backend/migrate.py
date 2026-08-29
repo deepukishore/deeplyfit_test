@@ -13,6 +13,11 @@ migrations = [
         "label": "Add users.water_goal",
     },
     {
+        "check": "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='users' AND column_name='step_goal'",
+        "sql": "ALTER TABLE users ADD COLUMN step_goal INT DEFAULT 10000",
+        "label": "Add users.step_goal",
+    },
+    {
         "check": "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='users' AND column_name='bio'",
         "sql": "ALTER TABLE users ADD COLUMN bio TEXT NULL",
         "label": "Add users.bio",

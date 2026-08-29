@@ -4649,6 +4649,8 @@ textarea {
 .health-steps-row span { color: var(--text-secondary); font-size: 12px; font-weight: 700; }
 .health-steps-row > div:first-child strong { color: var(--accent-lime); font-family: var(--font-display); font-size: clamp(38px,7vw,52px); line-height: 1; letter-spacing: -2px; }
 .health-steps-row small { margin-top: 5px; color: var(--text-muted); font-size: 11px; }
+.health-step-goal-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.health-step-goal-row button { margin-top: 5px; padding: 0; border: 0; background: transparent; color: var(--accent-purple); font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
 .health-step-percent { display: flex; flex-direction: column; align-items: flex-end; }
 .health-step-percent strong { font-family: var(--font-display); font-size: 20px; }
 .health-step-percent span { color: var(--text-muted); font-size: 10px; }
@@ -4676,6 +4678,8 @@ textarea {
 .health-weekly-strip i { width: min(26px,72%); min-height: 6px; border-radius: 7px 7px 3px 3px; background: linear-gradient(180deg,var(--accent-purple),var(--accent-lime)); }
 .health-weekly-strip small { color: var(--text-muted); font-size: 9px; font-style: normal; }
 .health-weekly-strip p { align-self: center; margin: auto; color: var(--text-secondary); font-size: 11px; text-align: center; }
+
+.step-goal-presets { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
 
 @media (min-width: 700px) {
   .health-metric-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }

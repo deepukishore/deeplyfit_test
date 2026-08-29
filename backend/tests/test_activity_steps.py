@@ -8,7 +8,8 @@ from sqlalchemy.pool import StaticPool
 from database import Base
 from models import StepLog, User
 from routes.activity import get_step_history, get_steps_for_date, sync_steps
-from schemas import StepLogCreate
+from routes.users import update_profile
+from schemas import StepLogCreate, UserUpdate
 
 
 class ActivityStepTests(unittest.TestCase):
@@ -44,6 +45,12 @@ class ActivityStepTests(unittest.TestCase):
         empty = get_steps_for_date(log_date, self.db, self.user)
         self.assertEqual(empty.steps, 0)
         self.assertEqual(get_step_history(7, self.db, self.user), [])
+
+    def test_user_can_update_daily_step_goal(self):
+        updated_user = update_profile(UserUpdate(step_goal=7500), self.db, self.user)
+
+        self.assertEqual(updated_user.step_goal, 7500)
+        self.assertEqual(self.db.get(User, self.user.id).step_goal, 7500)
 
 
 if __name__ == "__main__":
