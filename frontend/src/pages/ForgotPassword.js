@@ -28,7 +28,10 @@ const ForgotPassword = () => {
       setStep('otp');
       toast.success('Verification code sent. Check your email.');
     } catch (err) {
-      toast.error(err.message || 'Could not send verification code');
+      const timedOut = /too long|timeout|aborted/i.test(err.message || '');
+      toast.error(timedOut
+        ? 'The email may still arrive. Wait a minute before requesting another code.'
+        : err.message || 'Could not send verification code');
     } finally {
       setLoading(false);
     }

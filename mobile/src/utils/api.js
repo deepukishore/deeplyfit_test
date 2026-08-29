@@ -220,7 +220,7 @@ const diaryApi = {
 };
 
 export const api = {
-  forgotPassword: (email) => request('POST', '/auth/forgot-password', { email }),
+  forgotPassword: (email) => request('POST', '/auth/forgot-password', { email }, { timeoutMs: 60000 }),
   verifyResetOtp: (email, otp) => request('POST', '/auth/verify-reset-otp', { email, otp }),
   resetPassword: (token, new_password) => request('POST', '/auth/reset-password', { token, new_password }),
   register: (data) => request('POST', '/auth/register', data),

@@ -360,7 +360,7 @@ export const api = {
   register: (data) => request('POST', '/auth/register', data),
   login: (data) => request('POST', '/auth/login', data),
   me: () => request('GET', '/auth/me', null, { timeoutMs: 20000 }),
-  forgotPassword: (data) => request('POST', '/auth/forgot-password', data),
+  forgotPassword: (data) => request('POST', '/auth/forgot-password', data, { timeoutMs: 60000 }),
   verifyResetOtp: (data) => request('POST', '/auth/verify-reset-otp', data),
   resetPassword: (data) => request('POST', '/auth/reset-password', data),
 

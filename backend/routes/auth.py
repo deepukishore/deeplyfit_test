@@ -213,7 +213,7 @@ If you didn't request this, ignore this email.
             msg["Subject"] = f"{otp} is your Deeply Fit verification code"
             msg["From"] = smtp_sender
             msg["To"] = user.email
-            with smtplib.SMTP(smtp_host, smtp_port) as server:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
                 server.starttls()
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(smtp_sender, user.email, msg.as_string())
