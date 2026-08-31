@@ -1,6 +1,7 @@
 import json
 import unittest
 from unittest.mock import MagicMock, patch
+from urllib.error import HTTPError
 
 from utils.open_food_facts import (
     _local_food_results,
@@ -14,6 +15,18 @@ def mock_open_food_facts_response(products, count=None):
     response.read.return_value = json.dumps({
         "count": len(products) if count is None else count,
         "products": products,
+    }).encode("utf-8")
+    context = MagicMock()
+    context.__enter__.return_value = response
+    context.__exit__.return_value = False
+    return context
+
+
+def mock_full_text_search_response(products, count=None):
+    response = MagicMock()
+    response.read.return_value = json.dumps({
+        "count": len(products) if count is None else count,
+        "hits": products,
     }).encode("utf-8")
     context = MagicMock()
     context.__enter__.return_value = response
@@ -93,6 +106,18 @@ class IndianFoodSearchTests(unittest.TestCase):
         self.assertIn("Arachuvitta Sambar", sambar_names)
         self.assertIn("Keerai Sambar", sambar_names)
 
+    @patch("utils.open_food_facts.urlopen")
+    def test_chicken_fried_rice_returns_related_local_suggestions_during_outage(self, urlopen_mock):
+        results = search_foods("chicken fried rice", page=1, page_size=12)["results"]
+        names = [result["name"] for result in results]
+
+        self.assertEqual(names[0], "Chicken Fried Rice")
+        self.assertIn("Schezwan Chicken Fried Rice", names)
+        self.assertIn("Egg Fried Rice", names)
+        self.assertIn("Vegetable Fried Rice", names)
+        self.assertIn("Prawn Fried Rice", names)
+        urlopen_mock.assert_not_called()
+
     def test_regional_side_dish_aliases_find_the_expected_food(self):
         expectations = {
             "allam pachadi": "Ginger Chutney",
@@ -165,6 +190,68 @@ class IndianFoodSearchTests(unittest.TestCase):
         requested_url = urlopen_mock.call_args.args[0].full_url
         self.assertIn("tag_0=india", requested_url)
         self.assertIn("lc=en", requested_url)
+
+    @patch("utils.open_food_facts.urlopen")
+    def test_full_text_search_is_used_for_non_local_queries(self, urlopen_mock):
+        urlopen_mock.return_value = mock_full_text_search_response([
+            {
+                "code": "global-1",
+                "product_name": "Poulet et riz",
+                "product_name_en": "Blueberry cereal clusters",
+                "lang": "fr",
+                "brands": ["Example Foods", "Kitchen Range"],
+                "nutriments": {
+                    "energy-kcal_100g": 172,
+                    "proteins_100g": 9,
+                    "carbohydrates_100g": 24,
+                    "fat_100g": 5,
+                },
+            },
+            {
+                "code": "missing-nutrition",
+                "product_name_en": "Blueberry cereal without nutrition",
+                "lang": "en",
+                "nutriments": {},
+            },
+            {
+                "code": "unrelated",
+                "product_name_en": "Tomato soup",
+                "lang": "en",
+                "nutriments": {"energy-kcal_100g": 60},
+            },
+        ])
+
+        result = search_foods("blueberry cereal clusters", page=1, page_size=12)
+
+        self.assertEqual(len(result["results"]), 1)
+        self.assertEqual(result["results"][0]["name"], "Blueberry cereal clusters")
+        self.assertEqual(result["results"][0]["brand"], "Example Foods, Kitchen Range")
+        requested_url = urlopen_mock.call_args.args[0].full_url
+        self.assertTrue(requested_url.startswith("https://search.openfoodfacts.org/search?"))
+        self.assertIn("boost_phrase=true", requested_url)
+
+    @patch("utils.open_food_facts.urlopen")
+    def test_legacy_search_is_used_when_full_text_service_is_busy(self, urlopen_mock):
+        busy_error = HTTPError("https://search.openfoodfacts.org/search", 503, "busy", {}, None)
+        urlopen_mock.side_effect = [
+            busy_error,
+            mock_open_food_facts_response([
+                {
+                    "code": "legacy-1",
+                    "product_name": "Cocoa cereal clusters",
+                    "lang": "en",
+                    "brands": "Example",
+                    "nutriments": {"energy-kcal_100g": 350},
+                },
+            ]),
+        ]
+
+        result = search_foods("cocoa cereal clusters", page=1, page_size=12)
+
+        self.assertEqual([item["name"] for item in result["results"]], ["Cocoa cereal clusters"])
+        self.assertEqual(urlopen_mock.call_count, 2)
+        legacy_url = urlopen_mock.call_args.args[0].full_url
+        self.assertTrue(legacy_url.startswith("https://world.openfoodfacts.org/cgi/search.pl?"))
 
 
 if __name__ == "__main__":

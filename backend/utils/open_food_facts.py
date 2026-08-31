@@ -1,4 +1,5 @@
 import json
+import re
 from difflib import SequenceMatcher
 from typing import Optional, Tuple
 from urllib.error import HTTPError, URLError
@@ -12,11 +13,21 @@ from utils.indian_foods import INDIAN_FOOD_CATALOG
 
 OPEN_FOOD_FACTS_URL = "https://world.openfoodfacts.org/api/v2/product/{barcode}.json"
 OPEN_FOOD_FACTS_SEARCH_URL = "https://world.openfoodfacts.org/cgi/search.pl"
+OPEN_FOOD_FACTS_FULL_TEXT_SEARCH_URL = "https://search.openfoodfacts.org/search"
 OPEN_FOOD_FACTS_FIELDS = (
     "product_name,product_name_en,generic_name,generic_name_en,lang,brands,"
     "countries_tags,serving_size,quantity,image_front_small_url,nutriments"
 )
-OPEN_FOOD_FACTS_USER_AGENT = "FitTrackAI/1.0 (contact@fittrack.local)"
+OPEN_FOOD_FACTS_USER_AGENT = "DeeplyFit/1.0 (https://deeplyfit.vercel.app)"
+
+
+def _display_brand(value) -> Optional[str]:
+    if isinstance(value, list):
+        brands = [str(brand).strip() for brand in value if str(brand).strip()]
+        return ", ".join(brands) or None
+    if value in (None, ""):
+        return None
+    return str(value).strip() or None
 
 
 def _to_float(value) -> Optional[float]:
@@ -106,7 +117,7 @@ def _normalize_product(product: dict, fallback_name: str, english_only: bool = F
     return {
         "code": str(product.get("code") or ""),
         "name": name,
-        "brand": product.get("brands"),
+        "brand": _display_brand(product.get("brands")),
         "image_url": product.get("image_front_small_url"),
         "quantity_label": product.get("quantity"),
         "serving_size": product.get("serving_size"),
@@ -128,9 +139,10 @@ def _normalize_product(product: dict, fallback_name: str, english_only: bool = F
 
 
 def _local_match_score(item: dict, query_text: str) -> int:
-    query_lower = query_text.casefold()
-    name = item["name"].casefold()
-    tags = [tag.casefold() for tag in item["tags"]]
+    normalize = lambda value: " ".join(re.findall(r"[a-z0-9]+", value.casefold()))
+    query_lower = normalize(query_text)
+    name = normalize(item["name"])
+    tags = [normalize(tag) for tag in item["tags"]]
 
     if query_lower == name:
         return 120
@@ -149,6 +161,24 @@ def _local_match_score(item: dict, query_text: str) -> int:
     searchable = " ".join([name, *tags])
     if query_tokens and all(token in searchable for token in query_tokens):
         return 60
+
+    # Multi-word searches should also surface close variants. For example,
+    # "chicken fried rice" should include egg/veg fried rice and other
+    # chicken-and-rice dishes after the exact match.
+    searchable_tokens = set(searchable.split())
+    matched_tokens = sum(
+        1
+        for token in query_tokens
+        if token in searchable_tokens
+        or any(
+            len(token) >= 4 and SequenceMatcher(None, token, candidate).ratio() >= 0.84
+            for candidate in searchable_tokens
+        )
+    )
+    if len(query_tokens) >= 2 and matched_tokens >= 2:
+        coverage = matched_tokens / len(query_tokens)
+        if coverage >= 0.5:
+            return 40 + round(coverage * 15)
 
     if len(query_lower) >= 4:
         candidates = [name, *tags]
@@ -207,6 +237,99 @@ def _local_food_results(query_text: str, page: int, page_size: int) -> dict:
     }
 
 
+def _matches_external_query(result: dict, query_text: str) -> bool:
+    query_tokens = re.findall(r"[a-z0-9]+", query_text.casefold())
+    searchable_tokens = set(re.findall(
+        r"[a-z0-9]+",
+        f"{result['name']} {result['brand'] or ''}".casefold(),
+    ))
+    if not query_tokens or not searchable_tokens:
+        return False
+    matched_tokens = sum(
+        1
+        for token in query_tokens
+        if token in searchable_tokens
+        or any(
+            len(token) >= 4 and SequenceMatcher(None, token, candidate).ratio() >= 0.84
+            for candidate in searchable_tokens
+        )
+    )
+    required_matches = 1 if len(query_tokens) <= 2 else (len(query_tokens) + 1) // 2
+    return matched_tokens >= required_matches
+
+
+def _normalize_search_results(products: list[dict], query_text: str, limit: int) -> list[dict]:
+    results = []
+    seen_keys = set()
+    for product in products:
+        normalized = _normalize_product(product, "", english_only=True)
+        if (
+            not normalized["name"]
+            or not normalized["code"]
+            or normalized["calories"] <= 0
+            or not _matches_external_query(normalized, query_text)
+        ):
+            continue
+        dedupe_key = (
+            normalized["name"].casefold(),
+            (normalized["brand"] or "").casefold(),
+        )
+        if dedupe_key in seen_keys:
+            continue
+        seen_keys.add(dedupe_key)
+        results.append(normalized)
+        if len(results) >= limit:
+            break
+    return results
+
+
+def _search_a_licious(query_text: str, page: int, page_size: int) -> dict:
+    # Request extra hits because incomplete community records are filtered out
+    # before they reach the app.
+    request_size = min(max(page_size * 2, page_size), 40)
+    fields = (
+        "code,product_name,product_name_en,generic_name,generic_name_en,lang,brands,"
+        "serving_size,quantity,image_front_small_url,nutriments"
+    )
+    query = urlencode({
+        "q": query_text,
+        "page": page,
+        "page_size": request_size,
+        "langs": "en",
+        "boost_phrase": "true",
+        "fields": fields,
+    })
+    request = Request(
+        OPEN_FOOD_FACTS_FULL_TEXT_SEARCH_URL + "?" + query,
+        headers={"User-Agent": OPEN_FOOD_FACTS_USER_AGENT},
+    )
+    with urlopen(request, timeout=8) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def _legacy_food_search(query_text: str, page: int, page_size: int) -> dict:
+    query = urlencode({
+        "search_terms": query_text,
+        "search_simple": 1,
+        "action": "process",
+        "json": 1,
+        "page": page,
+        "page_size": page_size,
+        "fields": f"code,{OPEN_FOOD_FACTS_FIELDS}",
+        "lc": "en",
+        "cc": "in",
+        "tagtype_0": "countries",
+        "tag_contains_0": "contains",
+        "tag_0": "india",
+    })
+    request = Request(
+        OPEN_FOOD_FACTS_SEARCH_URL + "?" + query,
+        headers={"User-Agent": OPEN_FOOD_FACTS_USER_AGENT},
+    )
+    with urlopen(request, timeout=8) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
 def fetch_barcode_nutrition(barcode: str) -> dict:
     query = urlencode({"fields": OPEN_FOOD_FACTS_FIELDS})
     url = OPEN_FOOD_FACTS_URL.format(barcode=barcode.strip()) + "?" + query
@@ -256,64 +379,49 @@ def search_foods(query_text: str, page: int = 1, page_size: int = 12) -> dict:
 
     safe_page = max(page, 1)
     safe_page_size = min(max(page_size, 1), 20)
-    query = urlencode({
-        "search_terms": query_text,
-        "search_simple": 1,
-        "action": "process",
-        "json": 1,
-        "page": safe_page,
-        "page_size": safe_page_size,
-        "fields": f"code,{OPEN_FOOD_FACTS_FIELDS}",
-        "lc": "en",
-        "cc": "in",
-        "tagtype_0": "countries",
-        "tag_contains_0": "contains",
-        "tag_0": "india",
-    })
-    url = OPEN_FOOD_FACTS_SEARCH_URL + "?" + query
-    request = Request(url, headers={"User-Agent": OPEN_FOOD_FACTS_USER_AGENT})
-
     local_results = _local_food_results(query_text, safe_page, safe_page_size)
     if local_results["results"]:
         return local_results
 
+    provider_responded = False
     try:
-        with urlopen(request, timeout=12) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except HTTPError as exc:
-        if local_results["results"]:
-            return local_results
-        if exc.code == 503:
-            raise HTTPException(status_code=503, detail="Open Food Facts search is busy right now. Try again shortly. You can still enter nutrition manually.")
-        raise HTTPException(status_code=exc.code, detail="Food search failed")
-    except URLError:
-        if local_results["results"]:
-            return local_results
-        raise HTTPException(status_code=503, detail="Open Food Facts is unavailable right now. You can still enter nutrition manually.")
+        payload = _search_a_licious(query_text, safe_page, safe_page_size)
+        provider_responded = True
+        results = _normalize_search_results(payload.get("hits") or [], query_text, safe_page_size)
+        if results:
+            return {
+                "query": query_text,
+                "total_results": int(payload.get("count") or len(results)),
+                "page": safe_page,
+                "page_size": safe_page_size,
+                "results": results,
+            }
+    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
+        # Search-a-licious is the preferred full-text service. The legacy
+        # product search below remains useful while its rollout stabilizes.
+        pass
 
-    products = payload.get("products") or []
-    results = []
-    for product in products:
-        normalized = _normalize_product(product, "", english_only=True)
-        if normalized["name"] and normalized["code"]:
-            results.append(normalized)
-
-    combined_results = []
-    seen_keys = set()
-    for result in [*local_results["results"], *results]:
-        dedupe_key = (result["name"].casefold(), result["brand"] or "")
-        if dedupe_key in seen_keys:
-            continue
-        seen_keys.add(dedupe_key)
-        combined_results.append(result)
-
-    if not combined_results and local_results["results"]:
-        return local_results
-
-    return {
-        "query": query_text,
-        "total_results": len(local_results["results"]) + int(payload.get("count") or 0),
-        "page": safe_page,
-        "page_size": safe_page_size,
-        "results": combined_results[:safe_page_size],
-    }
+    try:
+        payload = _legacy_food_search(query_text, safe_page, safe_page_size)
+        provider_responded = True
+        results = _normalize_search_results(payload.get("products") or [], query_text, safe_page_size)
+        return {
+            "query": query_text,
+            "total_results": int(payload.get("count") or len(results)),
+            "page": safe_page,
+            "page_size": safe_page_size,
+            "results": results,
+        }
+    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
+        if provider_responded:
+            return {
+                "query": query_text,
+                "total_results": 0,
+                "page": safe_page,
+                "page_size": safe_page_size,
+                "results": [],
+            }
+        raise HTTPException(
+            status_code=503,
+            detail="Food search is temporarily unavailable. Common meals are still available from Deeply Fit estimates.",
+        )
