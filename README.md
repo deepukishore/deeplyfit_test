@@ -1,483 +1,232 @@
-# ⚡ Deeply Fit
+# Deeply Fit
 
-> Your intelligent fitness companion — built with React, FastAPI, MySQL & Gemini AI
+Deeply Fit is a full-stack fitness and nutrition platform with a React web app, an Expo/React Native mobile app, and a FastAPI backend. It combines daily health tracking with Gemini-powered coaching and food analysis.
 
-![Deeply Fit](https://img.shields.io/badge/DeeplyFit-AI-c8f135?style=for-the-badge)
-![React](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql)
-![Expo](https://img.shields.io/badge/Expo-51.0-000020?style=for-the-badge&logo=expo)
+![React](https://img.shields.io/badge/React-18.2-61DAFB?style=flat-square&logo=react)
+![Expo](https://img.shields.io/badge/Expo-SDK%2056-000020?style=flat-square&logo=expo)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python)
 
----
+## Features
 
-## 📋 Features
+- JWT registration, login, shared web/mobile accounts, and password-reset OTPs
+- Goal-based onboarding with calorie and macro calculations
+- Food diary with Indian-food search, barcode lookup, day copying, and allergen checks
+- Gemini food-photo analysis, meal suggestions, and an AI fitness coach
+- Water, weight, BMI, steps, workouts, streaks, and progress tracking
+- Meal templates and weekly meal planning
+- Achievements, community posts, comments, challenges, and public profiles
+- Free and PRO feature limits with Razorpay subscription support
+- Responsive web UI plus an Android/iOS Expo app
+- Web diary caching and offline queue support
 
-- 🔐 **JWT Authentication** — Register, login, forgot/reset password
-- 🧙 **Smart Onboarding** — BMR/TDEE/Macro auto-calculation (Mifflin-St Jeor)
-- 🏠 **Home Dashboard** — Calorie summary, macro pie chart, water tracker, workout suggestions
-- 📔 **AI Food Diary** — Log meals by category with AI-powered food scanning
-- 🔍 **AI Food Scanner** — Photograph food → Gemini AI detects nutrition → auto-logs
-- 🤖 **AI Assistant** — Chat with an AI fitness coach powered by Gemini
-- 📈 **Progress Analytics** — Weight trend chart, weekly calorie area chart, workout streak calendar
-- 🏆 **Achievements** — Unlock badges for fitness milestones
-- 🍽️ **Meal Plans & Templates** — Save and reuse custom meal templates
-- ⚠️ **Allergen Tracker** — Set food allergens, get warnings before logging
-- 👥 **Community** — Social feed, challenges, leaderboard, public profiles
-- 👤 **Profile** — Edit goals, dark mode toggle, macro targets
-- 📴 **Offline Support** — Offline banner + local diary storage fallback
-- 🔄 **Pull-to-Refresh** — Native-feel refresh on all pages
-- 🌙 **Dark/Light Mode** — Full theme switching
-- 📱 **React Native Mobile App** — Full Expo mobile app (iOS & Android)
+## Technology
 
----
+| Area | Stack |
+| --- | --- |
+| Web | React 18, React Router, Recharts, Three.js, CSS |
+| Mobile | Expo SDK 56, React Native 0.85, React Navigation |
+| API | FastAPI, Pydantic, SQLAlchemy |
+| Database | PostgreSQL in hosted environments; MySQL-compatible local fallback |
+| AI and food data | Google Gemini and Open Food Facts |
+| Authentication | JWT, bcrypt, Brevo password-reset email |
+| Payments | Razorpay subscriptions and webhooks |
 
-## 🛠️ Tech Stack
+## Repository layout
 
-| Layer        | Technology                                              |
-| ------------ | ------------------------------------------------------- |
-| Web Frontend | React 18.2, Recharts, react-hot-toast, react-router-dom |
-| Mobile App   | React Native 0.74, Expo 51, Victory Native              |
-| Styling      | Pure CSS3 (CSS Variables, Flexbox, Grid)                |
-| Backend      | Python FastAPI 0.115                                    |
-| ORM          | SQLAlchemy 2.0                                          |
-| Database     | MySQL 8.0                                               |
-| Auth         | JWT (python-jose + bcrypt), SMTP password-reset OTP     |
-| AI           | Google Gemini 2.5 Flash                                 |
-| Nutrition    | Open Food Facts API integration                         |
-
----
-
-## 📁 Project Structure
-
-```
-deeplyfit/
-├── backend/
-│   ├── main.py                  # FastAPI app entry point
-│   ├── database.py              # SQLAlchemy engine & session
-│   ├── models.py                # Database models
-│   ├── schemas.py               # Pydantic schemas
-│   ├── migrate.py               # DB migration runner
-│   ├── requirements.txt
-│   ├── .env                     # Environment variables
-│   ├── auth/
-│   │   └── jwt.py               # JWT helpers
-│   ├── routes/
-│   │   ├── auth.py              # /auth endpoints (login, register, reset)
-│   │   ├── users.py             # /users endpoints + allergens
-│   │   ├── food_logs.py         # /food endpoints + allergen check
-│   │   ├── workouts.py          # /workouts + streak & calendar
-│   │   ├── water_logs.py        # /water endpoints
-│   │   ├── weight_logs.py       # /weight endpoints
-│   │   ├── meal_templates.py    # /meal-templates endpoints
-│   │   ├── meal_plans.py        # /meal-plans endpoints
-│   │   ├── achievements.py      # /achievements endpoints
-│   │   ├── ai_chat.py           # /ai-chat endpoints
-│   │   └── community.py         # /community endpoints
-│   ├── ai/
-│   │   ├── gemini_food.py       # Gemini Vision food analysis
-│   │   └── meal_suggestions.py  # AI meal suggestion logic
-│   └── utils/
-│       ├── allergens.py         # Allergen detection & mapping
-│       ├── achievements.py      # Achievement unlock logic
-│       ├── community.py         # Community helpers
-│       ├── nutrition.py         # Nutrition calculation helpers
-│       ├── open_food_facts.py   # Open Food Facts API client
-│       ├── profile.py           # Profile utilities
-│       └── workout_library.py   # Workout library data
-│
-├── frontend/                    # React web app
-│   ├── package.json
-│   ├── public/index.html
-│   └── src/
-│       ├── App.js
-│       ├── index.js
-│       ├── context/
-│       │   ├── AuthContext.js
-│       │   ├── NetworkContext.js
-│       │   └── RefreshContext.js
-│       ├── pages/
-│       │   ├── Login.js
-│       │   ├── ForgotPassword.js
-│       │   ├── ResetPassword.js
-│       │   ├── Onboarding.js
-│       │   ├── Home.js
-│       │   ├── Diary.js
-│       │   ├── Progress.js
-│       │   ├── Community.js
-│       │   ├── PublicProfile.js
-│       │   ├── AIAssistant.js
-│       │   └── Profile.js
-│       ├── components/
-│       │   ├── BottomNav.js
-│       │   ├── FoodScannerModal.js
-│       │   ├── WorkoutPlannerModal.js
-│       │   ├── WorkoutStreakCalendar.js
-│       │   ├── AllergenSettingsModal.js
-│       │   ├── AllergenWarningModal.js
-│       │   ├── OfflineBanner.js
-│       │   └── PullToRefreshShell.js
-│       ├── styles/
-│       │   ├── global.css
-│       │   ├── auth.css
-│       │   ├── dashboard.css
-│       │   ├── scanner.css
-│       │   ├── assistant.css
-│       │   ├── bottomNav.css
-│       │   └── animations.css
-│       └── utils/
-│           ├── api.js
-│           ├── fitness.js
-│           ├── diaryStorage.js
-│           └── image.js
-│
-└── mobile/                      # React Native / Expo app
-    ├── app.json
-    ├── index.js
-    ├── babel.config.js
-    ├── package.json
-    └── src/
-        ├── navigation/AppNavigator.js
-        ├── context/
-        ├── pages/
-        ├── components/
-        └── utils/
+```text
+.
+|-- backend/              FastAPI application, models, routes, utilities, and tests
+|   |-- ai/               Gemini food analysis and meal suggestions
+|   |-- auth/             JWT and password helpers
+|   |-- routes/           API route modules
+|   |-- tests/            Python unit tests
+|   `-- utils/            Nutrition, food search, achievements, and shared helpers
+|-- frontend/             React web application
+|   |-- api/              Vercel serverless helpers
+|   |-- public/           Static web assets
+|   `-- src/              Pages, components, contexts, styles, and tests
+|-- mobile/               Expo/React Native application
+|   |-- assets/           Mobile icons and splash assets
+|   `-- src/              Navigation, screens, components, hooks, and utilities
+`-- setup.bat             Windows installer for backend and web dependencies
 ```
 
----
+## Prerequisites
 
-## 🚀 Step-by-Step Startup Guide
+- Python 3.10 or newer
+- Node.js 18 or newer and npm
+- PostgreSQL or MySQL
+- An optional Gemini API key for AI features
+- An Expo-compatible Android/iOS environment for mobile development
 
-### Prerequisites
+## Local setup
 
-Make sure these are installed before starting:
+### 1. Backend
 
-| Tool    | Version | Download                         |
-| ------- | ------- | -------------------------------- |
-| Python  | 3.10+   | https://python.org               |
-| Node.js | 18+     | https://nodejs.org               |
-| MySQL   | 8.0+    | https://dev.mysql.com/downloads/ |
-| Git     | any     | https://git-scm.com              |
+From the repository root:
 
----
+```powershell
+cd backend
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
 
-### Step 1 — Set Up the Database
+Create `backend/.env` and add the values needed by your environment:
 
-Open **MySQL Workbench** or the MySQL CLI and run:
+```dotenv
+DATABASE_URL=postgresql://postgres:password@localhost:5432/deeply_fit
+SECRET_KEY=replace-with-a-long-random-value
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+
+# Optional AI features
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash
+GEMINI_VISION_MODEL=gemini-2.5-flash
+
+# Optional password-reset email
+BREVO_API_KEY=
+EMAIL_SENDER=you@example.com
+EMAIL_SENDER_NAME=Deeply Fit
+
+# Optional Razorpay subscriptions
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_PLAN_MONTHLY=
+RAZORPAY_PLAN_QUARTERLY=
+RAZORPAY_PLAN_HALF_YEAR=
+RAZORPAY_PLAN_YEARLY=
+RAZORPAY_WEBHOOK_SECRET=
+```
+
+Start the API:
+
+```powershell
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8080
+```
+
+The backend creates missing tables on startup. API documentation is available at [http://127.0.0.1:8080/docs](http://127.0.0.1:8080/docs), and the health check is at [http://127.0.0.1:8080/health](http://127.0.0.1:8080/health).
+
+#### MySQL note
+
+For local MySQL, create the database and use a URL such as:
 
 ```sql
 CREATE DATABASE fittrack CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
----
-
-### Step 2 — Configure Environment Variables
-
-Edit `backend/.env` with your credentials:
-
-```env
-DATABASE_URL=mysql+pymysql://root:YOUR_PASSWORD@localhost:3306/fittrack
-SECRET_KEY=your-secret-key-change-this-in-production
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
-GEMINI_VISION_MODEL=gemini-2.5-flash
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_gmail@gmail.com
-SMTP_PASS=your_gmail_app_password
-PREMIUM_ADMIN_EMAIL=deeplyfitai@gmail.com
-PREMIUM_ADMIN_KEY=choose_a_private_admin_key
+```dotenv
+DATABASE_URL=mysql+pymysql://root:password@localhost:3306/fittrack
 ```
 
-> **Get a free Gemini API key:** https://makersuite.google.com/app/apikey
-> Without a Gemini key, AI chat and food scanning return a clear configuration error instead of mock data.
-> For SMTP (password-reset OTP emails), generate a Gmail App Password at: https://myaccount.google.com/apppasswords
-> Password-reset codes expire after 10 minutes and can be entered in either the website or mobile app.
+Install `PyMySQL` in the backend environment when using this option. The legacy `backend/migrate.py` script contains MySQL-specific migration SQL and should only be run against MySQL.
 
----
+### 2. Web app
 
-### Step 3 — Install Backend Dependencies
+Open another terminal:
 
-Open a terminal in the project root:
-
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
----
-
-### Step 4 — Run Database Migrations
-
-```bash
-cd backend
-python migrate.py
-```
-
-This applies all schema migrations (including allergens column, etc.).
-
----
-
-### Step 5 — Start the Backend Server
-
-```bash
-cd backend
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8080
-```
-
-- API runs at: **http://<your-computer-ip></your>:8080**
-- Interactive API docs: **http://<your-computer-ip></your>:8080/docs**
-- Health check: **http://<your-computer-ip></your>:8080/health**
-
----
-
-### Step 6 — Install Frontend Dependencies
-
-Open a **new terminal**:
-
-```bash
+```powershell
 cd frontend
 npm install
-```
-
----
-
-### Step 7 — Start the Frontend (Web App)
-
-```bash
-cd frontend
 npm start
 ```
 
-Web app opens at: **http://localhost:3000**
+The development server runs at [http://localhost:3000](http://localhost:3000) and proxies relative API calls to `http://127.0.0.1:8080`.
 
----
+To use a different API, create `frontend/.env.local`:
 
-### Step 8 (Optional) — Start the Mobile App
+```dotenv
+REACT_APP_API_URL=http://127.0.0.1:8080
+REACT_APP_API_TIMEOUT_MS=10000
+```
 
-Open a **third terminal**:
+### 3. Mobile app
 
-```bash
+```powershell
 cd mobile
 npm install
 npm start
 ```
 
-- Scan the QR code with the **Expo Go** app on your phone
-- Or press `a` for Android emulator / `i` for iOS simulator
+For a physical phone, create `mobile/.env` with the backend's LAN address:
 
----
-
-### Quick Start (All-in-One Script)
-
-Alternatively, run the setup script from the project root:
-
-```bash
-setup.bat
+```dotenv
+EXPO_PUBLIC_API_URL=http://192.168.1.10:8080
+EXPO_PUBLIC_API_TIMEOUT_MS=10000
+EXPO_PUBLIC_USE_TEST_ADS=true
 ```
 
----
+Replace `192.168.1.10` with the development computer's LAN IP. Razorpay is a native module, so subscription testing requires a development build rather than Expo Go:
 
-## 🔌 API Endpoints
+```powershell
+npm run android
+```
 
-### Auth
+See [mobile/README.md](mobile/README.md) for mobile build details.
 
-| Method | Endpoint                  | Description               |
-| ------ | ------------------------- | ------------------------- |
-| POST   | `/auth/register`        | Register new user         |
-| POST   | `/auth/login`           | Login & get JWT           |
-| GET    | `/auth/me`              | Get current user          |
-| POST   | `/auth/forgot-password` | Email a 6-digit reset OTP |
-| POST   | `/auth/verify-reset-otp` | Verify OTP and get a reset token |
-| POST   | `/auth/reset-password`  | Reset password with token |
+### Windows quick setup
 
-### Users & Allergens
+`setup.bat` installs the backend and web dependencies. Database configuration and the mobile install remain manual:
 
-| Method | Endpoint              | Description           |
-| ------ | --------------------- | --------------------- |
-| POST   | `/users/onboarding` | Complete onboarding   |
-| PUT    | `/users/profile`    | Update profile        |
-| GET    | `/users/allergens`  | Get user allergens    |
-| PUT    | `/users/allergens`  | Update user allergens |
+```powershell
+.\setup.bat
+```
 
-### Food & Nutrition
+## API overview
 
-| Method | Endpoint                  | Description              |
-| ------ | ------------------------- | ------------------------ |
-| POST   | `/food/log`             | Log food entry           |
-| GET    | `/food/logs/{date}`     | Get food logs for date   |
-| DELETE | `/food/log/{id}`        | Delete food log          |
-| GET    | `/food/summary/{date}`  | Get daily summary        |
-| GET    | `/food/weekly-summary`  | Get 7-day summary        |
-| POST   | `/food/scan`            | AI food scan & log       |
-| POST   | `/food/check-allergens` | Check food for allergens |
+FastAPI's `/docs` page is the authoritative, interactive endpoint reference. The main route groups are:
 
-### Workouts
+| Prefix | Purpose |
+| --- | --- |
+| `/auth` | Accounts, sessions, and password reset |
+| `/users` | Onboarding, profile, allergens, achievements, and premium state |
+| `/food` | Food logs, summaries, search, barcodes, suggestions, and scanning |
+| `/activity` | Daily step synchronization and history |
+| `/water`, `/weight` | Hydration, weight, and BMI history |
+| `/workouts` | Workout logging, library, history, streaks, and calendar |
+| `/templates/meals`, `/meal-plans` | Reusable meals and weekly plans |
+| `/ai` | AI coach chat |
+| `/community` | Challenges, posts, likes, and comments |
+| `/payments` | Razorpay subscription lifecycle and webhooks |
 
-| Method | Endpoint                  | Description                 |
-| ------ | ------------------------- | --------------------------- |
-| POST   | `/workouts/log`         | Log workout                 |
-| GET    | `/workouts/logs/{date}` | Get workouts for date       |
-| DELETE | `/workouts/log/{id}`    | Delete workout              |
-| GET    | `/workouts/streak`      | Get current & best streak   |
-| GET    | `/workouts/calendar`    | Get 90-day workout calendar |
+Most routes require a bearer token returned by `/auth/register` or `/auth/login`.
 
-### Water & Weight
+## Tests and checks
 
-| Method | Endpoint              | Description        |
-| ------ | --------------------- | ------------------ |
-| POST   | `/water/add-glass`  | Add water glass    |
-| POST   | `/water/log`        | Set water for day  |
-| GET    | `/water/log/{date}` | Get water for date |
-| POST   | `/weight/log`       | Log weight         |
-| GET    | `/weight/logs`      | Get weight history |
+Backend tests:
 
-### Meal Templates & Plans
+```powershell
+cd backend
+python -m unittest discover -s tests -v
+```
 
-| Method | Endpoint                 | Description         |
-| ------ | ------------------------ | ------------------- |
-| GET    | `/meal-templates`      | Get saved templates |
-| POST   | `/meal-templates`      | Save meal template  |
-| DELETE | `/meal-templates/{id}` | Delete template     |
-| GET    | `/meal-plans`          | Get meal plans      |
-| POST   | `/meal-plans`          | Create meal plan    |
+Web tests and production build:
 
-### Achievements & AI
+```powershell
+cd frontend
+$env:CI='true'; npm test -- --watchAll=false
+npm run build
+```
 
-| Method | Endpoint          | Description            |
-| ------ | ----------------- | ---------------------- |
-| GET    | `/achievements` | Get user achievements  |
-| POST   | `/ai-chat`      | Chat with AI assistant |
+Mobile dependency check:
 
-### Community
+```powershell
+cd mobile
+npm run doctor
+```
 
-| Method | Endpoint                    | Description        |
-| ------ | --------------------------- | ------------------ |
-| GET    | `/community/feed`         | Get social feed    |
-| POST   | `/community/post`         | Create post        |
-| POST   | `/community/like/{id}`    | Like a post        |
-| GET    | `/community/leaderboard`  | Get leaderboard    |
-| GET    | `/community/profile/{id}` | Get public profile |
+## Deployment notes
 
----
+- The web app includes Vercel rewrites in `frontend/vercel.json`.
+- Set `REACT_APP_API_URL` for a hosted web build.
+- Set `CORS_ORIGINS` to the exact deployed web origins.
+- Production startup requires an explicit `SECRET_KEY`.
+- Keep database, Gemini, Brevo, Razorpay, and admin credentials out of version control.
+- Configure `EXPO_PUBLIC_API_URL` through the appropriate EAS build profile for mobile releases.
 
-## 🤖 AI Food Scanner
+## Additional documentation
 
-The scanner uses **Google Gemini 2.5 Flash** vision model by default:
-
-1. User photographs food or uploads an image
-2. Image converted to Base64
-3. POST to `/food/scan` with base64 + meal_type + date
-4. Backend sends to Gemini with strict JSON prompt
-5. Gemini returns `{ name, calories, protein, carbs, fat }`
-6. Entry auto-saved to database
-7. Toast notification shown
-
-**Without Gemini API key:** Food scanning is unavailable and the backend returns a setup error.
-
----
-
-## ⚠️ Allergen Tracker
-
-Supported allergens: `gluten`, `lactose`, `nuts`, `peanuts`, `eggs`, `soy`, `shellfish`, `fish`, `sesame`, `mustard`
-
-- Set your allergens in Profile → Allergen Settings
-- When logging food, the app automatically checks for allergens
-- A warning modal appears if a match is found — you can log anyway or cancel
-
----
-
-## 🏆 Workout Streak Calendar
-
-- GitHub-style 90-day calendar on the Progress page
-- Color intensity: gray (0 workouts) → light green (1) → lime (2) → forest green (3+)
-- Displays current streak and personal best streak
-
----
-
-## 🎨 Design System
-
-- **Font:** Syne (display) + DM Sans (body)
-- **Theme:** Dark luxury — obsidian + electric lime + warm amber
-- **Primary accent:** `#c8f135` (electric lime)
-- **Secondary:** `#f5a623` (warm amber)
-- **Mobile-first:** max-width 420px
-
----
-
-## 🔒 Security Notes
-
-- Change `SECRET_KEY` in `.env` before deploying
-- Use environment variables for all secrets — never commit `.env`
-- JWT tokens expire after 7 days
-- Passwords hashed with bcrypt
-- SMTP credentials use Gmail App Passwords (not your main password)
-
----
-
-## 💎 Premium / PRO System
-
-### Pricing
-
-| Plan     | Price   | Billed         |
-| -------- | ------- | -------------- |
-| 1 Month  | ₹199   | Every month    |
-| 3 Months | ₹499   | Every 3 months |
-| 6 Months | ₹999   | Every 6 months |
-| 1 Year   | ₹1,799 | Once a year    |
-
-### Payment
-
-- Pay via UPI to: **deepu004.dk-4@okaxis**
-- Open GPay / PhonePe / Paytm → send the amount → copy the transaction ID
-- Enter the transaction ID in the app → request goes to pending verification and the transaction and profile details are emailed to `PREMIUM_ADMIN_EMAIL`
-- Approve verified payments with `POST /users/premium/approve` using `PREMIUM_ADMIN_KEY`
-
-### PRO Features
-
-| Feature           | Free     | PRO                                  |
-| ----------------- | -------- | ------------------------------------ |
-| AI Food Scans     | 3/day    | ♾️ Unlimited                       |
-| AI Coach Messages | 10/day   | ♾️ Unlimited                       |
-| AI Coach Memory   | None     | 30 days                              |
-| Weekly AI Report  | ❌       | ✅ Every Monday                      |
-| Analytics History | 7 days   | 90 days                              |
-| Macro Protocols   | Standard | 8 protocols (Keto, Vegan, Athlete…) |
-| Calorie Heatmap   | ❌       | ✅                                   |
-| Micronutrients    | ❌       | ✅ Full tracking                     |
-| Meal Prep Planner | ❌       | ✅ + Shopping list                   |
-| IF Fasting Timer  | ❌       | ✅ All protocols                     |
-| Progress Photos   | ❌       | ✅ + Timeline                        |
-| Body Measurements | ❌       | ✅ + Charts                          |
-| Export Reports    | ❌       | ✅ PDF + CSV                         |
-| PRO Badges        | ❌       | ✅ 10 exclusive                      |
-| PRO Profile Badge | ❌       | ✅ Gold border                       |
-
-### Implementation Files
-
-| File                                            | Purpose                                            |
-| ----------------------------------------------- | -------------------------------------------------- |
-| `frontend/src/utils/premium.js`               | isPro(), scan/chat counters, local cleanup helpers |
-| `frontend/src/components/PremiumModal.js`     | Plan selection + UPI payment flow                  |
-| `frontend/src/pages/Profile.js`               | Get PRO button, PRO badge, gold avatar             |
-| `frontend/src/components/FoodScannerModal.js` | 3-scan/day gate                                    |
-| `frontend/src/pages/AIAssistant.js`           | 10-message/day gate                                |
-
----
-
-## 🐛 Troubleshooting
-
-| Problem                           | Fix                                                                                 |
-| --------------------------------- | ----------------------------------------------------------------------------------- |
-| `Access denied for user 'root'` | Check`DATABASE_URL` password in `.env`                                          |
-| `ModuleNotFoundError`           | Run`pip install -r requirements.txt` again                                        |
-| Frontend can't reach backend      | Ensure backend is running on port`8080`                                           |
-| Gemini AI is unavailable          | Add a valid`GEMINI_API_KEY` and use `GEMINI_MODEL=gemini-2.5-flash` in `.env` |
-| Mobile app can't connect          | Set`EXPO_PUBLIC_API_URL` to your backend URL, e.g. `http://192.168.1.10:8080`   |
-| `migrate.py` fails              | Ensure the`fittrack` database exists in MySQL first                               |
-| PRO not activating                | Verify the payment manually and approve it with`POST /users/premium/approve`      |
-
----
-
-## 📄 License
-
-MIT © Deeply Fit 2026
+- [API_REFERENCE.md](API_REFERENCE.md) - allergen and workout-streak data examples
+- [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) - feature integration notes
+- [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) - historical implementation summary
